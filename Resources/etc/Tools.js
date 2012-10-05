@@ -1,6 +1,8 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true */
-var Tools = {};
+function Tools() { 'use strict';
+    return this;
+}
 
 Tools.endsWith = function(str, suffix) { 'use strict';
     return (str.indexOf(suffix, str.length - suffix.length) !== -1);
@@ -26,7 +28,7 @@ Tools.StringToUTF8 = function(str) { 'use strict';
         dest: buffer,
         charset: Ti.Codec.CHARSET_UTF8
     });
-    return buffer;
+    return buffer.toString();
 };
 
 Tools.Hash2Qparams = function(args) { 'use strict';
@@ -47,3 +49,4 @@ Tools.Hash2Qparams = function(args) { 'use strict';
     return qparams;
 };
 
+module.exports = Tools;

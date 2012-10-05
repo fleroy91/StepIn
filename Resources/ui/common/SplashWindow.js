@@ -5,11 +5,11 @@
 //  Created by Frédéric Leroy on 2012-09-21.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 //
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-Ti.include('etc/image.js');
-Ti.include('etc/spinner.js');
+var Image = require("/etc/Image");
+var Spinner = require("etc/Spinner");
 
 function SplashWindow() { 'use strict';
     var win = Ti.UI.createWindow({
@@ -90,8 +90,8 @@ function SplashWindow() { 'use strict';
     
     var button = Ti.UI.createButtonBar({
         labels : [Ti.Locale.getString('start_button_title', "Let's start !")],
-        bottom : 10 ,
-        backgroundColor:'#336699',
+        bottom : 10,
+        backgroundColor:'#ba307c',
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
         height : 35,
         width : '80%'
@@ -113,15 +113,15 @@ function SplashWindow() { 'use strict';
     win.update = function() {
         var user = AppUser.getCurrentUser();
         if(! user) {
-            this.vtop.hide();
+            win.vtop.hide();
         } else {
-            this.vtop.img.setImage(user.getPhotoUrl(0));
-            this.vtop.show();
+            win.vtop.img.setImage(user.getPhotoUrl(0));
+            win.vtop.show();
             
             if(user.isAdmin) {
-                this.vtop.adminButton.show();
+                win.vtop.adminButton.show();
             } else { 
-                this.vtop.adminButton.hide(); 
+                win.vtop.adminButton.hide(); 
             }
         }
     };

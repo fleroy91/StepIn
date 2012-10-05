@@ -5,7 +5,7 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 // Parameters :
 // - options : graphical options (like top, height, etc...)
@@ -18,6 +18,9 @@
 // - hint
 // - [keyboardType]
 // - [pickerOptions] : [array of values] --> if picker options, then the text field is not enabled
+var Image = require("/etc/Image");
+var Geoloc = require("/etc/Geoloc");
+var Tools = require("/etc/Tools");
 
 function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
     var update = (crud === 'update');
@@ -34,60 +37,56 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
     var header = null;
     var footer = Ti.UI.createView({height : 10});
 
-    Ti.include("etc/image.js");
-    
     // We define all the buttons !
-    var article = object;
-    var booked = (article.isBooked && article.isBooked());
-    var booking = Ti.UI.createButtonBar({
-        labels : [(booked ? "J'annule" : "1 - Je réserve")],
-        do_booking : (!booked), 
-        backgroundColor : (booked ? "red" : "green"),
-        object : article,
-        width : 200,
-        style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        height : buttonHeight,
-        win : win
-    });
-    booking.addEventListener('click', function(e) {
-        var article = e.source.object;
-        tabGroup.toggleBooking(article, e.source.do_booking, win.updateView);
-    }); 
     var cibutton = Ti.UI.createButtonBar({
-        labels : ["2 - Je Step-In (+250 pts)"],
+        labels : ["1 - Je Step-In (" + object.getPoints('stepin') + " pts)"],
         width:200,
         backgroundColor : "#336699",
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
         height : buttonHeight
     });
+    function createNewReward(user, shop, points, action) {
+        // We create a reward
+        var Reward = require("model/Reward"),
+            rew = new Reward();
+        rew.setUser(user);
+        rew.setShop(shop);
+        rew.setNbPoints(points);
+        rew.setActionKind(action);
+        tabGroup.addNewReward(rew, true);
+        shop.checkin = true;
+        win.updateView(object);
+    }
     cibutton.addEventListener('click', function(e) {
-        // we check the coordinates to verify that the user is at the same place as the article's shop
+        // we check the coordinates to verify that the user is at the same place as the object's shop
         var AppUser = require("model/AppUser"),
             user = AppUser.getCurrentUser();
         user.geolocalize(function(obj) {
             if(obj) {
-                var shoploc = article.shop.getLocation();
+                var shoploc = object.getLocation();
                 var userloc = obj.getLocation();
-                var dist = Geo.computeDistance(shoploc.lng, shoploc.lat, userloc.lng, userloc.lat);
-                if(dist < 0.010) {
-                    // We create a reward
-                    var Reward = require("model/Reward"),
-                        rew = new Reward();
-                    rew.setUser(obj);
-                    rew.setShop(article.shop);
-                    rew.setNbPoints(250);
-                    rew.setActionKind("Step-in");
-                    tabGroup.addNewReward(rew, true);
-                    article.checkin = true;
-                    win.updateView(article);
+                var dist = Math.round(Geoloc.computeDistance(shoploc.lat, shoploc.lng, userloc.lat, userloc.lng) / 5) * 5;
+                var bCreate = false;
+                if(dist <= 5) {
+                    createNewReward(obj, object, object.getPoints('stepin'), 'Step-In');
                 } else {
-                    alert("Nous n'arrivons à vous localiser dans le magasin !");
+                    var dlg = Ti.UI.createAlertDialog({
+                        title : "Trop loin !",
+                        message : "Vous êtes à " + dist + " mètres de la boutique !\nRapprochez-vous !",
+                        buttonNames : ['Step-in malgré tout !', 'Annuler']
+                    });
+                    dlg.addEventListener('click', function(e) {
+                        if(e.index === 0) {
+                            createNewReward(obj, object, object.getPoints('stepin'), 'Step-In');
+                        }
+                    });
+                    dlg.show();
                 }
             }
         });
     });
     var cobutton = Ti.UI.createButtonBar({
-        labels : ["3 - Je Step-Out (+250 pts)"],
+        labels : ["2 - Je Step-Out (" + object.getPoints('stepout') + " pts)"],
         width:200,
         backgroundColor : "pink",
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
@@ -99,7 +98,7 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
         var Review = require("/model/Review"),
             rev = new Review();
         rev.setUser(user);
-        rev.setShop(article.shop);
+        rev.setShop(object);
         
         var ShopFormWindow = require("/ui/common/FormWindow"),
             newWin = new ShopFormWindow({ title : "Step-out" }, 'create', rev, tabGroup, null);
@@ -175,29 +174,15 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
             footer.add(geobutton);
             footer.height = geobutton.height + 5;
         }
-        if(extra.addBooking) {
-            // We are managing an article
-            // 3 states : unbooked, booked but no CI, booked and CI
-            if(! article.isBooked()) {
-                booking.bottom = 2;
-                header.add(booking);
-                header.height += booking.height + 5;
-            } else {
-                // We need to add the cancel button (ie. the booking button in the footer)
-                footer.add(booking);
-                footer.height = booking.height + 5;
-                
-                // For the header : CI or OC
-                if(article.isCheckin()) {
-                    cobutton.bottom = 2;
-                    header.add(cobutton);
-                    header.height += cobutton.height + 5;
-                } else {
-                    cibutton.bottom = 2;
-                    header.add(cibutton);
-                    header.height += cibutton.height + 5;
-                }
-            }
+        // For the header : CI or CO
+        if(object.isCheckin()) {
+            cobutton.bottom = 2;
+            header.add(cobutton);
+            header.height += cobutton.height + 5;
+        } else {
+            cibutton.bottom = 2;
+            header.add(cibutton);
+            header.height += cibutton.height + 5;
         }
     }
 
@@ -347,27 +332,27 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
         });
 
     }
+    
+    // We try to add some gradient
+    tv.backgroundGradient = {
+        type: 'linear',
+        startPoint: { x: '0%', y: '0%' },
+        endPoint: { x: '0%', y: '100%' },
+        colors: [ { color: '#dbc3d0', offset: 0.0}, { color: '#dac2cf', offset: 1.0 } ]
+    };
 
     tv.top = 0;
     tv.addEventListener('click', win.hideKeyboard);
-    
     tv.runTimer = function() {
         if(read) {
-            var booked = tv.currentObject.isBooked && tv.currentObject.isBooked();
-            if(booked) {
-                var section = tv.getData();
-                if(section) {
-                    var row = section[0].getRows()[0];
-                    row = row.object.updateRow(row);
-                    tv.updateRow(0, row);
-                }    
-                if(tv.currentObject.stillBooked() !== booked) {
-                    win.updateView();
-                }
-            }
+            var section = tv.getData();
+            if(section) {
+                var row = section[0].getRows()[0];
+                row = row.object.updateRow(row);
+                tv.updateRow(0, row);
+            }    
         }
     };
-    
     tv.blurTfs = function() {
         var i;
         for ( i = 0; i < tfs.length; i++) {

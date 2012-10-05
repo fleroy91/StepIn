@@ -6,8 +6,9 @@
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
 // Display tabWindows for Objects + bookings
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
+var Spinner = require("etc/Spinner");
 
 function addBackButton(win) { 'use strict';
     var btRefresh = Ti.UI.createButton({title : 'Accueil', win:win});
@@ -17,6 +18,7 @@ function addBackButton(win) { 'use strict';
     });
 }
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
+var allTags;
 
 function ApplicationTabGroup() { 'use strict';
 
@@ -34,7 +36,7 @@ function ApplicationTabGroup() { 'use strict';
         style : Titanium.UI.iPhone.ActivityIndicatorStyle.PLAIN,
         font : {fontFamily:'Helvetica Neue', fontSize:15,fontWeight:'bold'},
         color : 'white',
-        message : Ti.Locale.getString('loading_indicator_text'),
+        message : Ti.Locale.getString('loading_indicator_text','Chargement...'),
         textAlign : 'center'
     });
     self.actInd = actInd;
@@ -54,12 +56,11 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
 
-    Ti.include("etc/spinner.js");
     Spinner.add(self);
 
 	var win1 = new TabWindow({booking : false, tabGroup : self});
 	var tabSearch = Ti.UI.createTab({
-		title : Ti.Locale.getString('mystock_tab_title','Objects'),
+		title : Ti.Locale.getString('mystock_tab_title','Autour de moi'),
 		icon : '/images/35-shopping.png',
 		window : win1
 	});
@@ -69,20 +70,6 @@ function ApplicationTabGroup() { 'use strict';
 	self.tvSearch = win1.tv;
     tabSearch.tv = win1.tv;
 	
-	var win2 = new TabWindow({booking : true, tabGroup : self});
-	var tabResa = Ti.UI.createTab({
-		title : Ti.Locale.getString('bookings_tab_title','Résas'),
-        icon : '/images/15-tags.png',
-		window : win2,
-		nbBadges : 0
-	});
-	win2.containingTab = tabResa;
-	win1.bookingTab = tabResa;
-    Spinner.add(win2);
-    self.tvBooked = win2.tv;
-    self.tabResa = tabResa;
-    tabResa.tv = win2.tv;
-    
 	var RewardWindow = require('ui/common/HistoryWindow');
 	var win3 = new RewardWindow({tabGroup : self});
 	var tabRewards = Ti.UI.createTab({
@@ -111,53 +98,126 @@ function ApplicationTabGroup() { 'use strict';
 	//  add tabs
 	//
 	self.addTab(tabSearch);
-	self.addTab(tabResa);
 	self.addTab(tabRewards);
 	self.addTab(tabAccount);
 	
 	//
 	// Management of arrays of objects
 	//
-    self.fillTable = function(allObjects) {
-        Ti.API.info("In refresh table");
-        var dataSearch = [], dataBooked = [], i;
-        for(i = 0; i < allObjects.length; i ++) {
-            var obj = allObjects[i];
-            var booked = obj.isBooked(); 
-            var row = obj.createTableRow();
-            if(booked) {
-                dataBooked.push(row);     
-            } else {
-                dataSearch.push(row);
+	function strcmp(a, b) {
+        if (a.toString() < b.toString()) { return -1; }
+        if (a.toString() > b.toString()) { return 1; }
+        return 0;
+    }
+    
+    function tagAlreadyIn(all, tag) {
+        var i, ret = null;
+        for(i = 0 ; !ret && i< all.length; i ++) {
+            var t = all[i];
+            if(t.tag === tag) {
+                ret = t;
             }
         }
-        self.tvBooked.setData(dataBooked);
-        self.tvSearch.setData(dataSearch);
+        return ret;
+    }
+    allTags = [];
+    self.fillTable = function(allObjects) {
+        if(allObjects) {
+            var newTags = allTags;
+            Ti.API.info("In refresh table");
+            var dataSearch = [], dataBooked = [], i;
+            for(i = 0; i < allObjects.length; i ++) {
+                var obj = allObjects[i];
+                var j, tags = obj.tags;
+                if(tags){
+                    for(j = 0; j < tags.length; j ++) {
+                        var tag = tags[j];
+                        var curTag = tagAlreadyIn(newTags, tag);
+                        if(! curTag) {
+                            var prevtag = tagAlreadyIn(allTags, tag);
+                            newTags.push({'tag':tag, 'value':(prevtag ? prevtag.value : true)});
+                        }   
+                    }
+                }
+                var row = obj.createTableRow();
+                dataSearch.push(row);
+            }
+            allTags = newTags;
+            self.tvSearch.setData(dataSearch);
+        }
         self.activeTab.tv.fireEvent('app:endReloading');
-        setTimeout(self.hideIndicator, 500);
+        setTimeout(self.hideIndicator, 250);
+        
+        // We sort the tags
+        allTags.sort(function(t1, t2) { return strcmp(t1.tag,t2.tag); });
     };
+    
+    function updateTitle() {
+        // We change the titleControl of the current window
+        var win = self.activeTab.window;
+        var points = win3.total_points;
+        var view = Ti.UI.createView({
+            height : 48,
+            width : 150
+        });
+        
+        var image = 'platinum.gif';
+        if(points < 1500) {
+            image = 'ivory.gif';
+        } else if(points < 5000) {
+            image = 'silver.gif';
+        } else if(points < 20000) {
+            image = 'gold.gif';
+        }
+        
+        var img = Ti.UI.createImageView({
+            width : 48,
+            height : 48,
+            left : 0,
+            borderRadius : 2,
+            image : '/images/' + image
+        });
+        view.add(img);
+        
+        var lbl = Ti.UI.createLabel({
+            text : points + " points",
+            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+            width :100,
+            left : 50,
+            font:{fontSize : 14},
+            color : '#ba307c',
+            shadowOffset : { x : 1, y : 1},
+            shadowColor : '#eadae3'
+        });
+        view.add(lbl);
+        
+        win.setTitleControl(view);
+        win.barImage = '/images/bg_gradient.png';
+    } 
 
     self.fillRewards = function(allRewards) {
-        Ti.API.info("In refresh table");
-        var data = [], i;     
-
-        for(i = 0; allRewards && i < allRewards.length; i ++) {
-            var rew = allRewards[i];
-            var row = rew.createTableRow();
-            data.push(row);
-            win3.total_points += rew.getNbPoints();
+        win3.total_points = 0;
+        if(allRewards) {
+            Ti.API.info("In refresh table");
+            var data = [], i;     
+    
+            for(i = 0; allRewards && i < allRewards.length; i ++) {
+                var rew = allRewards[i];
+                var row = rew.createTableRow();
+                data.push(row);
+                // TODO : updater les shops en checkin / checkout
+                win3.total_points += rew.getNbPoints();
+            }
+            self.tvRewards.setData(data);
         }
-        self.tvRewards.setData(data);
+        updateTitle();
         self.activeTab.tv.fireEvent('app:endReloading');
-        setTimeout(self.hideIndicator, 500);
+        setTimeout(self.hideIndicator, 250);
     };
     
     self.updateBadges = function() {
-        var section = self.tvBooked.getData();
-        if(section && section.length > 0) {
-            var dataBooked = section[0].getRows();
-            self.tabResa.setBadge((dataBooked.length > 0 ? dataBooked.length : null));
-        }
+        // TODO : see if we can remove this one
+        var ii = 0;
     };
     
     self.addNewReward = function(rew, comeFromWindow) {
@@ -207,38 +267,6 @@ function ApplicationTabGroup() { 'use strict';
         return index;
     };
     
-    self.toggleBooking = function(article, do_booking, func) {
-        var message = "";
-        // We have to check that the action is equal to the state of the article
-        // It not we do nothing
-        if(article.isBooked() !== do_booking) {
-            if(article.isBooked()) {
-                article.unbook();
-                article.save();
-                message = "La réservation de votre article a été annulée !";
-            } else  {
-                article.book();
-                article.save();
-                message = "Félicitations ! Votre article est réservé pour 15 minutes !";
-            }
-            var index, row = article.createTableRow();
-            if(article.isBooked()) {
-                index = self.getIndex(self.tvSearch, article);
-                self.tvSearch.deleteRow(index);
-                self.tvBooked.appendRow(row);
-            } else {
-                index = self.getIndex(self.tvBooked, article);
-                self.tvBooked.deleteRow(index);
-                self.tvSearch.appendRow(row);
-            }
-            self.updateBadges();
-            self.setDisplayMessage(message);
-            if(func) {
-                func(article);
-            }
-        }
-    };
-    
     function getNbRows(tv) {
         var nb = 0;
         var section = tv.getData();
@@ -248,40 +276,25 @@ function ApplicationTabGroup() { 'use strict';
         return nb;
     }
     
-    self.updateArticle = function(obj, func) {
+    self.updateobj = function(obj, func) {
         var index, row;
-        if(obj.isBooked()) {
-            index = self.getIndex(self.tvBooked, obj);
-        } else {
-            index = self.getIndex(self.tvSearch, obj);
-        }
+        index = self.getIndex(self.tvSearch, obj);
         if(index) {
             row = obj.createTableRow();
-            if(obj.isBooked()) {
-                self.tvBooked.updateRow(index, row);
-            } else {
-                self.tvSearch.updateRow(index, row);
-            }
+            self.tvSearch.updateRow(index, row);
         } else {
             // It's a new object
-            if(obj.isBooked()) {
-                obj.index = getNbRows(self.tvBooked);
-                row = obj.createTableRow();
-                self.tvBooked.appendRow(row);
-            } else {
-                obj.index = getNbRows(self.tvSearch);
-                row = obj.createTableRow();
-                self.tvSearch.appendRow(row);
-            }
+            obj.index = getNbRows(self.tvSearch);
+            row = obj.createTableRow();
+            self.tvSearch.appendRow(row);
         }
         if(func) {
             func(obj);
         }
     };
-    
     self.getAllObjects = function() {
         self.showIndicator();
-        mainObject.retrieveShops(self.fillTable);
+        mainObject.retrieveShops(allTags, self.fillTable, true);
     };
 
     self.getAllRewards = function() {
@@ -334,8 +347,22 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
     
+    self.chooseFilter = function() {
+        var ChooseFilterWindow = require("/ui/common/ChooseFilterWindow"),
+            win = new ChooseFilterWindow(allTags);
+            
+        win.addEventListener('close', function(e) {
+            if(e.source.tags) {
+                allTags = e.source.tags;
+                self.getAllObjects();
+            }
+        });
+        self.activeTab.open(win, {animated:true});
+    };
+    
     self.setDisplayNewPoints = function(title, details, points) {
         displayNewPoints = true;
+        messageLabel.text = null;
         var NewRewardWindow = require("ui/common/NewRewardWindow");
         rewardWindow = new NewRewardWindow({title : title, details : details, points : points});
         
@@ -347,18 +374,21 @@ function ApplicationTabGroup() { 'use strict';
         if(message) {
             messageLabel.text = message;
         }
-        messageWin.open();
+        // We don't display an empty message !
+        if(messageLabel.text) {
+            messageWin.open();
 
-        setTimeout(function() {
-            messageWin.close({opacity:0,duration:500});
-        },3000);
+            setTimeout(function() {
+                messageWin.close({opacity:0,duration:500});
+            },3000);
+        }
     };
 
     var timer = null;
     // Function we have to call every X secs
     self.updateAllRows = function() {
-        self.tvBooked.startLayout();
-        var section = self.tvBooked.getData();
+        self.tvSearch.startLayout();
+        var section = self.tvSearch.getData();
         if (section && section.length > 0) {
             var data = section[0].getRows();
             var i, booked = false;
@@ -366,21 +396,13 @@ function ApplicationTabGroup() { 'use strict';
                 var obj = data[i].object;
                 var row = data[i];
                 if (obj) {
-                    var stillBooked = obj.stillBooked();
-                    if (stillBooked) {
-                        row = obj.updateRow(row);
-                        self.tvBooked.updateRow(i, row);
-                    } else {
-                        // The article is not booked anymore
-                        self.tvBooked.deleteRow(i);
-                        row = obj.createTableRow();
-                        self.tvSearch.appendRow(row);
-                    }
+                    row = obj.updateRow(row);
+                    self.tvSearch.updateRow(i, row);
                 }
             }
             self.updateBadges();
         }
-        self.tvBooked.finishLayout();
+        self.tvSearch.finishLayout();
     };
    // Creates the timer
     timer = setInterval(self.updateAllRows, 1000);
@@ -392,12 +414,14 @@ function ApplicationTabGroup() { 'use strict';
     self.addEventListener('open', ApplicationTabGroup.startSonic); 
    
     self.addEventListener('focus', ApplicationTabGroup.startSonic); 
+
+    self.addEventListener('focus', updateTitle);
      
     self.addEventListener('close', function(e){
         clearInterval(timer);
         ApplicationTabGroup.stopSonic();
     });
-
+    
 	return self;
 }
     

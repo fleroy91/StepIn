@@ -5,13 +5,13 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true, TV : true */
+/*global Ti: true, Titanium : true, TV : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
 var allRewards = [];
 var refresh_all = true;
 
-Ti.include("/etc/tv.js");
+var TV = require("/etc/TV");
 
 function HistoryWindow(args) { 'use strict';
     var self = Ti.UI.createWindow();

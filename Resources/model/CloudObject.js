@@ -6,13 +6,12 @@
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var DataManager = require('services/DataManager'),
     _dm = new DataManager();
     
-Ti.include("/etc/Tools.js");
-Ti.include("/etc/image.js");
+var Image = require("/etc/Image");
 
 function CloudObject(json) {'use strict';
 
@@ -153,9 +152,11 @@ function CloudObject(json) {'use strict';
     
     this.getJSON = function(bForPost) {
         this.m_type = this.getCloudType();
-        var str  = JSON.stringify(this);
+        var str; 
         if(bForPost) {
-             str = '{"entry":' + str + '}';
+            str = JSON.stringify({entry:this});
+        } else {
+            str = JSON.stringify(this);
         }
         return str;
     };
@@ -197,9 +198,22 @@ function CloudObject(json) {'use strict';
     this.getFormFields = function() {
         return null;
     };
+    this.isCheckin = function() {
+        return false;
+    };
     // Return true or gives some alerts
     this.validate = function() {
         return true;
+    };
+    // Return a list of options for the Form Window
+    this.getExtraFormWindowOptions = function(crud) {
+        return null;
+    };
+    this.getPoints = function() {
+        return 0;
+    };
+    this.doActionsAfterCrud = function(args) {
+        return null;
     };
 
     return this;

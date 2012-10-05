@@ -5,7 +5,7 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 // To create a shop : call the window without arguments
 // To update a shop : call the window with {update :true, shop : shop}

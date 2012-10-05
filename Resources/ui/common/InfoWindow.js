@@ -5,9 +5,9 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
-Ti.include("/etc/image.js");
+var Image = require("/etc/Image");
 
 function InfoWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 

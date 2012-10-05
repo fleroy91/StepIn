@@ -1,7 +1,9 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true */
 
-var Spinner = {};
+function Spinner(){ 'use strict';
+    return this;
+}
 
 Spinner.add = function(win) { 'use strict';
     var spinner=Ti.UI.createActivityIndicator({
@@ -29,3 +31,5 @@ Spinner.hide = function(win) { 'use strict';
         w.setToolbar(null,{animated:true});
     }
 };
+
+module.exports = Spinner;

@@ -1,7 +1,10 @@
 /*global Ti: true, Titanium : true, Tools:true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-var TV = {};
+function TV() { 'use strict';
+    return this;
+}
+
 TV.create = function(options, onReload) { 'use strict';
 
     function formatDate()
@@ -84,6 +87,7 @@ TV.create = function(options, onReload) { 'use strict';
     {
         if(reloading) {    
             // when you're done, just reset
+            Ti.API.info("in endReloading !");
             tableView.setContentInsets({top:0},{animated:true});
             reloading = false;
             lastUpdatedLabel.text = "Actualisé le "+formatDate();
@@ -143,3 +147,4 @@ TV.create = function(options, onReload) { 'use strict';
     return tableView;
 };
 
+module.exports = TV;

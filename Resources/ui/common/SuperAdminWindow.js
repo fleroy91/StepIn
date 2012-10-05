@@ -5,9 +5,10 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
-Ti.include("/etc/image.js");
+var Image = require("/etc/Image");
+var Tools = require("/etc/Tools");
 
 function SuperAdminWindow(args) {'use strict';
     var AppUser = require("model/AppUser"),
@@ -67,18 +68,18 @@ function SuperAdminWindow(args) {'use strict';
         // We get the shops around us from GMaps and insert them in the DB
         var GmapsReq = "https://maps.googleapis.com/maps/api/place/search/json";
         var GmapsOptions = { radius :500,
-            // types : 'food', // TODO
-            // name: 'harbour',
-            sensor : false, // ???
+            types : 'store|shoe_store|shopping_mall|spa|pharmacy|pet_store|liquor_store|library|grocery_or_supermarket|hardware_store|jewelry_store|home_goods_store|furniture_store|florist|electronics_store|department_store|clothing_store|convenience_store|book_store|bicycle_store|bar|bakery|restaurant',
+            sensor : false, // do we ask for using the current GPS location : NO !
             key : 'AIzaSyAkB43SsAc4TGopk7WuvLEspVXrOqwhJbI',
             location : '-33.8670522,151.1957362' // location to be replaced
         };
         user.geolocalize(function() {
             // The use ris now geolocalized
-            GmapsOptions.location = user.location.lng + ',' + user.location.lat;
+            // GmapsOptions.location = user.location.lat + ',' + user.location.lng;
+            GmapsOptions.location = "48.874806,2.331239";
             var DataManager = require("/services/DataManager"),
                 dm = new DataManager();
-                
+            dm.silent = true;    
             dm.doCall('GET', GmapsReq, Tools.Hash2Qparams(GmapsOptions), null, function(json) {
                 // We need to create a shop for each entry
                 /*
@@ -132,56 +133,66 @@ function SuperAdminWindow(args) {'use strict';
                  * 
                  */           
                  var elem, Shop = require("/model/Shop"), newShop, i = 0;
+                 
                  var results = json.results;
-                 for(i = 0 ; i < 2 && i < results.length ; i++) {
+                 for(i = 0 ; i < results.length ; i++) {
                      elem = results[i];
                      if(elem.hasOwnProperty('geometry')) {
                          newShop = new Shop();
 
                          newShop.location = elem.geometry.location;
-                         var iconpath = Image.cacheImage(newShop.icon);
-                         var file = Ti.Filesystem.getFile(iconpath);
-                         if(file && file.exists()) {
-                            var blob = file.read();
-                            newShop.setPhoto(0, blob);   
+                         var iconpath = Image.cacheImage(elem.icon);
+                         if(iconpath) {
+                             var file = Ti.Filesystem.getFile(iconpath);
+                             if(file && file.exists()) {
+                                var blob = file.read();
+                                newShop.setPhoto(0, blob);   
+                             }
                          }
-                         newShop.setName(elem.name);
+                         newShop.name = Tools.StringToUTF8(elem.name);
                          if(elem.hasOwnProperty('vicinity')) {
                              var ads = elem.vicinity.split(',');
-                             newShop.setAddress(ads[0]);
+                             newShop.address = Tools.StringToUTF8(ads[0]);
                              var city = ads[ads.length-1]; 
-                             newShop.setCity(city);
+                             newShop.city = Tools.StringToUTF8(city);
                              // We need to get back the zipcode
-                             if(city.toLower() === 'paris') {
-                                 newShop.setZipcode('75000');
+                             if(city.toLowerCase() === 'paris') {
+                                 newShop.zipcode = '75000';
                              } 
                              // else TODO : get the zipcode from http://api.geonames.org/postalCodeSearchJSON?placename=paris&country=fr&maxRows=10&username=fleroy
                          }
-                         if(elem.hasOwnProperty('types')) {
-                            newShop.tags = elem.types.toString();
+                         if(elem.types){
+                             var j;
+                             newShop.tags = [];
+                             for(j = 0; j < elem.types.length; j ++) {
+                                 newShop.tags.push(Tools.StringToUTF8(elem.types[j]));
+                             }
                          }
                          newShop.rating = elem.rating;
+                         newShop.ident = elem.id; // uniqueness !! GREAT
+                         newShop.points = { stepin : Math.round(2 + Math.random(5)) * 50, stepout : Math.round(2 + Math.random(5)) * 50};
                          newShop.create();
                      }
                  }     
-            });
+            }, true);
         });
     }
     
     var data = [
         { title : "List users", hasChild :true, req : "/ui/admin/ListUsersWindow"},
         { title : "List shops", hasChild :true, req : "/ui/admin/ListShopsWindow"},
-        { title : "Clean file cache", hasChild :true, action : cleanFileCache},
-        { title : "Email log file", hasChild :true, action : emailLogFile},
+        { title : "Clean file cache", hasChild :false, action : cleanFileCache},
+        { title : "Email log file", hasChild :false, action : emailLogFile},
         { title : "Show log file", hasChild :true, req : "/ui/admin/ShowLogWindow"},
-        { title : "Populate shop DB", hasChild :true, action : populateShopDB}
+        { title : "Populate shop DB", hasChild :false, action : populateShopDB}
     ];
     
-    var rows = [row1], i;
+    var rows = [], i;
     for(i = 0; i < data.length; i ++) {
         var row = Ti.UI.createTableViewRow(data[i]);
         rows.push(row);
     }
+    rows.push(row1);
     
     var tv = Ti.UI.createTableView({
         style : Ti.UI.iPhone.TableViewStyle.GROUPED,

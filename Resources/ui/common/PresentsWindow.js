@@ -5,9 +5,9 @@
 //  Created by Fr√©d√©ric Leroy on 2012-09-25.
 //  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
-Ti.include("/etc/image.js");
+var Image = require("/etc/Image");
 
 function ShopPresentsWindow(mainWin) {'use strict';
     var AppUser = require("model/AppUser"),

@@ -5,10 +5,12 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
 var CloudObject = require("model/CloudObject");
+var Geoloc = require("etc/Geoloc");
+var Tools = require("etc/Tools");
     
 function AppUser(json) {'use strict';
     CloudObject.call(this);
@@ -91,7 +93,7 @@ function AppUser(json) {'use strict';
             art = new Article(), qparams = null;
         if(around) {
             var rayon = 1; // ie. km
-            qparams = 'location!within=((' + this.getLatitude() +' ,' + this.getLongitude() + '), ' + Geo.km2rad(rayon) + ')';
+            qparams = 'location!within=((' + this.getLatitude() +' ,' + this.getLongitude() + '), ' + Geoloc.km2Rad(rayon) + ')';
         } 
         // else {
             // TODO : filtrer sur les users
@@ -121,6 +123,38 @@ function AppUser(json) {'use strict';
                 }
             }
             func(data);
+        });
+    };
+    
+    this.retrieveShops = function(tags, func, around) {
+        var Shop = require('model/Shop'),
+            shop = new Shop(), qparams = '';
+        this.geolocalize(function(self) {
+            var rayon = 1; // ie. km
+            var userloc = self.location;
+            qparams = 'location!near=((' + userloc.lat +',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
+            if(tags && tags.length > 0) {
+                var i;
+                for(i = 0; i < tags.length; i++) {
+                    var tag = tags[i];
+                    if(tag.value) {
+                        qparams += "&tags!in[]=" + tag.tag;
+                    }
+                }
+            }
+            
+            self.getList(shop, qparams, function(result) {
+                var i, data = null;
+                if(result && result.length > 0) {
+                    data = [];
+                    for(i = 0 ; i < result.length; i++) {
+                        data.push(new Shop(result[i]));    
+                    }
+                }
+                if(func) {
+                    func(data);
+                }
+            });
         });
     };
     
@@ -174,7 +208,7 @@ function AppUser(json) {'use strict';
     function getGeocoded(e, func) {
         if (!e.success || e.error)
         {
-            Ti.API.info("Code translation: "+ Geo.translateErrorCode(e.code) + JSON.stringify(e.error));
+            Ti.API.info("Code translation: "+ Geoloc.translateErrorCode(e.code) + JSON.stringify(e.error));
         } else {
             self.setLocation(e.coords.longitude, e.coords.latitude);
             func(self);
@@ -182,7 +216,7 @@ function AppUser(json) {'use strict';
     }
     
     this.geolocalize = function(func) {
-        if(Geo.isLocationServicesEnabled()) {
+        if(Geoloc.isLocationServicesEnabled()) {
             Titanium.Geolocation.getCurrentPosition(function(e) { 
                 getGeocoded(e, func); 
             });
@@ -229,14 +263,13 @@ AppUser.prototype.setPhoneNumber = function(p) {'use strict';
 };
 
 AppUser.prototype.geoLocalize = function(func) {'use strict';
-    Ti.include("etc/Geolocation.js");
     // We need to geolocalize the AppUser first !
-    if(Geo.isLocationServicesEnabled())
+    if(Geoloc.isLocationServicesEnabled())
     {
         Titanium.Geolocation.getCurrentPosition(function(e){
             if (!e.success || e.error)
             {
-                Ti.API.info("Code translation: " + Geo.translateErrorCode(e.code));
+                Ti.API.info("Code translation: " + Geoloc.translateErrorCode(e.code));
                 return;
             }
     

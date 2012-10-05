@@ -5,8 +5,9 @@
 //  Created by Fr√©d√©ric Leroy on 2012-10-02.
 //  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
+var Image = require("/etc/Image");
 
 // Parameters : args.title, args.details, args.nb_points
 function NewRewardWindow(args) { 'use strict';
@@ -14,11 +15,14 @@ function NewRewardWindow(args) { 'use strict';
     t = t.scale(0);
 
     var self = Ti.UI.createWindow({
-        modal : true,
-        modalStyle : Titanium.UI.iPhone.MODAL_PRESENTATION_PAGESHEET,
-        modalTransitionStyle :  Titanium.UI.iPhone.MODAL_TRANSITION_STYLE_CROSS_DISSOLVE,
         navBarHidden : true,
-        backgroundColor : '#fff'
+        backgroundImage : '/iphone/Default.png',
+        width : '90%',
+        height : '80%',
+        zIndex : 10,
+        borderRadius : 5,
+        borderColor : '#ba307c',
+        borderWidth : 2
     });
     
     // create first transform to go beyond normal size
@@ -61,47 +65,20 @@ function NewRewardWindow(args) { 'use strict';
     var nbImages = nbCentaines + 1;
     var i, v;
     var view = Ti.UI.createView({
-        top : 60 
+        top : 100 
     });
     var widthOfCentaine = 80;
     var widthOfDizaine = 50;
     var nleft = 5;
     
-    function createPointView(points, width, left) {
-        var pv = Ti.UI.createView({
-            width : width,
-            height : width,
-            left : left
-        });
-        
-        var img = Ti.UI.createImageView({
-            image : '/images/stepin.png',
-            width : width,
-            height : width,
-            left : 0,
-            top : 0
-        });
-        pv.add(img);
-        
-        var lbl = Ti.UI.createLabel({
-            text : points,
-            top : width / 3,
-            left : width / 2,
-            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
-            font : {fontSize : (points > 100 ? 12 : 10), fontWeight : 'bold'},
-            color : 'black'
-        });
-        pv.add(lbl);
-        
-        return pv;
-    }
-    
     for(i = 0; i < nbCentaines; i++) {
-        v = createPointView(100, widthOfCentaine, nleft);
+        v = Image.createPointView(100, widthOfCentaine, widthOfCentaine);
+        v.left = nleft;
         nleft += v.width + 5;
         view.add(v);
     }
-    v = createPointView(nbDizaines, widthOfDizaine, nleft);
+    v = Image.createPointView(nbDizaines, widthOfDizaine, widthOfDizaine);
+    v.left = nleft;
     view.add(v);
     self.add(view);
     
@@ -121,7 +98,8 @@ function NewRewardWindow(args) { 'use strict';
     self.animation = animation;
     
     self.addEventListener('open', function(e) {
-        Ti.Media.vibrate();
+        // Animate and then vibrate :-)
+        self.animate(animation, Ti.Media.vibrate);
     });
     
     return self;

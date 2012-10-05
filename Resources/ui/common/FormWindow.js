@@ -5,7 +5,7 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 // Parameters :
 // - options : graphical options (like top, height, etc...)
@@ -38,6 +38,7 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
     win.backgroundColor = 'white';
     win.navBarHidden = false;
     win.currentObject = object;
+    win.barImage = '/images/bg_gradient.png';
     
     var enclosingView = Ti.UI.createView({
         height : Ti.UI.FILL,
@@ -45,8 +46,6 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
         backgroundColor : 'white'
     });
  
-    Ti.include("etc/image.js");
-
     // Tools functions
     win.removePicker = function() {
         if(_currentPicker) {
@@ -130,25 +129,20 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
     win.prevObject = null;
     
     win.closeAfter = function(newObj) {
-        if (newObj) {
-            if(newObj.getCloudType() === 'Article') {
-                tabGroup.updateArticle(newObj);
-                win.close();
-            } else {
-                var Reward = require("model/Reward"), 
-                    rew = new Reward();
-                rew.setUser(newObj.user);
-                rew.setShop(newObj.shop);
-                rew.setNbPoints(350);
-                rew.setActionKind("Step-Out");
-                tabGroup.addNewReward(rew, true);
-                win.close({animated:true});
+        win.close({animated:true});
+        setTimeout(function(e) {
+            if (newObj) {
+                newObj.doActionsAfterCrud(tabGroup);
             }
-        }
+        }, 250);
     };
     
     var bNextPrev = Ti.UI.createButtonBar({
-        labels : [ {image : '/images/up.png', enabled : (!!win.prevObject)}, {image : "/images/down.png", enabled : (!!win.nextObject)}],
+        labels : [ 
+            {image : '/images/up.png', enabled : (!!win.prevObject)},
+            {image : "/images/down.png", enabled : (!!win.nextObject)}
+        ],
+        backgroundColor : '#ba307c',
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
         height : 25
     });
@@ -161,7 +155,7 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
             
             bNextPrev.setLabels([ 
                 {image : '/images/up.png', enabled : (!!win.prevObject)}, 
-                {image : "/image s/down.png", enabled : (!!win.nextObject)}
+                {image : "/images/down.png", enabled : (!!win.nextObject)}
             ]);
             
             if(win.nextObject || win.prevObject) {
@@ -265,7 +259,7 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
         clearInterval(_timer);
         _timer = null;    
     });
-    
+
     function closeWindow(e) {
         //IOS fires with source tabGroup. Android with source tab
         tabG.removeEventListener('focus', closeWindow);

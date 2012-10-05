@@ -5,27 +5,36 @@
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
+
+var Spinner = require("/etc/Spinner");
+
 function DataManager() {'use strict';
 	// Initialisation of the calls to the API
 	this.account_id = '4ff6ebed1b338a6ace001893';
 	this.auth_token = 'seK41wiSZxB6Rr1iGLyg';
 	this.base_url = "http://api.storageroomapp.com/accounts/" + this.account_id;
+	this.silent = false;
 	
 	this.completeURL = function(sub_url) {
 	    return this.base_url + sub_url;
 	};
 	
-    this.doCall = function(method, url, qparams, body, func) {
+    this.doCall = function(method, url, qparams, body, func, not_storage_room_call) {
         Spinner.show();
+        var silent = this.silent;
         
         if(url[0] === '/') {
             url = this.completeURL(url);
         }
-        url += ".json?meta_prefix=m_&auth_token=" + this.auth_token;
-        if(qparams) {
-            url = url + "&" + qparams;
+        if(not_storage_room_call) {
+            url += "?" + qparams;
+        } else {
+            url += ".json?meta_prefix=m_&auth_token=" + this.auth_token;
+            if(qparams) {
+                url = url + "&" + qparams;
+            }
         }
         Ti.API.info(method + ' ' + url + '\nBody : ' + body);
         
@@ -51,7 +60,11 @@ function DataManager() {'use strict';
                      var response = JSON.parse(prevAnswer);
                      func(response);
                  } else {
-                    alert('Impossible to connect to network' + e);
+                     if(silent) {
+                         Ti.API.info("--> HTTP return code : " + client.status + '-' + client.statusText);
+                     } else { 
+                         alert('Impossible to connect to network' + client.status + '-' + client.statusText);
+                     }
                  }
              }
          },

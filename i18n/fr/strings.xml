@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="mystock_tab_title">Articles</string>
+    <string name="bookings_tab_title">Réservations</string>
+    <string name="history_tab_title">Points</string>
+    <string name="account_tab_title">Mon compte</string>
+    
+    <string name="filter_button">Filtrer</string>
+    
+    <string name="list_button">Vue par liste</string>
+    <string name="map_button">Vue sur carte</string>
+
+    <string name="profil_text">Mon profil</string>
+    <string name="boutique_text">Ma boutique</string>
+    <string name="payments_text">Mode de paiement</string>
+    <string name="share_fb_text">Partarger avec mes amis</string>
+    <string name="email_text">Email / Mot de passe</string>
+    <string name="email_hint">Entrez votre email</string>
+    <string name="login_button_text">Connexion</string>
+    <string name="password_text">Mot de passe</string>
+    <string name="password_hint">mot de passe</string>
+
+    <string name="timeout_login_title">Connexion impossible</string>
+    <string name="timeout_login_message">Impossible de vérifier votre login.\nRéessayer plus tard !</string>
+    <string name="incorrect_login_title">Login incorrect</string>
+    <string name="incorrect_login_message">Votre login / mot de passe est incorrect.\nRéessayer !</string>
+    
+    <string name="register_first_title">Enregistrez-vous</string>
+    <string name="register_first_message">Vous devez créer votre compte !</string>
+    
+    <string name="loading_indicator_text">Chargement...</string>
+    
+    
+</resources>

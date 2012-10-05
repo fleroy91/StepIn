@@ -5,7 +5,7 @@
 //  Created by Fr√©d√©ric Leroy on 2012-10-01.
 //  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
 // 
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var CloudObject = require("model/CloudObject");
 
@@ -40,6 +40,20 @@ function Review(json) {'use strict';
     };
     this.setUser = function(user) {
         this.setFieldObject('user', user);    
+    };
+    this.doActionsAfterCrud = function(tabGroup) {
+        var review = this;
+        this.retrieveObject('shop','Shop', function(shop) {
+            if(shop) {
+                var Reward = require("model/Reward"), 
+                    rew = new Reward();
+                rew.setUser(review.user);
+                rew.setShop(shop);
+                rew.setNbPoints(shop.getPoints('stepout'));
+                rew.setActionKind("Step-Out");
+                tabGroup.addNewReward(rew, true);
+            }
+        });
     };
 
     this.init(json);

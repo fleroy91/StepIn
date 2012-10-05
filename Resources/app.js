@@ -10,7 +10,7 @@
 * - Require and open our top-level UI component
 *
 */
-/*global Ti: true, Titanium : true, Geo : true, Image : true, Spinner : true, Tools : true */
+/*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
 //bootstrap and check dependencies
@@ -32,13 +32,13 @@ var isTablet = ((osname === 'ipad') || (osname === 'android' && (width > 899 || 
 Ti.UI.setBackgroundColor('white');
 // Ti.UI.setBackgroundImage('/iphone/Default.png');
 // Titanium.UI.iPhone.hideStatusBar();
-Ti.Geolocation.purpose = Ti.Locale.getString('geolocation_purpose_text', "Géolocalisation pour checkin dans les boutiques");
+Ti.Geolocation.purpose = Ti.Locale.getString('geolocation_purpose_text', "Géolocalisation au sein des boutiques");
 Titanium.Geolocation.accuracy = Titanium.Geolocation.ACCURACY_BEST;
 
 // Main settings
 Ti.App.Properties.setInt('MaxBookingTime', 15);
-Ti.include("etc/spinner.js");
-Ti.include("etc/Geolocation.js");
+var Spinner = require("etc/Spinner");
+var Geoloc = require("etc/Geoloc");
 
 var AppUser = require('model/AppUser');
 var ApplicationTabGroup = require('ui/common/ApplicationTabGroup');
@@ -89,12 +89,12 @@ function runApp() {'use strict';
 }
 
 function checkUser(e) {'use strict';
-    Geo.isLocationServicesEnabled(true);
+    Geoloc.isLocationServicesEnabled(true);
     // We must be logged
     var user = Ti.App.Properties.getString('AppUser');
     if (!user) {
         Titanium.Facebook.logout();
-        var Login = require('ui/common/Login');
+        var Login = require('ui/common/LoginWindow');
         var win = new Login();
         win.addEventListener('close', function(e) {
             main.update();

@@ -1,10 +1,12 @@
 /*global Ti: true, Titanium : true, Tools:true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-Ti.include("/etc/Tools.js");
+var Tools = require("/etc/Tools");
 
 // To be able to delete an image, just give {update : true}. The object must have a defaultFilename property
-var Image = {};
+function Image() { 'use strict';
+    return this;    
+}
 
 Image.loadOrTakeImage = function(img) {'use strict'; 
     var items = ['Prendre une photo', 'Choisir une photo'];
@@ -71,9 +73,6 @@ Image.loadOrTakeImage = function(img) {'use strict';
                 error : function(error) {
                 },
                 allowEditing : false,
-                // TODO : iPad
-                // popoverView:scrollView,
-                // arrowDirection:arrowDirection,
                 mediaTypes : [Ti.Media.MEDIA_TYPE_PHOTO]
             });
         } else if (e.index !== cancelIndex) {
@@ -189,7 +188,6 @@ Image.displayMapZoom = function(mapview) { 'use strict';
     var m = Titanium.Map.createView({
         mapType: Titanium.Map.STANDARD_TYPE,
         animate:true,
-        regionFit:true,
         userLocation:true,
         height : 350,
         width : 250,
@@ -329,21 +327,26 @@ Image.isGoodUrl = function(url) { 'use strict';
 };
 Image.imageDirectoryName = 'cachedImages';
 Image.convertUrlInFile = function(url) { 'use strict';
-    var filenames = url.split('/');
+    var filenames = url.split('/'), filename;
     // URL are always like "http://files.storageroomapp.com/accounts/4ff6ebed1b338a6ace001893/collection/4ff6f9851b338a3e72000c64/entries/4ff6fa0d1b338a5c1e0007f5/fields/k4ff6f9ec1b338a5c1e0007af/file.jpg?m_version=xxx"
-    var filename = filenames[filenames.length - 4] + "_" + filenames[filenames.length - 2] ;
-    var end = filenames[filenames.length - 1].split('?');
-    if(end.length > 1) {
-        filename += '_' + end[1];
+    if(url.indexOf("files.storageroomapp.com") > 0) {
+        filename = filenames[filenames.length - 4] + "_" + filenames[filenames.length - 2] ;
+        var end = filenames[filenames.length - 1].split('?');
+        if(end.length > 1) {
+            filename += '_' + end[1];
+        }
+        filename += '_' + end[0];
+    } else {
+        // We only keep the name of the file
+        filename =  filenames[filenames.length - 1];
     }
-    filename += '_' + end[0];
 
     var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, Image.imageDirectoryName, filename);
     return file;
 };
 
 // Return the image to set to the image view
-Image.cacheImage = function(url) { 'use strict';
+Image.cacheImage = function(url, func) { 'use strict';
     // Grab the filename
     // Ti.API.info("Cache Photo : " + url);
     var ret = null, imageDirectoryName = 'cachedImages';
@@ -385,11 +388,16 @@ Image.cacheImage = function(url) { 'use strict';
         // Ti.API.info("==> bad Url");
         ret = url;   
     }
+    if(func) {
+        func(ret) ;
+    }
     return ret;
 };
 
 Image.cachedImageView = function(url, imageViewObject) { 'use strict';
-    imageViewObject.image = Image.cacheImage(url);
+    Image.cacheImage(url, function(image) {
+        imageViewObject.image = image;    
+    });
 };
 
 Image.replaceCache = function(url, newVersion, blob) { 'use strict';
@@ -421,7 +429,9 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
     options.defaultFilename = defaultFilename;
     options.borderRadius = options.borderRadius || 2;
     options.borderColor = options.borderColor || 'black';
-    options.borderWidth = options.borderWidth || 1;
+    if(! options.hasOwnProperty('borderWidth')) {
+        options.borderWidth = 1;
+    }
 
     var view = Ti.UI.createView(options);
     view.backgroundColor = 'white';
@@ -463,3 +473,33 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
     return view;
 };
 
+// To create a view of points !
+Image.createPointView = function(points, height, width) { 'use strict';
+    var pv = Ti.UI.createView({
+        width : width,
+        height : height
+    });
+    
+    var img = Ti.UI.createImageView({
+        image : '/images/stepin.png',
+        width : width,
+        height : height,
+        left : 0,
+        top : 0
+    });
+    pv.add(img);
+    
+    var lbl = Ti.UI.createLabel({
+        text : points,
+        top : height / 3,
+        left : width / 2,
+        textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
+        font : {fontSize : (points >= 100 ? 11 : 9)},
+        color : '#fefefe'
+    });
+    pv.add(lbl);
+    
+    return pv;
+};
+    
+module.exports = Image;
