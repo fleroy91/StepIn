@@ -17,12 +17,30 @@ function ShopPresentsWindow(args) {'use strict';
 
 	var self = Ti.UI.createWindow({ 
 	    title : 'Les cadeaux !', 
-	    backgroundColor : 'white'
+	    backgroundColor : '#f0f0f0'
     });
     
+    var sheader = Ti.UI.createView({
+        height : 40,
+        top : 0,
+        backgroundColor : '#d92276'
+    });
+    var lbl = Ti.UI.createLabel({
+        text : "Echangez vos points contre ces cadeaux :",
+        top : 2,
+        left : 2,
+        color : 'white',
+        font : {fontSize : '15', fontWeight : 'normal'},
+        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
+        height : 40
+    });
+    sheader.add(lbl);
+    self.add(sheader);
+
     var tv = Ti.UI.createTableView({
         scrollable : true,
         allowsSelection : false,
+        top : 40,
         separatorStyle : Titanium.UI.iPhone.TableViewSeparatorStyle.NONE
     });
     

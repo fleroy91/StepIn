@@ -21,6 +21,11 @@ Tools.getImageBlob = function(imgView) { 'use strict';
     return blob;
 };
 
+Tools.isSimulator = function() { 'use strict';
+    var ret = (Titanium.Platform.model === 'google_sdk' || Titanium.Platform.model === 'Simulator');
+    return ret;
+};
+
 Tools.StringToUTF8 = function(str) { 'use strict';
     var buffer = Ti.createBuffer({ length: str.length * 2 + 2});
     Ti.Codec.encodeString({

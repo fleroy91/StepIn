@@ -92,12 +92,10 @@ function AppUser(json) {'use strict';
         var Article = require('model/Article'),
             art = new Article(), qparams = null;
         if(around) {
-            var rayon = 1; // ie. km
-            qparams = 'location!within=((' + this.getLatitude() +' ,' + this.getLongitude() + '), ' + Geoloc.km2Rad(rayon) + ')';
+            // FIXME : demo VC
+            var rayon = 1000; // ie. km
+            qparams = 'location!near=((' + this.getLatitude() +' ,' + this.getLongitude() + '), ' + Geoloc.km2Rad(rayon) + ')';
         } 
-        // else {
-            // TODO : filtrer sur les users
-        //} 
         
         this.getList(art, qparams, function(result) {
             var i, data = null;
@@ -144,7 +142,8 @@ function AppUser(json) {'use strict';
         var Shop = require('model/Shop'),
             shop = new Shop(), qparams = '';
         this.geolocalize(function(self) {
-            var rayon = 1; // ie. km
+            // FIXME : demo VC
+            var rayon = 1000; // ie. km
             var userloc = self.location;
             qparams = 'location!near=((' + userloc.lat +',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
             if(tags && tags.length > 0) {

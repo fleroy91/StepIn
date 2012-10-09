@@ -37,10 +37,11 @@ function NewRewardWindow(args) { 'use strict';
         // Titanium.API.info('here in complete');
         var t2 = Titanium.UI.create2DMatrix();
         t2 = t2.scale(1.0);
-        self.animate({
+        var a2 = Ti.UI.createAnimation({
             transform : t2,
             duration : 200
         });
+        self.animate(a2);
     });
 
     var title = Ti.UI.createLabel({
@@ -60,27 +61,9 @@ function NewRewardWindow(args) { 'use strict';
     self.add(details);
     
     var nbPoints = args.points;
-    var nbCentaines = Math.floor(nbPoints / 100);
-    var nbDizaines = nbPoints - 100*nbCentaines;
-    var nbImages = nbCentaines + 1;
-    var i, v;
-    var view = Ti.UI.createView({
-        top : 130 
-    });
-    var widthOfCentaine = 80;
-    var widthOfDizaine = 50;
-    var nleft = 5;
-    
-    for(i = 0; i < nbCentaines; i++) {
-        v = Image.createPointView(100, widthOfCentaine, widthOfCentaine);
-        v.left = nleft;
-        nleft += v.width + 5;
-        view.add(v);
-    }
-    v = Image.createPointView(nbDizaines, widthOfDizaine, widthOfDizaine);
-    v.left = nleft;
-    view.add(v);
-    self.add(view);
+    var v = Image.createPointView(nbPoints, 80, 80);
+    v.top = 210;
+    self.add(v);
     
     var button = Ti.UI.createButtonBar({
         labels : ['Ok'],
@@ -98,8 +81,10 @@ function NewRewardWindow(args) { 'use strict';
     self.animation = animation;
     
     self.addEventListener('open', function(e) {
-        // Animate and then vibrate :-)
-        self.animate(animation, Ti.Media.vibrate);
+        Titanium.Media.vibrate();
+        setTimeout(function(e) {
+            self.animate(animation);
+        }, 250);
     });
     
     return self;

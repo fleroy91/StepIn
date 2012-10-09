@@ -22,7 +22,7 @@ TV.create = function(options, onReload) { 'use strict';
     });
     
     var tableHeader = Ti.UI.createView({
-        backgroundColor:"#e2e7ed",
+        backgroundColor:"#f0f0f0",
         width:320,
         height:60
     });

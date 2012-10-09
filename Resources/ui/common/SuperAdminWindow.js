@@ -9,6 +9,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require("/etc/Image");
 var Tools = require("/etc/Tools");
+var ApplicationTabGroup = require("/ui/common/ApplicationTabGroup");
 
 function SuperAdminWindow(args) {'use strict';
     var AppUser = require("model/AppUser"),
@@ -183,6 +184,9 @@ function SuperAdminWindow(args) {'use strict';
     }
     
     var data = [
+        { title : "Sonic is running", hasCheck :Ti.App.Properties.getBool('isSonicRunning', false)},
+        { title : "Start Sonic", hasChild :false, action : function(e) { ApplicationTabGroup.startSonic(); } },
+        { title : "Stop Sonic", hasChild :false, action : function(e) { ApplicationTabGroup.stopSonic(); } },
         { title : "Simulate Step-In Shop 6227", hasChild :false, action : function(e) { simulateStepIn(6227); } },
         { title : "Simulate Step-In Shop 6228", hasChild :false, action : function(e) { simulateStepIn(6228); } },
         { title : "Simulate Step-In Shop 6229", hasChild :false, action : function(e) { simulateStepIn(6229); } },

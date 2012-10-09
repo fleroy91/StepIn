@@ -134,26 +134,39 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
             "PDF417" : false
         }
     }; 
-    
-    scanbutton.addEventListener('click', function(e) {
-        TiBar.scan({
-            configure: config,
-            success:function(data){
-                Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
-                if(data && data.barcode){
-                    // We need to find the article in the DB
-                    object.newObjectScanned(data.barcode, tabGroup);
-                }
-            },
-            cancel:function(){
-                Ti.API.info('TiBar cancel callback!');
-            },
-            error:function(){
-                Ti.API.info('TiBar error callback!');
+    if(Tools.isSimulator()) {
+        scanbutton.addEventListener('click', function(e) {
+            // We need to find the article in the DB
+            if(object.shop) {
+                object.shop.newObjectScanned(object.code, tabGroup, function() {
+                    win.close({animated:true});
+                });
             }
         });
-    });
-    
+    } else {
+        scanbutton.addEventListener('click', function(e) {
+            TiBar.scan({
+                configure: config,
+                success:function(data){
+                    if(data && data.barcode){
+                        Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
+                        // We need to find the article in the DB
+                        if(object.shop) {
+                            object.shop.newObjectScanned(data.barcode, tabGroup, function() {
+                                win.close({animated:true});
+                            });
+                        }
+                    }
+                },
+                cancel:function(){
+                    Ti.API.info('TiBar cancel callback!');
+                },
+                error:function(){
+                    Ti.API.info('TiBar error callback!');
+                }
+            });
+        });
+    }
     
     var cobutton = Ti.UI.createButtonBar({
         labels : ["2 - Je Step-Out (" + object.getPoints('stepout') + " pts)"],
@@ -209,11 +222,6 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
         var viewWidth = Ti.Platform.displayCaps.platformWidth;
         var spaceSize = (viewWidth - nbPhotos * photoWidth) / (nbPhotos + 1); 
         var nleft = spaceSize;
-        
-        // We align on the left !
-        if(nbPhotos === 1) {
-            nleft = 2;
-        }
         
         var imgsView = Titanium.UI.createView({
             left : 0,
@@ -417,9 +425,14 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
         if(read) {
             var section = tv.getData();
             if(section) {
-                var row = section[0].getRows()[0];
-                row = row.object.updateRow(row);
-                tv.updateRow(0, row);
+                var rows = section[0].getRows();
+                if(rows) {
+                    var row = rows[0];
+                    if(row.object) {
+                        row = row.object.updateRow(row);
+                        tv.updateRow(0, row);
+                    }
+                }
             }    
         }
     };

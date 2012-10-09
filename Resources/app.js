@@ -41,7 +41,24 @@ var Spinner = require("etc/Spinner");
 var Geoloc = require("etc/Geoloc");
 
 var AppUser = require('model/AppUser');
-var ApplicationTabGroup = require('ui/common/ApplicationTabGroup');
+var Tools = require('/etc/Tools');
+
+var debug;
+if (Tools.isSimulator()) {
+    // do something useful here
+    // alert("We're in simulator !");
+    debug = 0;
+} else {
+    // alert("We're NOT in simulator !'");
+    debug = 0;
+}
+
+var ApplicationTabGroup ;
+if(debug) {
+    ApplicationTabGroup = require('ui/common/NewApplicationTabGroup');
+} else {
+    ApplicationTabGroup = require('ui/common/ApplicationTabGroup');
+}
 
 // Management of the Sonic Service !
 Ti.App.Properties.setBool('isSonicRunning', false);
@@ -80,16 +97,15 @@ Ti.API.myLog = function(args) {'use strict';
 
 function runApp() {'use strict';
     Ti.API.info("RunApp");
-    alert("On est RunApp");
+    // alert("On est RunApp");
 
     var win = new ApplicationTabGroup(nav);
-    alert("On est avant l'open");
-    //nav.open(win);
+    // alert("On est avant l'open");
     Ti.API.myLog("Open main tabGroup with adminMode=" + Ti.App.adminMode);
     win.open({
         animated : true
     });
-    alert("On est après l'open");
+    // alert("On est après l'open");
 }
 
 function checkUser(e) {'use strict';
@@ -105,16 +121,19 @@ function checkUser(e) {'use strict';
         });
         nav.open(win);
     } else {
-        // Maybe a little refresh is useful
-        // Add here all the fields you want to check
-        alert("On est en 1");
-        if(! user.getTotalPoints()) {
-            alert("On reload en 2");
-            user.reload(function(newUser) {
-                alert("On est en 3");
-                newUser.setCurrentUser();
-            });
-        }
+        user.geolocalize(function(user1) {
+            user1.setCurrentUser();
+            // Maybe a little refresh is useful
+            // Add here all the fields you want to check
+            if(! user1.getTotalPoints()) {
+                user1.reload(function(newUser) {
+                    newUser.setCurrentUser();
+                    runApp();
+                });
+            } else {
+                runApp();
+            }
+        });
     }
 }
 
@@ -162,12 +181,15 @@ main.adminButton.addEventListener('click', function(e) {'use strict';
     });
     dlg.show();
 });
-
 main.button.addEventListener('click', function(e) {'use strict';
     Ti.App.adminMode = false;
     runApp();
 });
 
-main.addEventListener('open', checkUser);
-main.open();
+// FIXME
+// To avoid the splash screen which is UGLY !!!!
+ 
+// main.addEventListener('open', checkUser);
+// main.open();
 
+checkUser();

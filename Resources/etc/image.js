@@ -43,10 +43,12 @@ Image.loadOrTakeImage = function(img) {'use strict';
                         title : 'Camera'
                     });
                     if (error.code === Titanium.Media.NO_CAMERA) {
-                        a.setMessage('Impossible de prendre une photo avec cet appareil');
-                        // TODO : we are in the debugger !!!!
-                        e.source.img.setImage('images/shop_debug_photo.png');
-                        e.source.img.changed = true;
+                        if(Tools.isSimulator()) {
+                            e.source.img.setImage('images/shop_debug_photo.png');
+                            e.source.img.changed = true;
+                        } else {
+                            a.setMessage('Impossible de prendre une photo avec cet appareil');
+                        }
                     } else {
                         a.setMessage('Erreur inattendue: ' + error.code);
                     }
@@ -487,6 +489,7 @@ Image.createPointView = function(points, height, width) { 'use strict';
         height : height
     });
     
+    /*
     var img = Ti.UI.createImageView({
         image : '/images/stepin.png',
         width : width,
@@ -495,16 +498,27 @@ Image.createPointView = function(points, height, width) { 'use strict';
         top : 0
     });
     pv.add(img);
+    */
     
     var lbl = Ti.UI.createLabel({
-        text : points,
-        top : height / 3,
-        left : width / 2,
-        textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
-        font : {fontSize : (points >= 100 ? 11 : 9)},
-        color : '#fefefe'
+        text : (points > 0 ? '+' : '') + points,
+        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+        font : {fontSize : 18, fontWeight : 'bold'},
+        color : '#d92276',
+        height : height,
+        right : 20
     });
     pv.add(lbl);
+    var lblSmall = Ti.UI.createLabel({
+        text : " pts",
+        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+        verticalAlign : Ti.UI.TEXT_VERTICAL_ALIGNMENT_BOTTOM,
+        font : {fontSize : 12, fontWeight : 'bold'},
+        color : '#d92276',
+        height : height,
+        right : 1
+    });
+    pv.add(lblSmall);
     
     return pv;
 };

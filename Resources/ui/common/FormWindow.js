@@ -157,10 +157,6 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
                 {image : '/images/up.png', enabled : (!!win.prevObject)}, 
                 {image : "/images/down.png", enabled : (!!win.nextObject)}
             ]);
-            
-            if(win.nextObject || win.prevObject) {
-                win.setRightNavButton(bNextPrev);
-            }
         }
     };
     
@@ -234,7 +230,7 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
                         clearInterval(_timer);
                         _timer = null;
                     }
-                    _timer = setInterval(contentView.runTimer, 1000);
+                    // _timer = setInterval(contentView.runTimer, 1000);
             });
         }
     };
@@ -251,14 +247,17 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
         _timer = null;
     }
     
+    /*
     win.addEventListener('open', function(e) {
         _timer = setInterval(contentView.runTimer, 1000);
     });
-    
+    */
+    /*
     win.addEventListener('close', function(e) {
         clearInterval(_timer);
         _timer = null;    
     });
+    */
 
     function closeWindow(e) {
         //IOS fires with source tabGroup. Android with source tab

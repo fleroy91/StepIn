@@ -178,7 +178,17 @@ function Shop(json) {'use strict';
     // --------------------------------------------------------
     // For display in table view !
     // --------------------------------------------------------
-    this.computeDistance = function() {
+    this.setDistance = function(label, dist) {
+        if(dist && label) {
+            if(dist > 1000) {
+                label.setText("A " + Math.round(dist / 10) / 100 + " km.");
+            } else {
+                label.setText("A " +dist + " m.");
+            }
+        }
+    };
+    
+    this.computeDistance = function(func) {
         var user = AppUser.getCurrentUser();
         if(this.location) {
             var shoploc = this.location;
@@ -187,29 +197,55 @@ function Shop(json) {'use strict';
             if(! user.location) {
                 user.geolocalize(function(newuser) {
                     newuser.setCurrentUser();
+                    var userloc = newuser.location;
+                    this.distance = Math.round(Geoloc.computeDistance(shoploc.lat, shoploc.lng, userloc.lat, userloc.lng) / 5) * 5;
+                    if(func) {
+                        func(this.distance);
+                    }
                 });
             } else {
                 this.distance = Math.round(Geoloc.computeDistance(shoploc.lat, shoploc.lng, userloc.lat, userloc.lng) / 5) * 5;
+                if(func) {
+                    func(this.distance);
+                }
             }   
         }
     };
-    this.createAnnotation = function() {
+    this.createAnnotation = function(tabGroup) {
         var shoploc = this.location;
+        var self = this;
         var shopImg = Image.createImageView('read', this.getPhotoUrl(0), null, { height : 30, width : 30});
         var annotation = Titanium.Map.createAnnotation({
             latitude:shoploc.lat,
             longitude:shoploc.lng,
             leftView : shopImg,
+            rightButton : (tabGroup ? Titanium.UI.iPhone.SystemButton.DISCLOSURE : null),
             title : this.getName(),
             subtitle : this.getDetails(),
             animate:true
         });
+        
+        annotation.addEventListener('click', function(e) {
+            if(e.clicksource === "rightButton") {
+                var obj = self,
+                    FormWindow = require('ui/common/FormWindow'),
+                    crud, title;
+                    
+                if(Ti.App.adminMode) {
+                    crud = 'update';
+                    title = 'Edition';
+                } else {
+                    crud = 'read';
+                    title = obj.getName();
+                }
+                var win = new FormWindow(null, crud, obj, tabGroup, obj.getExtraFormWindowOptions(crud));
+                tabGroup.activeTab.open(win,{animated:true});
+            }
+        });
         return annotation;
     };
-    this.updateReadViewWithLocation = function() {
-        var rowMap = this.rowMap,
-            rowSelf = this.rowSelf,
-            mapview = rowMap.mapview;
+    this.updateReadViewWithLocation = function(view) {
+        var mapview = view.mapview;
             
         if(this.location) {
             var shoploc = this.location;
@@ -228,153 +264,177 @@ function Shop(json) {'use strict';
             mapview.setLocation(region);
             var annotation = this.createAnnotation();
             mapview.addAnnotation(annotation);
-            mapview.selectAnnotation(annotation);
+            // mapview.selectAnnotation(annotation);
             
             if(this.distance === null) {
                 this.computeDistance();
             }
-            if(this.distance !== null) {
-                this.labelDistance.setText((this.distance || "0") + " mètres");
+            if(this.distance !== null && view.labelDistance) {
+                view.labelDistance.setText((this.distance || "0") + " mètres");
             }
         }
     };
     
     this.createReadView = function(header, footer, tabGroup) {
         var internBorder = 2;
-        var internHeight = 90;
-        var internShopHeight = 130;
-        var labelHeight = Math.round((internHeight - (4 * internBorder)) / 4);
-
+        var internHeight = 74;
+        var labelHeight = 13;
+        
+        // Header : 135 + 63
+        // Row : 74
+        
+        // We create a new header view
+        var newHeader = Ti.UI.createView({
+            height : 135+63
+        });
+        Image.cacheImage(this.getPhotoUrl(0), function(image) {
+            newHeader.setBackgroundImage(image);
+        });
+        /*
+        // First view
+        var imgView = Image.createImageView('read', this.getPhotoUrl(0), null, {
+            width : '100%',
+            height : Titanium.UI.SIZE,
+            top : 0,
+            zIndex : -1
+        });
+        newHeader.add(imgView);
+        */
+        
         // we create a view for shop details in the header
         var shopdetails = Ti.UI.createView({
-            top : internBorder,
-            left : 80,
-            height : 90,
-            backgroundColor : 'white',
-            borderRadius : 5,
-            borderWidth : 1,
-            borderColor : '#ba307c'
+            top : 97,
+            height : 36,
+            backgroundColor : 'black',
+            opacity : 0.8,
+            zIndex : 0
         });
-        header.height = Math.max(header.height, 90 + 2 * internBorder);
         
         // Line 1
         var labelName = Ti.UI.createLabel({
-            font : {fontSize: 14, fontWeight : 'bold'},
-            color:'#576996',
-            text : this.getName(),
-            left : internBorder,
+            font : {fontSize: 12, fontWeight : 'bold'},
+            left : 70,
             top : internBorder,
+            color:'white',
+            opacity : 1,
+            zIndex : 1,
+            text : this.getName(),
             height : labelHeight
         });
         shopdetails.add(labelName);
     
         // line 2
         var labelDetails = Ti.UI.createLabel({
-            color : '#222',
-            font : { fontSize : 12, fontWeight : 'normal'},
-            text : this.getDetails(),
-            height : labelHeight,
-            left : labelName.left,
-            top : labelName.top + labelName.height + internBorder
+            color : 'white',
+            left : 70,
+            opacity : 1,
+            top : 20,
+            zIndex : 1,
+            font : { fontSize : 10, fontWeight : 'normal'},
+            text : this.getDetails()
         }); 
         shopdetails.add(labelDetails);
-        
-        // line 3 (the review)
-        var StarView = require("/ui/common/StarView");
-        var viewRate = new StarView({
-            height : labelHeight, 
-            value : this.rating, 
-            left : labelName.left,
-            top : labelDetails.top + labelDetails.height + internBorder
+        var btShowMap = Ti.UI.createButton({
+            image : '/images/actionpink.png',
+            width : 22, 
+            height: 22,
+            zIndex : 1,
+            right : 2
         });
-        shopdetails.add(viewRate);
-
-        // last line
-        var labelTags = Ti.UI.createLabel({
-            font : {fontSize: 11},
-            color : 'gray', 
-            text : this.tags.toString(),
-            width : (300 - labelName.left - 80),
-            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
-            left : labelName.left,
-            bottom : internBorder,
-            height : labelHeight
-        });
-        shopdetails.add(labelTags);
-
-        var labelDistance = Ti.UI.createLabel({
-            font : {fontSize: 10, fontStyle : 'italic'},
-            color : 'lightgray', 
-            text : "",
-            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-            right : internBorder * 2,
-            bottom : internBorder,
-            height : labelHeight
-        });
-        shopdetails.add(labelDistance);
-        this.labelDistance = labelDistance;
+        shopdetails.add(btShowMap);
+        newHeader.add(shopdetails);
         
-        header.add(shopdetails);
-        
-        var tv = Ti.UI.createTableView({
-            height : 'auto',
-            scrollable : true,
-            allowsSelection : false,
-            footerView : footer,
-            headerView : header,
-            style : Titanium.UI.iPhone.TableViewStyle.GROUPED
-        });
-        
-        // The map of the shop
-        var rowMap = Ti.UI.createTableViewRow({
-            height : internShopHeight,
-            object : this
-        });
-        
+        // Mini map
         var user = AppUser.getCurrentUser();
         var loc = (this.location || user.location || {lat : 48.833, lng : 2.333});
         
         var mapview = Titanium.Map.createView({
             mapType: Titanium.Map.STANDARD_TYPE,
+            borderRadius : 1,
+            borderWidth : 2,
+            borderColor : 'white',
             animate:true,
             region : { latitude: loc.lat,
                 longitude: loc.lng,
                 latitudeDelta:0.005, 
                 longitudeDelta:0.005},
             regionFit:true,
-            userLocation:true,
+            userLocation:false,
             zIndex : 1,
+            height : 60,
+            width : 60,
             bottom : 2,
-            top : 0 
+            top : 76,
+            left : 9 
         });
-        rowMap.add(mapview);
-        rowMap.mapview = mapview;
-        
-        var zoom = Titanium.UI.createButton({
-            image:'/images/magnifying_glass.png',
-            backgroundColor : 'transparent',
-            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-            heigth : 16,
-            bottom : 2,
-            right : 0,
-            zIndex : 2    
+        newHeader.add(mapview);
+        btShowMap.addEventListener('click', function(e) {
+            Image.displayMapZoom(mapview);
         });
-        rowMap.add(zoom);
-        zoom.addEventListener('click', function(e) {
-            Image.displayMapZoom(mapview); 
-        });
-        
-        var data = [rowMap];
-        // Actions to do
-        var actions = [];
-        /*
-        if(this.points) {
-            actions =[
-                {what : 'Step-in', photo : '/images/stepin.png', points : this.getPoints('stepin')},
-                {what : 'Step-out', photo : '/images/stepin.png', points : this.getPoints('stepout')}
-            ];
+        newHeader.mapview = mapview;
+
+        var points_to_win = 0;
+        if(! this.checkin) {
+            points_to_win += this.getPoints('stepin');
         }
-        */
+        
+        // Add the points
+        var pointsView = Ti.UI.createView({
+            bottom : 0,
+            height : 63,
+            backgroundColor : '#d92276'
+        });
+        var lblPoints = Ti.UI.createLabel({
+            top : 5,
+            color : 'white',
+            text : points_to_win + ' points',
+            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+            font : {fontSize : 24, fontWeight : 'bold'}
+        });
+        var lblDetails = Ti.UI.createLabel({
+            bottom : 5,
+            color : 'white',
+            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+            font : {fontSize : 13, fontWeight : 'normal'},
+            text : 'à gagner en vous rendant dans ce magasin'
+        });
+        pointsView.add(lblPoints);
+        pointsView.add(lblDetails);
+        this.lblPoints = lblPoints;
+        
+        newHeader.add(pointsView);
+        
+        var tv = Ti.UI.createTableView({
+            height : 'auto',
+            scrollable : true,
+            allowsSelection : this.checkin,
+            footerView : footer,
+            headerView : newHeader,
+            style : Titanium.UI.iPhone.TableViewStyle.PLAIN,
+            backgroundColor : '#f0f0f0'
+        });
+        
+        var data = [];
+        var section = Ti.UI.createTableViewSection();
+        
+        var sheader = Ti.UI.createView({
+            height : 20,
+            bakcgroundColor : '#f0f0f0'
+        });
+        var lbl = Ti.UI.createLabel({
+            text : "Gagnez plus de points en scannant ces produits :",
+            top : internBorder,
+            left : internBorder,
+            color : '#4d4d4d',
+            font : {fontSize : '12', fontWeight : 'bold'},
+            textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
+            height : 15
+        });
+        sheader.add(lbl);
+        section.headerView = sheader;
+        data[0] = section;
+        tv.setData(data);
+        var checkin = this.checkin;
         
         function createRow(options) {
             var row = Ti.UI.createTableViewRow(options);
@@ -385,39 +445,33 @@ function Shop(json) {'use strict';
             
             var lbl = Ti.UI.createLabel({
                 left : 44,
-                top : 2,
-                font : {fontSize : 14},
+                top : 4,
+                font : {fontSize : 12},
+                color : '#4d4d4d',
                 text : options.what,
-                width : 220
+                width : 190 - 40 
             });
             row.add(lbl);
             
-            var pt = Image.createPointView(options.points, 40, 40);
-            pt.right = 2;
+            var pt = Image.createPointView(options.points, 40, 80);
+            pt.right = 5;
             row.add(pt);
+            row.ptView = pt;
             return row;
         }
-        
-        var i;
-        for(i = 0; i < actions.length; i++) {
-            var row = createRow(actions[i]);
-            data.push(row);
-        }
-        
-        tv.setData(data);
-        
-        /*
-         * FIXME
+        var self = this;
         tv.addEventListener('click', function(e) {
-            if(e.rowData && e.rowData.object) {
+            if(e.rowData && e.rowData.object && e.rowData.hasDetail) {
                 // We open a detailed window of the object to scan
-                e.rowData.object.checkin = this.checkin;
+                var obj = e.rowData.object; 
+                obj.checkin = checkin;
+                obj.shop = self;
                 var FormWindow = require("/ui/common/FormWindow"),
-                    swin = new FormWindow(null, 'read', e.rowData.object, tabGroup);
+                    swin = new FormWindow(null, 'read', obj, tabGroup);
                 tabGroup.activeTab.open(swin, {animated:true});
             } 
         });
-        */
+
         // We add the scan articles
         var Scan = require("/model/Scan"),
             scan = new Scan();
@@ -428,45 +482,49 @@ function Shop(json) {'use strict';
                 var row = createRow({
                     what : s.title,
                     points : s.points,
-                    hasChild : true,
+                    hasDetail: checkin,
                     object : s,
                     photo : s.getPhotoUrl(0)
                 });
                 row.scan = s;
-                tv.appendRow(row, {animated : true});
-            } 
+                points_to_win += s.points;
+                lblPoints.setText(points_to_win + ' points');
+                section.add(row);
+            }
+            tv.setData([section]);
         });
         
         this.tv = tv;
-        this.rowMap = rowMap;
         
         // We need to update the view
-        this.updateReadViewWithLocation();
+        this.updateReadViewWithLocation(newHeader);
         
         return tv;
     };
     
-    this.newObjectScanned = function(code, tabGroup) {
+    this.newObjectScanned = function(code, tabGroup, func) {
         // We search for the object
         var section = this.tv.getData(), scan = null;
         if(section && section.length > 0) {
             var rows = section[0].getRows();
             var i;
             for (i = 0 ; !scan && i < rows.length; i++) {
-                if(rows.scan && rows[i].scan.code === code) {
+                if(rows[i].scan && rows[i].scan.code.toString() === code.toString()) {
                     var row = rows[i];
                     scan = row.scan;
                     row.backgroungColor = '#eadae3';
+                    row.hasDetail = false;
+                    row.hasCheck = true;
                 }
             }
         }
         if(scan) {
             // We have found it
             var Reward = require("model/Reward"),
-                rew = new Reward({ points : scan.points, action_kind : 'Scan', extra : {code : scan.code}});
+                rew = new Reward({ nb_points : scan.points, action_kind : 'Scan', extra : {code : scan.code}});
             rew.setShop(this);
             rew.setUser(AppUser.getCurrentUser());
-            tabGroup.addNewReward(rew, true);
+            tabGroup.addNewReward(rew, true, func);
         } else {
             alert("Désolé mais l'article scanné ne correspond pas à un article de cette boutique !");
         }
@@ -474,12 +532,13 @@ function Shop(json) {'use strict';
     
     this.createTableRow = function() {
         var internBorder = 2;
-        var internHeight = 70;
+        var internHeight = 75;
         var labelHeight = Math.round((internHeight - 2 * internBorder) / 3);
          
         var row = Ti.UI.createTableViewRow({
-            hasChild : true,
-            height : internHeight + 2 * internBorder
+            hasDetail : true,
+            height : internHeight + 2 * internBorder,
+            backgroundColor : '#f0f0f0'
         });
         
         var nbPhotos = this.getNbPhotos();
@@ -488,18 +547,16 @@ function Shop(json) {'use strict';
         var imgs = [];
         var i;
         for(i = 0; i < nbPhotos; i ++) {
-            var img = Image.createImageView('read', this.getNthPhotoUrl(i), null, {noEvent : true});
+            var img = Image.createImageView('read', this.getNthPhotoUrl(i), null, {borderWidth : 0, borderRadius : 0, noEvent : true});
             imgs.push(img);
         }
         
         var sc = Ti.UI.createScrollableView({
             views : imgs,
-            top : internBorder,
-            left : internBorder,
-            height : internHeight,
-            width : internHeight,
-            borderWith : 1,
-            borderColor : 'black',
+            left : 5,
+            height : 60,
+            width : 60,
+            borderWith : 0,
             borderRadius : 2,
             pagingControlHeight : 7,
             pagingControlColor : 'gray',
@@ -507,68 +564,49 @@ function Shop(json) {'use strict';
         });
         row.add(sc);
         
-        var vPoints = Image.createPointView(this.getPoints(), 50,50);
+        var vPoints = Image.createPointView(this.getPoints(), 50,70);
         vPoints.right = internBorder * 2;
         row.add(vPoints);
+        row.ptView = vPoints;
 
         var labelName = Ti.UI.createLabel({
             font : {fontSize: 14, fontWeight : 'bold'},
-            color:'#576996',
+            color:'#323232',
             text : this.getName(),
-            left : sc.width +  2 * internBorder,
-            top : internBorder,
-            width : 300- (sc.width + 2 * internBorder + vPoints.width + 2 * internBorder), 
+            left : 70,
+            top : 23,
+            width : 300 - (sc.width + 2 * internBorder + vPoints.width + 2 * internBorder), 
             height : labelHeight
         });
         row.add(labelName);
-    
-        var labelDetails = Ti.UI.createLabel({
-            color : '#222',
-            font : { fontSize : 12, fontWeight : 'normal'},
-            text : this.getDetails(),
-            height : labelHeight,
-            width : labelName.width,
-            left : labelName.left,
-            top : labelName.top + labelName.height + internBorder
-        }); 
-        row.add(labelDetails);
-
-        var labelTags = Ti.UI.createLabel({
-            font : {fontSize: 11},
-            color : 'gray', 
-            text : this.tags.toString(),
-            width : (320 - labelName.left - 80),
-            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
-            left : labelName.left,
-            bottom : internBorder,
-            height : labelHeight
-        });
-        row.add(labelTags);
         
         var labelDistance = Ti.UI.createLabel({
-            font : {fontSize: 10, fontStyle : 'italic'},
-            color : 'lightgray', 
+            font : {fontSize: 12},
+            color : '#646464', 
             text : null,
             textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-            right : internBorder * 2,
-            bottom : internBorder,
+            left : labelName.left,
+            top : 40,
             height : labelHeight
         });
         row.add(labelDistance);
         row.labelDistance = labelDistance;
-        this.labelDistance = labelDistance;
+        this.updateRow(row);
                 
         row.object = this;
         return row;
     };
+    
     this.updateRow = function(row) {
         // We run a distance computation
         if(row.labelDistance) {
             if(! this.hasOwnProperty('distance')) {
-                this.computeDistance();            
-            }
-            if(this.distance !== null) {
-                row.labelDistance.setText(this.distance + " mètres");
+                var self = this;
+                this.computeDistance(function(dist) {
+                    self.setDistance(row.labelDistance, dist);
+                });            
+            } else {
+                this.setDistance(row.labelDistance, this.distance);
             }
         }
         return row;

@@ -215,6 +215,9 @@ function CloudObject(json) {'use strict';
     this.doActionsAfterCrud = function(args) {
         return null;
     };
+    this.updateRow = function(row) {
+        return row;
+    };
 
     return this;
 }

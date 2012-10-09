@@ -1,6 +1,7 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var CloudObject = require("model/CloudObject");
+var Image = require("/etc/Image");
 
 function Scan(json) {'use strict';
     CloudObject.call(this);
@@ -13,6 +14,9 @@ function Scan(json) {'use strict';
     };
     this.getEntriesUrl = function() {
         return "/collections/506eec600f660214ae00013a/entries";    
+    };
+    this.getFormPhotoFields = function() {
+        return ['photo0'];
     };
     this.getFormFields = function(read) {
         var data = []; 
@@ -40,7 +44,7 @@ function Scan(json) {'use strict';
         
         // The description of the article
         var rowSelf = Ti.UI.createTableViewRow({
-            height : internHeight,
+            height : 45,
             object : this
         });
         
@@ -64,11 +68,25 @@ function Scan(json) {'use strict';
         }); 
         rowSelf.add(labelDetails);
         
-        var pt = Image.createPointView(this.points, 60, 60);
-        pt.right = internBorder;
-        rowSelf.add(pt);
+        var rowPt = Ti.UI.createTableViewRow({
+            height : 40
+        });
         
-        tv.setData([rowSelf]);
+        var pt = Image.createPointView(this.points, 40, 80);
+        rowPt.add(pt);
+        
+        var data = [rowSelf, rowPt];
+        var rowScan = null;
+        /*
+        if(this.getPhotoUrl(1)) {
+            rowScan = Ti.UI.createTableViewRow({ height : 120});
+            Image.cacheImage(this.getPhotoUrl(1), function(image) {
+                rowScan.setBackgroundImage(image);
+            });
+            data.push(rowScan);  
+        }
+        */
+        tv.setData(data);
         
         return tv;
     };

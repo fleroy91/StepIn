@@ -13,7 +13,7 @@ var Tools = require("/etc/Tools");
 function AccountWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Mon compte', 
-	    backgroundColor : 'white'
+	    backgroundColor : '#f0f0f0'
     });
     var tabGroup = args.tabGroup;
     
@@ -23,7 +23,24 @@ function AccountWindow(args) {'use strict';
         user = AppUser.getCurrentUser();
     var mainObject = (Ti.App.adminMode ? shop : user); 
 	
-	var header = Ti.UI.createView({ height : 65});   
+    var sheader = Ti.UI.createView({
+        height : 40,
+        top : 0,
+        backgroundColor : '#d92276'
+    });
+    var lbl = Ti.UI.createLabel({
+        text : "Configurez votre compte :",
+        top : 2,
+        left : 2,
+        color : 'white',
+        font : {fontSize : '15', fontWeight : 'normal'},
+        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
+        height : 40
+    });
+    sheader.add(lbl);
+    self.add(sheader);
+    
+    var header = Ti.UI.createView({ height : 65});   
 	var img = Image.createImageView('read', mainObject.getPhotoUrl(0), null, {id:'imgShop', top:15, left:15, height:50, width:50});
 	header.add(img);
 	
@@ -47,8 +64,8 @@ function AccountWindow(args) {'use strict';
     if(Ti.App.adminMode) {
 	   s1.add(r11);
 	}
-	s1.add(r12);
-	s1.add(r13);
+	// s1.add(r12);
+	// s1.add(r13);
 	
     r10.addEventListener('click', function(e) {
         var ShopFormWindow = require("/ui/common/FormWindow"),
@@ -181,6 +198,8 @@ function AccountWindow(args) {'use strict';
 		data:data, 
 		footerView : fv,
 		headerView : header,
+		backgroundColor : '#f0f0f0',
+		top : 40,
 		style:Titanium.UI.iPhone.TableViewStyle.GROUPED
 	});
 	self.add(tv);
