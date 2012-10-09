@@ -125,6 +125,20 @@ function AppUser(json) {'use strict';
             func(data);
         });
     };
+    this.retrievePresents = function(func) {
+        var Present = require('model/Present'),
+            pres = new Present();
+        this.getList(pres, Tools.Hash2Qparams({sort : 'points', order : 'asc'}), function(result) {
+            var i, data = null;
+            if(result && result.length > 0) {
+                data = [];
+                for(i = 0 ; i < result.length; i++) {
+                    data.push(new Present(result[i]));    
+                }
+            }
+            func(data);
+        });
+    };
     
     this.retrieveShops = function(tags, func, around) {
         var Shop = require('model/Shop'),
@@ -142,6 +156,8 @@ function AppUser(json) {'use strict';
                     }
                 }
             }
+            // TODO : for test, we only get the shops with beancode
+            qparams += '&beancode!gt=6000';
             
             self.getList(shop, qparams, function(result) {
                 var i, data = null;
@@ -166,6 +182,7 @@ function AppUser(json) {'use strict';
                 shop = new Shop();
             qparams = qparams || {};
             qparams["app_user.url"] = Ti.Network.encodeURIComponent(this.getUrl());
+            qparams.per_page = 15;
             
             this.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
                 // Ti.API.info('GET shop : ' + JSON.stringify(result));
@@ -191,6 +208,14 @@ function AppUser(json) {'use strict';
             func(result); 
         });
     };
+    this.reload = function(func) {
+        this.retrieveUser({m_url : this.m_url}, function(newUser) {
+            if(newUser) {
+                func(newUser);
+            }
+        });
+    };
+    
     this.setCurrentUser = function() {
         // Ti.API.info("AppUser JSON = " + JSON.stringify(this));
         Ti.App.Properties.setString('AppUser', JSON.stringify(this));
@@ -203,7 +228,16 @@ function AppUser(json) {'use strict';
     this.getName = function() {
         return this.email;
     };
-    
+    this.getTotalPoints = function() {
+        return this.total_points;
+    };
+    this.setTotalPoints = function(points) {
+        this.total_points = points;
+    };
+    this.saveAll = function() {
+        this.setCurrentUser();
+        this.save();
+    };
     var self = this;
     function getGeocoded(e, func) {
         if (!e.success || e.error)

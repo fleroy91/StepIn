@@ -182,7 +182,6 @@ Image.displayMapZoom = function(mapview) { 'use strict';
             transform : t2,
             duration : 200
         });
-
     });
 
     var m = Titanium.Map.createView({
@@ -357,6 +356,9 @@ Image.cacheImage = function(url, func) { 'use strict';
             // If it has been cached, assign the local asset path to the image view object.
             // Ti.API.info("Read cached image : " + file.nativePath);
             ret = file.nativePath;
+            if(func) {
+                func(ret) ;
+            }
         } else {
             // If it hasn't been cached, grab the directory it will be stored in.
             var g = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, Image.imageDirectoryName);
@@ -376,6 +378,9 @@ Image.cacheImage = function(url, func) { 'use strict';
                     file.write(xhr.responseData);
                     // Assign the local asset path to the image view object.
                     ret = file.nativePath;
+                    if(func) {
+                        func(ret);
+                    }
                 }
             };
     
@@ -387,9 +392,9 @@ Image.cacheImage = function(url, func) { 'use strict';
     } else {
         // Ti.API.info("==> bad Url");
         ret = url;   
-    }
-    if(func) {
-        func(ret) ;
+        if(func) {
+            func(ret) ;
+        }
     }
     return ret;
 };
@@ -427,10 +432,12 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
     var edition_mode = (crud === 'create' || crud === 'update');
     if(! options) { options = {}; }
     options.defaultFilename = defaultFilename;
-    options.borderRadius = options.borderRadius || 2;
     options.borderColor = options.borderColor || 'black';
     if(! options.hasOwnProperty('borderWidth')) {
         options.borderWidth = 1;
+    }
+    if(! options.hasOwnProperty('borderRadius')) {
+        options.borderRadius = 2;
     }
 
     var view = Ti.UI.createView(options);

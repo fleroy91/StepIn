@@ -266,8 +266,6 @@ function ShopFormWindow(win_options, crud, object, tabG, extra) { 'use strict';
         win.close({animated:false});
     }
     
-    tabG.addEventListener('focus', closeWindow);
-    
     return win;
 }
 

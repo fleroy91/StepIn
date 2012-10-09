@@ -178,7 +178,15 @@ function SuperAdminWindow(args) {'use strict';
         });
     }
     
+    function simulateStepIn(code) {
+        args.tabGroup.didHearCode(code);        
+    }
+    
     var data = [
+        { title : "Simulate Step-In Shop 6227", hasChild :false, action : function(e) { simulateStepIn(6227); } },
+        { title : "Simulate Step-In Shop 6228", hasChild :false, action : function(e) { simulateStepIn(6228); } },
+        { title : "Simulate Step-In Shop 6229", hasChild :false, action : function(e) { simulateStepIn(6229); } },
+        { title : "Simulate Step-In Shop 6230", hasChild :false, action : function(e) { simulateStepIn(6230); } },
         { title : "List users", hasChild :true, req : "/ui/admin/ListUsersWindow"},
         { title : "List shops", hasChild :true, req : "/ui/admin/ListShopsWindow"},
         { title : "Clean file cache", hasChild :false, action : cleanFileCache},

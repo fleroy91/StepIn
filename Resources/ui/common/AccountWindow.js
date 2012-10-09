@@ -130,26 +130,26 @@ function AccountWindow(args) {'use strict';
         dlg.show();
 	});
 	
-	data.push(s1);
-	data.push(s2);
-	data.push(s3);
-	data.push(s4);
-	
-	var email = user.getEmail();
+	var s5 = null, email = user.getEmail();
 	// TODO : debug - check if the user is marked in the DB as super admin
 	if(true || Tools.startsWith(email, "flperso@gmail.com") || (Tools.startsWith(email, "flperso+") && Tools.endsWith(email, "@gmail.com"))) {
-        var s5 = Ti.UI.createTableViewSection({});
+        s5 = Ti.UI.createTableViewSection({});
         var r51 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Super-admin page'});
         s5.add(r51);
         
         r51.addEventListener('click', function(e) {
             var SuperAdminWindow = require("/ui/common/SuperAdminWindow"),
-                win = new SuperAdminWindow();
+                win = new SuperAdminWindow({ tabGroup : tabGroup});
             self.containingTab.open(win, {animated:true}); 
         });
-        
-	    data.push(s5);
 	}
+    data.push(s1);
+    if(s5) { 
+        data.push(s5);
+    }
+    data.push(s2);
+    data.push(s3);
+    data.push(s4);
 	
 	var fv = Ti.UI.createView({
 	    bottom : 0,

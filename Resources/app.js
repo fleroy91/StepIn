@@ -80,18 +80,22 @@ Ti.API.myLog = function(args) {'use strict';
 
 function runApp() {'use strict';
     Ti.API.info("RunApp");
+    alert("On est RunApp");
+
     var win = new ApplicationTabGroup(nav);
+    alert("On est avant l'open");
     //nav.open(win);
     Ti.API.myLog("Open main tabGroup with adminMode=" + Ti.App.adminMode);
     win.open({
         animated : true
     });
+    alert("On est après l'open");
 }
 
 function checkUser(e) {'use strict';
     Geoloc.isLocationServicesEnabled(true);
     // We must be logged
-    var user = Ti.App.Properties.getString('AppUser');
+    var user = AppUser.getCurrentUser();
     if (!user) {
         Titanium.Facebook.logout();
         var Login = require('ui/common/LoginWindow');
@@ -100,6 +104,17 @@ function checkUser(e) {'use strict';
             main.update();
         });
         nav.open(win);
+    } else {
+        // Maybe a little refresh is useful
+        // Add here all the fields you want to check
+        alert("On est en 1");
+        if(! user.getTotalPoints()) {
+            alert("On reload en 2");
+            user.reload(function(newUser) {
+                alert("On est en 3");
+                newUser.setCurrentUser();
+            });
+        }
     }
 }
 

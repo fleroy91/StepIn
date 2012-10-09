@@ -10,7 +10,7 @@
     <sdk-version>2.1.0.GA</sdk-version>
     <id>com.stepin.app</id>
     <name>StepIn</name>
-    <version>1.0</version>
+    <version>1.1</version>
     <publisher>viaduc143</publisher>
     <url>http://www.stepin.fr</url>
     <description>not specified</description>
@@ -45,7 +45,11 @@
         </splash>
         <theme>default</theme>
     </mobileweb>
-     <modules>
+    <modules>
         <module version="0.1">com.sonic</module>
+        <module version="0.4.2">tibar</module>
     </modules>
+    <ios>
+        <min-ios-ver>4.3</min-ios-ver>
+    </ios>
 </ti:app>

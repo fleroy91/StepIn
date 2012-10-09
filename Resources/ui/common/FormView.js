@@ -21,6 +21,7 @@
 var Image = require("/etc/Image");
 var Geoloc = require("/etc/Geoloc");
 var Tools = require("/etc/Tools");
+var AppUser = require("/model/AppUser");
 
 function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
     var update = (crud === 'update');
@@ -85,6 +86,75 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
             }
         });
     });
+    var scanbutton = Ti.UI.createButtonBar({
+        labels : ["Scan"],
+        width:200,
+        backgroundColor : "pink",
+        style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
+        height : buttonHeight
+    });
+    var TiBar = require('tibar');
+ 
+    Ti.API.info("module is => " + TiBar);
+    // Configuration
+    // VC - ZBarReaderViewController
+    // C - ZBarReaderController
+    //
+    var config = {
+        classType : "ZBarReaderViewController", // ZBarReaderViewController, ZBarReaderController
+        sourceType : "Camera", // Library(C), Camera(VC), Album(C)
+        cameraMode : "Default", // Default, Sampling, Sequence
+        config : {
+            "showsCameraControls" : true, // (VC)
+            "showsZBarControls" : true,
+            "tracksSymbols" : true,
+            "enableCache" : true,
+            "showsHelpOnFail" : true,
+            "takesPicture" : false
+        },
+        custom : {// not implemented yet
+            "scanCrop" : '',
+            "CFG_X_DENSITY" : '',
+            "CFG_Y_DENSITY" : '',
+            "continuous" : ''
+        },
+        symbol : {
+            "QR-Code" : true,
+            "CODE-128" : false,
+            "CODE-39" : false,
+            "I25" : false,
+            "DataBar" : false,
+            "DataBar-Exp" : false,
+            "EAN-13" : true,
+            "EAN-8" : false,
+            "UPC-A" : false,
+            "UPC-E" : false,
+            "ISBN-13" : false,
+            "ISBN-10" : false,
+            "PDF417" : false
+        }
+    }; 
+    
+    scanbutton.addEventListener('click', function(e) {
+        TiBar.scan({
+            configure: config,
+            success:function(data){
+                Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
+                if(data && data.barcode){
+                    // We need to find the article in the DB
+                    object.newObjectScanned(data.barcode, tabGroup);
+                }
+            },
+            cancel:function(){
+                Ti.API.info('TiBar cancel callback!');
+            },
+            error:function(){
+                Ti.API.info('TiBar error callback!');
+            }
+        });
+    });
+    
+    
     var cobutton = Ti.UI.createButtonBar({
         labels : ["2 - Je Step-Out (" + object.getPoints('stepout') + " pts)"],
         width:200,
@@ -135,10 +205,15 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
     if (photos) {
         header = Ti.UI.createView();
         var nbPhotos = (read ? object.getNbPhotos() : photos.length);
-        var photoWidth = 90;
+        var photoWidth = 70;
         var viewWidth = Ti.Platform.displayCaps.platformWidth;
         var spaceSize = (viewWidth - nbPhotos * photoWidth) / (nbPhotos + 1); 
         var nleft = spaceSize;
+        
+        // We align on the left !
+        if(nbPhotos === 1) {
+            nleft = 2;
+        }
         
         var imgsView = Titanium.UI.createView({
             left : 0,
@@ -174,21 +249,16 @@ function ShopFormView(win, crud, object, tabG, extra) { 'use strict';
             footer.add(geobutton);
             footer.height = geobutton.height + 5;
         }
-        // For the header : CI or CO
-        if(object.isCheckin()) {
-            cobutton.bottom = 2;
-            header.add(cobutton);
-            header.height += cobutton.height + 5;
-        } else {
-            cibutton.bottom = 2;
-            header.add(cibutton);
-            header.height += cibutton.height + 5;
-        }
+    }
+    if(object.checkin) {
+        header.height += scanbutton.height + 5;
+        scanbutton.bottom = 2;
+        header.add(scanbutton);
     }
 
     var tv = null;
     if(read) {
-        tv = object.createReadView(header, footer);
+        tv = object.createReadView(header, footer, tabGroup);
         tv.currentObject = object;
     } else {
         // Manage fields

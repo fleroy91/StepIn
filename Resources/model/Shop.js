@@ -193,10 +193,23 @@ function Shop(json) {'use strict';
             }   
         }
     };
+    this.createAnnotation = function() {
+        var shoploc = this.location;
+        var shopImg = Image.createImageView('read', this.getPhotoUrl(0), null, { height : 30, width : 30});
+        var annotation = Titanium.Map.createAnnotation({
+            latitude:shoploc.lat,
+            longitude:shoploc.lng,
+            leftView : shopImg,
+            title : this.getName(),
+            subtitle : this.getDetails(),
+            animate:true
+        });
+        return annotation;
+    };
     this.updateReadViewWithLocation = function() {
-        var rowShop = this.rowShop,
+        var rowMap = this.rowMap,
             rowSelf = this.rowSelf,
-            mapview = rowShop.mapview;
+            mapview = rowMap.mapview;
             
         if(this.location) {
             var shoploc = this.location;
@@ -213,17 +226,7 @@ function Shop(json) {'use strict';
             mapview.setRegionFit(false);
             mapview.setRegion(region);
             mapview.setLocation(region);
-            
-            var shopImg = Image.createImageView('read', this.getPhotoUrl(0), null, { height : 30, width : 30});
-            
-            var annotation = Titanium.Map.createAnnotation({
-                latitude:shoploc.lat,
-                longitude:shoploc.lng,
-                leftView : shopImg,
-                title : this.getName(),
-                subtitle : this.getDetails(),
-                animate:true
-            });
+            var annotation = this.createAnnotation();
             mapview.addAnnotation(annotation);
             mapview.selectAnnotation(annotation);
             
@@ -231,31 +234,28 @@ function Shop(json) {'use strict';
                 this.computeDistance();
             }
             if(this.distance !== null) {
-                rowSelf.labelDistance.setText((this.distance || "0") + " mètres");
+                this.labelDistance.setText((this.distance || "0") + " mètres");
             }
         }
     };
     
-    this.createReadView = function(header, footer) {
+    this.createReadView = function(header, footer, tabGroup) {
         var internBorder = 2;
         var internHeight = 90;
         var internShopHeight = 130;
         var labelHeight = Math.round((internHeight - (4 * internBorder)) / 4);
-        
-        var tv = Ti.UI.createTableView({
-            height : 'auto',
-            scrollable : true,
-            allowsSelection : false,
-            footerView : footer,
-            headerView : header,
-            style : Titanium.UI.iPhone.TableViewStyle.GROUPED
+
+        // we create a view for shop details in the header
+        var shopdetails = Ti.UI.createView({
+            top : internBorder,
+            left : 80,
+            height : 90,
+            backgroundColor : 'white',
+            borderRadius : 5,
+            borderWidth : 1,
+            borderColor : '#ba307c'
         });
-        
-        // The description of the article
-        var rowSelf = Ti.UI.createTableViewRow({
-            height : internHeight,
-            object : this
-        });
+        header.height = Math.max(header.height, 90 + 2 * internBorder);
         
         // Line 1
         var labelName = Ti.UI.createLabel({
@@ -266,7 +266,7 @@ function Shop(json) {'use strict';
             top : internBorder,
             height : labelHeight
         });
-        rowSelf.add(labelName);
+        shopdetails.add(labelName);
     
         // line 2
         var labelDetails = Ti.UI.createLabel({
@@ -277,7 +277,7 @@ function Shop(json) {'use strict';
             left : labelName.left,
             top : labelName.top + labelName.height + internBorder
         }); 
-        rowSelf.add(labelDetails);
+        shopdetails.add(labelDetails);
         
         // line 3 (the review)
         var StarView = require("/ui/common/StarView");
@@ -287,7 +287,7 @@ function Shop(json) {'use strict';
             left : labelName.left,
             top : labelDetails.top + labelDetails.height + internBorder
         });
-        rowSelf.add(viewRate);
+        shopdetails.add(viewRate);
 
         // last line
         var labelTags = Ti.UI.createLabel({
@@ -300,7 +300,7 @@ function Shop(json) {'use strict';
             bottom : internBorder,
             height : labelHeight
         });
-        rowSelf.add(labelTags);
+        shopdetails.add(labelTags);
 
         var labelDistance = Ti.UI.createLabel({
             font : {fontSize: 10, fontStyle : 'italic'},
@@ -311,12 +311,22 @@ function Shop(json) {'use strict';
             bottom : internBorder,
             height : labelHeight
         });
-        rowSelf.add(labelDistance);
-        rowSelf.labelDistance = labelDistance;
-        this.rowSelf = rowSelf;
+        shopdetails.add(labelDistance);
+        this.labelDistance = labelDistance;
         
-        // The description of the shop
-        var rowShop = Ti.UI.createTableViewRow({
+        header.add(shopdetails);
+        
+        var tv = Ti.UI.createTableView({
+            height : 'auto',
+            scrollable : true,
+            allowsSelection : false,
+            footerView : footer,
+            headerView : header,
+            style : Titanium.UI.iPhone.TableViewStyle.GROUPED
+        });
+        
+        // The map of the shop
+        var rowMap = Ti.UI.createTableViewRow({
             height : internShopHeight,
             object : this
         });
@@ -337,8 +347,8 @@ function Shop(json) {'use strict';
             bottom : 2,
             top : 0 
         });
-        rowShop.add(mapview);
-        rowShop.mapview = mapview;
+        rowMap.add(mapview);
+        rowMap.mapview = mapview;
         
         var zoom = Titanium.UI.createButton({
             image:'/images/magnifying_glass.png',
@@ -349,20 +359,117 @@ function Shop(json) {'use strict';
             right : 0,
             zIndex : 2    
         });
-        rowShop.add(zoom);
+        rowMap.add(zoom);
         zoom.addEventListener('click', function(e) {
             Image.displayMapZoom(mapview); 
         });
         
-        tv.setData([rowSelf, rowShop]);
+        var data = [rowMap];
+        // Actions to do
+        var actions = [];
+        /*
+        if(this.points) {
+            actions =[
+                {what : 'Step-in', photo : '/images/stepin.png', points : this.getPoints('stepin')},
+                {what : 'Step-out', photo : '/images/stepin.png', points : this.getPoints('stepout')}
+            ];
+        }
+        */
+        
+        function createRow(options) {
+            var row = Ti.UI.createTableViewRow(options);
+            row.height = 44;
+            
+            var img = Image.createImageView('read', options.photo, null, {noEvent : true, borderWidth : 0, left : 2, top : 2, width : 40, height : 40});
+            row.add(img);
+            
+            var lbl = Ti.UI.createLabel({
+                left : 44,
+                top : 2,
+                font : {fontSize : 14},
+                text : options.what,
+                width : 220
+            });
+            row.add(lbl);
+            
+            var pt = Image.createPointView(options.points, 40, 40);
+            pt.right = 2;
+            row.add(pt);
+            return row;
+        }
+        
+        var i;
+        for(i = 0; i < actions.length; i++) {
+            var row = createRow(actions[i]);
+            data.push(row);
+        }
+        
+        tv.setData(data);
+        
+        /*
+         * FIXME
+        tv.addEventListener('click', function(e) {
+            if(e.rowData && e.rowData.object) {
+                // We open a detailed window of the object to scan
+                e.rowData.object.checkin = this.checkin;
+                var FormWindow = require("/ui/common/FormWindow"),
+                    swin = new FormWindow(null, 'read', e.rowData.object, tabGroup);
+                tabGroup.activeTab.open(swin, {animated:true});
+            } 
+        });
+        */
+        // We add the scan articles
+        var Scan = require("/model/Scan"),
+            scan = new Scan();
+        this.getList(scan, Tools.Hash2Qparams({ "shop.url" : this.getUrl() }), function(scans) {
+            var j;
+            for(j = 0; j < scans.length; j++) {
+                var s = new Scan(scans[j]);
+                var row = createRow({
+                    what : s.title,
+                    points : s.points,
+                    hasChild : true,
+                    object : s,
+                    photo : s.getPhotoUrl(0)
+                });
+                row.scan = s;
+                tv.appendRow(row, {animated : true});
+            } 
+        });
         
         this.tv = tv;
-        this.rowShop = rowShop;
+        this.rowMap = rowMap;
         
         // We need to update the view
         this.updateReadViewWithLocation();
         
         return tv;
+    };
+    
+    this.newObjectScanned = function(code, tabGroup) {
+        // We search for the object
+        var section = this.tv.getData(), scan = null;
+        if(section && section.length > 0) {
+            var rows = section[0].getRows();
+            var i;
+            for (i = 0 ; !scan && i < rows.length; i++) {
+                if(rows.scan && rows[i].scan.code === code) {
+                    var row = rows[i];
+                    scan = row.scan;
+                    row.backgroungColor = '#eadae3';
+                }
+            }
+        }
+        if(scan) {
+            // We have found it
+            var Reward = require("model/Reward"),
+                rew = new Reward({ points : scan.points, action_kind : 'Scan', extra : {code : scan.code}});
+            rew.setShop(this);
+            rew.setUser(AppUser.getCurrentUser());
+            tabGroup.addNewReward(rew, true);
+        } else {
+            alert("Désolé mais l'article scanné ne correspond pas à un article de cette boutique !");
+        }
     };
     
     this.createTableRow = function() {
@@ -449,6 +556,7 @@ function Shop(json) {'use strict';
         });
         row.add(labelDistance);
         row.labelDistance = labelDistance;
+        this.labelDistance = labelDistance;
                 
         row.object = this;
         return row;

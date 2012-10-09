@@ -9,9 +9,11 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require("/etc/Image");
 
-function ShopPresentsWindow(mainWin) {'use strict';
+function ShopPresentsWindow(args) {'use strict';
     var AppUser = require("model/AppUser"),
         user = AppUser.getCurrentUser();
+        
+    var tabGroup = args.tabGroup;
 
 	var self = Ti.UI.createWindow({ 
 	    title : 'Les cadeaux !', 
@@ -25,7 +27,7 @@ function ShopPresentsWindow(mainWin) {'use strict';
     });
     
     // TODO : we need to get back the presents from the cloud
-    var presents = [ 
+    var allPresents = [ 
         { title : "Cappucino chez Starbuck", points : 1000, image : 'images/background.png' },
         { title : "Chèque cadeau Amazon de 10€", points : 2000, image : 'images/background.png' },
         { title : "Chèque cadeau Fnac de 10€", points : 2500, image : 'images/background.png' },
@@ -36,13 +38,13 @@ function ShopPresentsWindow(mainWin) {'use strict';
     ]; 
     
     function createPresentView(present) {
-        var isEnabled = (mainWin.total_points >= present.points);
+        var isEnabled = (user.getTotalPoints() >= present.points);
         var v = Ti.UI.createView({
             width : '50%',
             height : 170
         });
         
-        var img = Image.createImageView('read', present.image, null, { borderWidth : 0,height : 100, width : 100});
+        var img = Image.createImageView('read', present.getPhotoUrl(0), null, { borderWidth : 0,height : 100, width : 100});
         img.top = 2;
         v.add(img);
         
@@ -77,7 +79,7 @@ function ShopPresentsWindow(mainWin) {'use strict';
         bt.addEventListener('click', function(e) {
             var dlg = Ti.UI.createAlertDialog({
                 title : "Conversion",
-                message : "Voulez-vous convertir vos points en ce cadeau ?\nCette opération est irréversible.",
+                message : "Voulez-vous convertir vos points en ce cadeau ?",
                 buttonNames : ['Confirmer', 'Annuler'] 
             });
             dlg.addEventListener('click', function(e) {
@@ -89,14 +91,10 @@ function ShopPresentsWindow(mainWin) {'use strict';
                     rew.setNbPoints(-1 * present.points);
                     self.total_points -= present.points;
                     rew.setActionKind(present.title);
-                    rew.create(function(newRew) {
-                        if(newRew) {
-                            var rewrow = newRew.createTableRow();
-                            self.rewardsTv.appendRow(rewrow);
-                            mainWin.updateTitle(self.total_points);
-                            alert("Votre bon cadeau vous sera envoyé par email dans un délai de 15 jours maximum !");
-                            self.close();
-                        }
+                    // FIXME
+                    tabGroup.addNewReward(rew, false, function(e) {
+                        alert("Votre bon cadeau vous sera envoyé par email dans un délai de 15 jours maximum !");
+                        self.close();
                     });
                 }
             });
@@ -105,7 +103,7 @@ function ShopPresentsWindow(mainWin) {'use strict';
         return v;
     }
     
-    function createRow(index1, index2) {
+    function createRow(presents, index1, index2) {
         var row = Ti.UI.createTableViewRow({
             backgroundColor : 'white'
         });
@@ -126,11 +124,15 @@ function ShopPresentsWindow(mainWin) {'use strict';
         return row;
     }
     
-    var i, data = [];
-    for(i = 0; i < presents.length; i+=2) {
-        data.push(createRow(i, i+1));
-    }
-    tv.setData(data);
+    self.setPresents = function(presents) {
+        var i, data = [];
+        for(i = 0; i < presents.length; i+=2) {
+            data.push(createRow(presents, i, i+1));
+        }
+        tv.setData(data);
+    };
+    
+    // self.setPresents(allPresents);
     
     self.add(tv);
     

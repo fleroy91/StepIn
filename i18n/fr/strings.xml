@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <string name="mystock_tab_title">Articles</string>
-    <string name="bookings_tab_title">Réservations</string>
-    <string name="history_tab_title">Points</string>
-    <string name="account_tab_title">Mon compte</string>
+    <string name="mystock_tab_title">A coté</string>
+    <string name="account_tab_title">Compte</string>
     
     <string name="filter_button">Filtrer</string>
     

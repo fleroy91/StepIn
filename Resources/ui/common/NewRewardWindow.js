@@ -65,7 +65,7 @@ function NewRewardWindow(args) { 'use strict';
     var nbImages = nbCentaines + 1;
     var i, v;
     var view = Ti.UI.createView({
-        top : 100 
+        top : 130 
     });
     var widthOfCentaine = 80;
     var widthOfDizaine = 50;
