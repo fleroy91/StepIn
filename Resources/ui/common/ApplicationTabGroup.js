@@ -402,8 +402,10 @@ function ApplicationTabGroup() { 'use strict';
         messageLabel.text = null;
         var NewRewardWindow = require("ui/common/NewRewardWindow");
         rewardWindow = new NewRewardWindow({title : title, details : details, points : points});
-        
-        rewardWindow.open({animated:true});
+        Titanium.Media.vibrate();
+        setTimeout(function(e) {
+            rewardWindow.open();
+        }, 250);
     };
     
     self.displayMessage = function(message) {
@@ -539,7 +541,7 @@ function ApplicationTabGroup() { 'use strict';
 
     self.addEventListener('close', function(e){
         clearInterval(timer);
-        SonicModule.stopSonic();
+        SonicModule.StopSonic();
         Ti.API.info("==> Arrêt de Sonic");
         Ti.App.Properties.setBool('isSonicRunning', false);
     });

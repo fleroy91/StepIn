@@ -37,11 +37,10 @@ function NewRewardWindow(args) { 'use strict';
         // Titanium.API.info('here in complete');
         var t2 = Titanium.UI.create2DMatrix();
         t2 = t2.scale(1.0);
-        var a2 = Ti.UI.createAnimation({
+        self.animate({
             transform : t2,
             duration : 200
         });
-        self.animate(a2);
     });
 
     var title = Ti.UI.createLabel({
@@ -81,10 +80,7 @@ function NewRewardWindow(args) { 'use strict';
     self.animation = animation;
     
     self.addEventListener('open', function(e) {
-        Titanium.Media.vibrate();
-        setTimeout(function(e) {
-            self.animate(animation);
-        }, 250);
+        self.animate(animation);
     });
     
     return self;

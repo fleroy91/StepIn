@@ -10,10 +10,10 @@
     <sdk-version>2.1.3.v20120915120319</sdk-version>
     <id>com.stepin.app</id>
     <name>StepIn</name>
-    <version>1.2</version>
-    <publisher>viaduc143</publisher>
+    <version>1.3</version>
+    <publisher>Frédéric Leroy</publisher>
     <url>http://www.stepin.fr</url>
-    <description>not specified</description>
+    <description>Application de géolocalisation indoor permettant de gagner de l'argent en simplement entrant dans les boutiques !</description>
     <copyright>2012 by viaduc143</copyright>
     <icon>icon.png</icon>
     <persistent-wifi>false</persistent-wifi>
