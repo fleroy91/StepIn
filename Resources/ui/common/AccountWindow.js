@@ -39,7 +39,6 @@ function AccountWindow(args) {'use strict';
     
     var header = Ti.UI.createView({ height : 65});   
 	var img = Ti.UI.createImageView({
-	    image : "/images/unknown_user.png", 
 	    top:15, 
 	    left:15, 
 	    height:50, 
@@ -195,18 +194,20 @@ function AccountWindow(args) {'use strict';
 	    if(user) {
             user.setCurrentUser();
             user.checkAll();
+            tabGroup.closeAllWindows();
+            tabGroup.updateAllRows();
 	    } else {
             user = AppUser.getCurrentUser();
         }
-        tabGroup.closeAllWindows();
-        tabGroup.updateAllRows();
         if(user.isDummy()) {
            img.setImage("/images/unknown_user.png");
            lbl2.setText("Vous n'êtes pas connecté !");
            r41.setTitle('Connexion'); 
         } else {
            Image.cacheImage(user.getPhotoUrl(0), function(image) {
-               img.setImage(image);
+                if(image) {
+                    img.setImage(image);
+                }
            });
            lbl2.setText(user.firstname);
            r41.setTitle('Déconnexion');

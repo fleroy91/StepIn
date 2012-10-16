@@ -31,7 +31,7 @@ Geoloc.translateErrorCode = function(code) {'use strict';
 
 Geoloc.isLocationServicesEnabled = function(askQuestion) { 'use strict';
     var ok = false ;
-    if (Titanium.Geolocation.locationServicesEnabled === false)
+    if (! Titanium.Geolocation.locationServicesEnabled)
     {
         if(askQuestion) {
             Titanium.UI.createAlertDialog({title:'TODO', message:'Your device has geo turned off - turn it on.'}).show();
@@ -45,7 +45,7 @@ Geoloc.isLocationServicesEnabled = function(askQuestion) { 'use strict';
             if(askQuestion) {
                 Ti.UI.createAlertDialog({
                     title:'TODO',
-                    message:'You have disallowed SoldEasy from running geolocation services.'
+                    message:'You have disallowed StepIn from running geolocation services.'
                 }).show();
             }
         }
@@ -53,7 +53,7 @@ Geoloc.isLocationServicesEnabled = function(askQuestion) { 'use strict';
             if(askQuestion) {
                 Ti.UI.createAlertDialog({
                     title:'TODO',
-                    message:'Your system has disallowed SoldEasy from running geolocation services.'
+                    message:'Your system has disallowed StepIn from running geolocation services.'
                 }).show();
             }
         } else {

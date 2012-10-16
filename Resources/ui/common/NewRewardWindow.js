@@ -9,6 +9,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require("/etc/Image");
 var AppUser = require("/model/AppUser");
+var Reward = require("/model/Reward");
 
 // Parameters : args.title, args.details, args.nb_points
 function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
@@ -46,7 +47,7 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     main.add(blackView);
     
     var view = Ti.UI.createView({
-        backgroundImage : '/images/gain-points.jpg',
+        backgroundImage : '/images/bck-win.png',
         width : '95%',
         height : '95%',
         borderRadius : 5,
@@ -54,11 +55,15 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         borderWidth : 2
     });
     
-    var button = Ti.UI.createButtonBar({
-        labels : ['Fermer'],
-        style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        backgroundColor : 'black',
-        height : 30,
+    var yeah = Ti.UI.createImageView({
+        image : '/images/yay.png',
+        top : 10
+    });
+    view.add(yeah);
+    
+    var button = Ti.UI.createButton({
+        image : '/images/close.png',
+        style:Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
         top : 5,
         right : 5 
     });
@@ -69,10 +74,8 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     });
     
     var vPoints = Ti.UI.createLabel({
-        backgroundColor : '#fbdd31',
         top : 80,
         height : 60,
-        width : Ti.UI.FILL,
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
         font : {fontSize : 50, fontWeight : 'bold'},
         text : reward.getNbPoints(),
@@ -81,6 +84,17 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         shadowColor : 'white'
     });
     view.add(vPoints);
+    
+    var explain = Ti.UI.createLabel({
+        textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+        text : (reward.getActionKind() === Reward.ACTION_KIND_SCAN ? "points gagnés en scannant ce produit !" : "points gagnés en entrant dans cette boutique !"),
+        top : 145,
+        font : {fontSize : 14},
+        color : 'black',
+        shadowColor : 'white',
+        shadowOffset : { x: 1, y : 1}
+    });
+    view.add(explain);
 
     var goToPresents = Ti.UI.createButtonBar({
         labels : ['Les échanger contre un cadeau'],
@@ -94,20 +108,73 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     
     goToPresents.addEventListener('click', function(e) {
         self.managedWindow = true;
+        self.close();
         tabGroup.setActiveTab(1);
-        setTimeout(function(e) { self.close();}, 250);
+        // setTimeout(function(e) { self.close();}, 250);
+    });
+
+    var tv = Ti.UI.createTableView({
+        top : 220,
+        height : 'auto',
+        scrollable : false,
+        allowsSelection : true,
+        style : Titanium.UI.iPhone.TableViewStyle.PLAIN,
+        backgroundColor : 'transparent'
     });
     
-    // TODO : implement the next actions and the window if we're not logged !
+    var section = Ti.UI.createTableViewSection({
+        style : Titanium.UI.iPhone.TableViewSeparatorStyle.NONE
+    });
+    
+    var sheader = Ti.UI.createView({
+        height : 20
+    });
+    var lbl = Ti.UI.createLabel({
+        text : "Gagnez plus de points en scannant ces produits :",
+        top : 2,
+        left : 2,
+        color : '#4d4d4d',
+        font : {fontSize : '12', fontWeight : 'bold'},
+        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
+        height : 15
+    });
+    sheader.add(lbl);
+    section.headerView = sheader;
+    
+    tv.addEventListener('click', function(e) {
+        if(e.rowData && e.rowData.object) {
+            // We open a detailed window of the object to scan
+            self.close();
+            var FormWindow = require("/ui/common/FormWindow"),
+                swin = new FormWindow(null, 'read', e.rowData.object, tabGroup);
+            tabGroup.openWindow(null, swin);
+        } 
+    });
+
+    // We add the actions
+    var j;
+    for(j = 0; nextActions && j < nextActions.length; j++) {
+        var s = nextActions[j];
+        var row = s.createTableRow({
+            index : j,
+            object : s
+        });
+        row.backgroundColor = 'transparent';
+        section.add(row);
+    }
+    tv.setData([section]);
+    
+    view.add(tv);
+    
     if(user.isDummy()) {
+        tv.visible = false;
         var yellow = Ti.UI.createView({
-            backgroundColor : '#fbdd31',
             width : '100%',
             height : Ti.UI.FILL,
             top : 170             
         });
         
-        var lbl = Ti.UI.createLabel({
+        var lblConnect = Ti.UI.createLabel({
             text : "Connectez vous\npour gagner vos points !",
             textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
             verticalAlign : Ti.UI.TEXT_VERTICAL_ALIGNMENT_TOP,
@@ -117,9 +184,9 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
             top : 0,
             height : 60
         });
-        yellow.add(lbl);
+        yellow.add(lblConnect);
         
-        var tv = Ti.UI.createTableView({
+        var tvActions = Ti.UI.createTableView({
             style : Ti.UI.iPhone.TableViewStyle.GROUPED,
             backgroundColor : 'transparent',
             top : 60
@@ -170,8 +237,8 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
             title : "avec mon compte existant"
         });
         s2.add(rowLogin);
-        tv.setData([s1, s2]);
-        tv.addEventListener('click', function(e) {
+        tvActions.setData([s1, s2]);
+        tvActions.addEventListener('click', function(e) {
             var swin = null;
             
             if(e.index === 0) {
@@ -196,7 +263,8 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
                             // TODO : to implement -> update the bottom view
                             tabGroup.updateAllRows();
                             yellow.hide();
-                            swin.object = reward;
+                            tv.visible = true;
+                            self.object = reward;
                         });
                     }
                 });
@@ -204,7 +272,7 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
                 nav.open(swin, {animated:true});
             }
         });
-        yellow.add(tv);
+        yellow.add(tvActions);
         view.add(yellow);
     }
     

@@ -181,7 +181,8 @@ function SuperAdminWindow(args) {'use strict';
     }
     
     function simulateStepIn(code) {
-        tabGroup.didHearCode(code);        
+        tabGroup.didHearCode(code);
+        self.close();        
     }
     
     function clearAllRewards() {
@@ -202,6 +203,7 @@ function SuperAdminWindow(args) {'use strict';
                         user.setCurrentUser();
                         user.checkAll();
                         tabGroup.updateAllRows();
+                        self.close();
                     });
                 }
             });

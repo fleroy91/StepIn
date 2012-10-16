@@ -380,7 +380,6 @@ function ApplicationTabGroup() { 'use strict';
                             var row = newShop.createTableRow();
                             self.tvSearch.updateRow(row_index, row);
                         });
-                        self.setActiveTab(0);
                         self.tabSearch.open(swin, {animated:true});
                     }
                 });
@@ -432,7 +431,6 @@ function ApplicationTabGroup() { 'use strict';
     }); 
 
     
-    // TODO : Implement the management by tab !!!!
     self.closeWindow = function(win) {
         var pos = _allWindows.indexOf(win);
         if(pos >= 0) {

@@ -460,7 +460,7 @@ function Shop(json) {'use strict';
         var tv = Ti.UI.createTableView({
             height : 'auto',
             scrollable : true,
-            allowsSelection : this.checkin,
+            allowsSelection : true,
             footerView : footer,
             headerView : newHeader,
             style : Titanium.UI.iPhone.TableViewStyle.PLAIN,
@@ -545,8 +545,17 @@ function Shop(json) {'use strict';
     };
     
     this.getTwoFreeScans = function() {
-        // TODO : to implement  
-        return null;
+        var j, ret = null, nb = 0;
+        var scans = this.scans;
+        for(j = 0; scans && nb < 4 && j < scans.length; j++) {
+            var s = scans[j];
+            if(! s.scanned) {
+                if(! ret) { ret = []; }
+                ret.push(s);
+                nb ++;
+            }
+        }
+        return ret;
     };
     
     this.createTableRow = function() {

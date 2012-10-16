@@ -114,7 +114,11 @@ function LoginWindow(args) {'use strict';
             if(user) {
                 user.setCurrentUser();
                 win.object = user;
-                win.close();
+                if(win.nav) {
+                    win.nav.close(win, {animated:true});
+                } else {
+                    win.close();
+                }
             } else {
                 alert("Erreur dans la saisie de l'email / mot de passe !");
             }

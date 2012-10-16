@@ -31,12 +31,12 @@ function AppUser(json) {'use strict';
     };
     this.getFormFields = function() {
         var dataEmail = [ 
-            { id : 'firstname', title : "Prénom", hint : "John", keyboardType : Titanium.UI.KEYBOARD_EMAIL},
+            { id : 'firstname', title : "Prénom", hint : "John", keyboardType : Titanium.UI.KEYBOARD_EMAIL, autocorrect : false},
             { id : 'email', title : "Email", hint : "john.smith@gmail.com", keyboardType : Titanium.UI.KEYBOARD_EMAIL},
             { id : 'password', title : "Mot de passe", passwordMask : true}
         ];
         var dataPhone = [
-            { id : 'phone_number', hint : "Téléphone", events : { change :  function(e) {
+            { id : 'phone_number', title : "Téléphone", hint : "Téléphone", events : { change :  function(e) {
                                     var p = e.source.value;
                                     var re = / /g;
                                     p = p.replace(re, '').replace('(','').replace(')', '');
@@ -255,14 +255,15 @@ function AppUser(json) {'use strict';
     };
     
     this.getTwoFreeShops = function() {
-        var ret = null;
+        var ret = null,nb = 0;
         if(Ti.App.allShops) {
             var i;
-            for(i = 0; i < Ti.App.allShops.length; i ++) {
+            for(i = 0; nb < 2 && i < Ti.App.allShops.length; i ++) {
                 var shop = Ti.App.allShops[i];
                 if(! ret) { ret = []; }
                 if(! shop.checkin) {
                     ret.push(shop);
+                    nb ++;
                 }
             }
         }

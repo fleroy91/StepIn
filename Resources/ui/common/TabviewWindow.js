@@ -48,7 +48,7 @@ function TabViewWindow(args) {
                 mapType : Titanium.Map.STANDARD_TYPE,
                 animate : true,
                 top : 40,
-                userLocation : true,
+                userLocation : false,
                 zIndex : -1,
                 region : {
                     latitude : (userloc ? userloc.lat : 48.33),
@@ -117,6 +117,7 @@ function TabViewWindow(args) {
         if(mapView) {
             if(viewList) {
                 listView.hide();
+                mapView.setUserLocation(true);
                 mapView.show();
                 mapView.addEventListener('complete', updateMapView);
                 if(mapViewOk) {
@@ -125,6 +126,7 @@ function TabViewWindow(args) {
                 // listView.animate({view : mapView, transition : Ti.UI.iPhone.AnimationStyle.FLIP_FROM_LEFT});          
             } else {
                 mapView.hide();
+                mapView.setUserLocation(false);
                 listView.show();
                 //mapView.animate({view : listView, transition : Ti.UI.iPhone.AnimationStyle.FLIP_FROM_RIGHT});            
             }
@@ -157,6 +159,17 @@ function TabViewWindow(args) {
     
     self.tv = tv;
     self.map = mapView;
+    
+    self.addEventListener('focus', function(e) {
+        if(mapView && ! viewList) {
+            mapView.setUserLocation(true);
+        }
+    });
+    self.addEventListener('blur', function(e) {
+        if(mapView) {
+            mapView.setUserLocation(false);
+        }
+    });
     
 	return self;
 }

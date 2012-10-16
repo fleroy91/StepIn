@@ -29,7 +29,7 @@ function MapDetailWindow(shop) { 'use strict';
     var m = Ti.Map.createView({
         mapType: Titanium.Map.STANDARD_TYPE,
         animate:true,
-        userLocation:true,
+        userLocation:false,
         region : region,
         location : region
     });
@@ -40,8 +40,18 @@ function MapDetailWindow(shop) { 'use strict';
         var annotation = shop.createAnnotation();
         m.addAnnotation(annotation);
         m.selectAnnotation(annotation);    
+        m.setUserLocation(true);
     });
     
+    self.addEventListener('blur', function(e) {
+        m.setUserLocation(false);
+    });
+    self.addEventListener('close', function(e) {
+        m.setUserLocation(false);
+    });
+    self.addEventListener('focus', function(e) {
+        m.setUserLocation(true);
+    });
     return self;
 }
 

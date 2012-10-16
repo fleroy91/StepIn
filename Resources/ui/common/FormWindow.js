@@ -113,7 +113,12 @@ function FormWindow(win_options, crud, object, tabG, extra) { 'use strict';
     };
         
     win.closeAfter = function(newObj) {
-        win.close({animated:true});
+        win.object = newObj;
+        if(win.nav) {
+            win.nav.close(win, {animated:true});
+        } else {
+            win.close({animated:true});
+        }
         setTimeout(function(e) {
             if (newObj) {
                 newObj.doActionsAfterCrud(tabGroup);
@@ -126,12 +131,6 @@ function FormWindow(win_options, crud, object, tabG, extra) { 'use strict';
         win.add(contentView);
         win.tv = contentView;
     });
-    
-    function closeWindow(e) {
-        //IOS fires with source tabGroup. Android with source tab
-        tabG.removeEventListener('focus', closeWindow);
-        win.close({animated:false});
-    }
     
     if(read) {
         tabGroup.createTitle(win);

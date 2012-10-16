@@ -216,7 +216,7 @@ Image.displayMapZoom = function(mapview) { 'use strict';
         });
     });
 
-    w.open(a);
+    
     w.addEventListener('open', function(e) {
         // We add the annotations of the mapview
         var annotations = mapview.getAnnotations();
@@ -238,6 +238,12 @@ Image.displayMapZoom = function(mapview) { 'use strict';
             }
         }
     });
+    
+    w.addEventListener('close', function(e) {
+        m.setUserLocation(false); 
+    });
+
+    w.open(a);
 }; 
 
 // Zoom on a list of photos (e.source should be the scrollview)
@@ -483,22 +489,20 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
 };
 
 // To create a view of points !
-Image.createPointView = function(points, height, width, disabled) { 'use strict';
+Image.createPointView = function(points, height, width, disabled, options) { 'use strict';
     var pv = Ti.UI.createView({
         height : height
     });
     var color = (disabled ? '#b9b9b9' :  '#d92276'); 
-    
-    var lbl = Ti.UI.createLabel({
+    var lblOptions = {
         text : (disabled ? '' : '+') + points,
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
         font : {fontSize : 20, fontWeight : 'bold'},
         color : color,
         height : height,
         right : 18
-    });
-    pv.add(lbl);
-    var lblSmall = Ti.UI.createLabel({
+    };
+    var lblSmallOptions = {
         text : " pts",
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
         verticalAlign : Ti.UI.TEXT_VERTICAL_ALIGNMENT_BOTTOM,
@@ -506,7 +510,17 @@ Image.createPointView = function(points, height, width, disabled) { 'use strict'
         color : color,
         height : height,
         right : 0
-    });
+    };
+    var key;
+    for(key in options) {
+        if(options.hasOwnProperty(key)) {
+            lblOptions.key = options.key;
+            lblSmallOptions.key = options.key;
+        }
+    }
+    var lbl = Ti.UI.createLabel(lblOptions);
+    var lblSmall = Ti.UI.createLabel(lblSmallOptions);
+    pv.add(lbl);
     pv.add(lblSmall);
     
     return pv;

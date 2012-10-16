@@ -75,7 +75,7 @@ function Scan(json) {'use strict';
         main.add(labelDetails);
         
         // Add the points
-        var vPoints = Image.createPointView(this.points, 50,70, this.scanned);
+        var vPoints = Image.createPointView(this.points, 50,70, this.scanned, {shadowColor : 'white', shadowOffset : { x:1,y:1}});
         vPoints.right = 5;
         main.add(vPoints);
 

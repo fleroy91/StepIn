@@ -83,6 +83,7 @@ function ShopPresentsWindow(args) {'use strict';
             width : '80%'
         });
         v.add(bt);
+        v.bt = bt;
         bt.addEventListener('click', function(e) {
             var dlg = Ti.UI.createAlertDialog({
                 title : "Conversion",
@@ -120,6 +121,8 @@ function ShopPresentsWindow(args) {'use strict';
         var v1 = createPresentView(p1);
         v1.left = 0;
         row.add(v1);
+        row.bt1 = v1.bt;
+        row.p1 = p1;
         
         if(index2 < presents.length) {
             var p2 = presents[index2];
@@ -127,17 +130,37 @@ function ShopPresentsWindow(args) {'use strict';
             var v2 = createPresentView(p2);
             v2.right = 0;
             row.add(v2);
+            row.p2 = p2;
+            row.bt2 = v2.bt;
         }
         return row;
     }
-    
+    var i, data = [];
     self.setPresents = function(presents) {
-        var i, data = [];
         for(i = 0; i < presents.length; i+=2) {
             data.push(createRow(presents, i, i+1));
         }
         tv.setData(data);
     };
+    
+    self.addEventListener('focus', function(e) {
+        var user = AppUser.getCurrentUser();
+        var points = user.getTotalPoints();
+        for(i = 0; i < data.length; i++) {
+            var bt1 = data[i].bt1,
+                bt2 = data[i].bt1,
+                p1 = data[i].p1,
+                p2 = data[i].p2;
+            if(p1 && bt1) {
+                bt1.setTitle(p1.points <= points ? 'Convertir' : 'Pas assez de points');
+                bt1.enabled = p1.points <= points;
+            }
+            if(p2 && bt2) {
+                bt2.setTitle(p2.points <= points ? 'Convertir' : 'Pas assez de points');
+                bt2.enabled = p2.points <= points;
+            }
+        }
+    });
     
     self.add(tv);
     

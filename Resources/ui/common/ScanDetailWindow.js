@@ -79,7 +79,9 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
             });
         } else {
             var overlayView = Ti.UI.createView({
+                backgroundImage : "/images/scanner.png"
             });
+            
             // We need to create a nav bar
             var btBack = Ti.UI.createButtonBar({
                 labels : ['Retour'],
@@ -87,6 +89,7 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
                 backgroundColor : 'black'
             });
             btBack.addEventListener('click', function(e) {
+                Ti.UI.currentWindow.close();
                 self.object = null;
                 self.close({animated:true}); 
             });
@@ -104,7 +107,7 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
                backgroundColor : 'black' 
             });
             overlayView.add(navBar);
-            view.top = 36;
+            view.top = 60;
             overlayView.add(view);
             
             self.addEventListener('open', function(e) {
