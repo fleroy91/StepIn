@@ -43,6 +43,11 @@ var Geoloc = require("etc/Geoloc");
 var AppUser = require('model/AppUser');
 var Tools = require('/etc/Tools');
 
+// Init global variables
+Ti.App.currentUser = null;
+Ti.App.allRewards = null;
+Ti.App.allShops = null;
+
 var debug;
 if (Tools.isSimulator()) {
     // do something useful here
@@ -62,17 +67,14 @@ if(debug) {
 
 // Management of the Sonic Service !
 Ti.App.Properties.setBool('isSonicRunning', false);
+/*
 var service = Ti.App.iOS.registerBackgroundService({
     url : 'bg-service.js'
 });
-Ti.App.addEventListener("resumed", function(e) {'use strict';
-    ApplicationTabGroup.startSonic();
-});
+*/
 
 var SplashWindow = require("ui/common/SplashWindow");
 var main = new SplashWindow();
-var nav = main.navGroup;
-Spinner.add(main);
 
 Ti.App.adminMode = false;
 function isArray(a) {'use strict';
@@ -96,16 +98,11 @@ Ti.API.myLog = function(args) {'use strict';
 };
 
 function runApp() {'use strict';
-    Ti.API.info("RunApp");
-    // alert("On est RunApp");
-
-    var win = new ApplicationTabGroup(nav);
-    // alert("On est avant l'open");
-    Ti.API.myLog("Open main tabGroup with adminMode=" + Ti.App.adminMode);
+    Spinner.hide(main);
+    var win = new ApplicationTabGroup();
     win.open({
         animated : true
     });
-    // alert("On est après l'open");
 }
 
 function checkUser(e) {'use strict';
@@ -113,83 +110,26 @@ function checkUser(e) {'use strict';
     // We must be logged
     var user = AppUser.getCurrentUser();
     if (!user) {
-        Titanium.Facebook.logout();
-        var Login = require('ui/common/LoginWindow');
-        var win = new Login();
-        win.addEventListener('close', function(e) {
-            main.update();
-        });
-        nav.open(win);
+        // We need to create a dummy user BUT geolocalized
+        // We will login later in the process 
+        user = new AppUser();
+        user.geolocalize(function(newUser) {
+            user.setCurrentUser();
+            runApp();
+        });        
     } else {
-        user.geolocalize(function(user1) {
-            user1.setCurrentUser();
-            // Maybe a little refresh is useful
-            // Add here all the fields you want to check
-            if(! user1.getTotalPoints()) {
-                user1.reload(function(newUser) {
-                    newUser.setCurrentUser();
-                    runApp();
-                });
-            } else {
+        user.reload(function(user1) {
+            user1.geolocalize(function(user2) {
+                user2.setCurrentUser();
                 runApp();
-            }
+            });
         });
     }
 }
 
-function checkShop() {'use strict';
-    // We first look for the user shop
-    var user = AppUser.getCurrentUser();
-    if (user) {
-        user.retrieveShop(function(shop) {
-            if (shop) {
-                Ti.API.info("Shop OK");
-                shop.setCurrentShop();
-                Ti.App.adminMode = true;
-                runApp();
-            } else {
-                var CreateShop = require('ui/common/CreateShopWindow');
-                var win = new CreateShop();
-                win.addEventListener('close', function(e) {
-                    user.retrieveShop(function(shop) {
-                        if (shop) {
-                            shop.setCurrentShop();
-                            Ti.App.adminMode = true;
-                            runApp();
-                        }
-                    });
-                });
-                nav.open(win);
-            }
-        });
-    } else {
-        checkUser();
-    }
-}
-
-main.adminButton.addEventListener('click', function(e) {'use strict';
-    var dlg = Ti.UI.createAlertDialog({
-        message : 'Voulez-vous entrer en mode administration ?',
-        buttonNames : ['Oui', 'Non'],
-        cancel : 1,
-        title : 'Mode admin'
-    });
-    dlg.addEventListener('click', function(e) {
-        if (e.index === 0) {
-            checkShop();
-        }
-    });
-    dlg.show();
-});
-main.button.addEventListener('click', function(e) {'use strict';
-    Ti.App.adminMode = false;
-    runApp();
+main.addEventListener('open', function(e){ 'use strict';
+    Spinner.show(main);
+    checkUser();
 });
 
-// FIXME
-// To avoid the splash screen which is UGLY !!!!
- 
-// main.addEventListener('open', checkUser);
-// main.open();
-
-checkUser();
+main.open();

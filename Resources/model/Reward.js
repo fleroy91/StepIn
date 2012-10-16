@@ -52,9 +52,18 @@ function Reward(json) {    'use strict';
     this.setNbPoints = function(nb) {
         this.setField('nb_points', nb);    
     };
+    // Returns the number of minutes passed between the reward action and the given date
+    this.howLong = function(now) {
+        var ret = 0;
+        if(this.when && now) {
+            var dwhen = new Date(Date.parse(this.when));
+            ret = (now.getTime() - dwhen.getTime()) / 1000 / 60;
+        }
+        return ret;
+    };
     this.isClosedTo = function(rew) {
         var close = false;
-        if(rew.action_kind === this.action_kind && rew.shop.m_url === this.shop.m_url) {
+        if(rew.action_kind === this.action_kind && rew.shop.url === this.shop.url) {
             // Same action on the same shop
             // We need to compute the distance in time
             var w1 = new Date(Date.parse(this.when)),
@@ -94,7 +103,8 @@ function Reward(json) {    'use strict';
         }); 
         row.add(labelDetails);
     
-        row.object = this;
+        // TODO : deprecated
+        // row.object = this;
         return row;
     };
     this.when = new Date();
@@ -105,5 +115,8 @@ function Reward(json) {    'use strict';
 
 Reward.prototype = CloudObject.prototype;
 Reward.prototype.constructor = Reward;
+
+Reward.ACTION_KIND_STEPIN = "stepin";
+Reward.ACTION_KIND_SCAN = "scan";
 
 module.exports = Reward;

@@ -11,7 +11,8 @@
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
 var Tools = require("etc/Tools");
-    
+var Reward = require('model/Reward');
+            
 function AppUser(json) {'use strict';
     CloudObject.call(this);
     
@@ -30,6 +31,7 @@ function AppUser(json) {'use strict';
     };
     this.getFormFields = function() {
         var dataEmail = [ 
+            { id : 'firstname', title : "Prénom", hint : "John", keyboardType : Titanium.UI.KEYBOARD_EMAIL},
             { id : 'email', title : "Email", hint : "john.smith@gmail.com", keyboardType : Titanium.UI.KEYBOARD_EMAIL},
             { id : 'password', title : "Mot de passe", passwordMask : true}
         ];
@@ -88,41 +90,21 @@ function AppUser(json) {'use strict';
     // -------------------------------------------------------
     // My methods
     // -------------------------------------------------------
-    this.retrieveArticles = function(func, around) {
-        var Article = require('model/Article'),
-            art = new Article(), qparams = null;
-        if(around) {
-            // FIXME : demo VC
-            var rayon = 1000; // ie. km
-            qparams = 'location!near=((' + this.getLatitude() +' ,' + this.getLongitude() + '), ' + Geoloc.km2Rad(rayon) + ')';
-        } 
-        
-        this.getList(art, qparams, function(result) {
-            var i, data = null;
-            if(result && result.length > 0) {
-                data = [];
-                for(i = 0 ; i < result.length; i++) {
-                    data.push(new Article(result[i]));    
-                }
-            }
-            func(data);
-        });
+    this.isDummy = function() {
+        return (! this.m_url);
     };
-    this.retrieveRewards = function(func) {
-        var Reward = require('model/Reward'),
-            rew = new Reward();
-        var qparams = { 'user.url' : this.getUrl(), 'sort' : 'when', 'per_page' : 30, 'order' : 'desc' };
-        this.getList(rew, Tools.Hash2Qparams(qparams), function(result) {
-            var i, data = null;
-            if(result && result.length > 0) {
-                data = [];
-                for(i = 0 ; i < result.length; i++) {
-                    data.push(new Reward(result[i]));    
-                }
-            }
-            func(data);
-        });
+    
+    this.getRewards = function() {
+        return Ti.App.allRewards;
     };
+    
+    this.addReward = function(rew) {
+        if(! Ti.App.allRewards) {
+            Ti.App.allRewards = [];
+        }
+        Ti.App.allRewards.push(rew);
+    };
+
     this.retrievePresents = function(func) {
         var Present = require('model/Present'),
             pres = new Present();
@@ -138,62 +120,153 @@ function AppUser(json) {'use strict';
         });
     };
     
-    this.retrieveShops = function(tags, func, around) {
-        var Shop = require('model/Shop'),
-            shop = new Shop(), qparams = '';
-        this.geolocalize(function(self) {
-            // FIXME : demo VC
-            var rayon = 1000; // ie. km
-            var userloc = self.location;
-            qparams = 'location!near=((' + userloc.lat +',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
-            if(tags && tags.length > 0) {
-                var i;
-                for(i = 0; i < tags.length; i++) {
-                    var tag = tags[i];
-                    if(tag.value) {
-                        qparams += "&tags!in[]=" + tag.tag;
+    this.retrieveRewards = function(func) {
+        if(! this.isDummy()) {
+            var rew = new Reward();
+            var now = new Date();
+            var dateOffset = (24*60*60*1000) * 7; // 7 days
+            now.setTime(now.getTime() - dateOffset);
+            this.getList(rew, Tools.Hash2Qparams({
+                    'user.url' : this.getUrl(),
+                    'when!gte' : now.toISOString(), 
+                    sort : 'when', 
+                    order : 'desc'}), 
+                function(result) {
+                    var i, data = null;
+                    if(result) {
+                        data = [];
+                        for(i = 0 ; i < result.length; i++) {
+                            data.push(new Reward(result[i]));    
+                        }
                     }
+                    Ti.App.allRewards = data;
+                    if(func) {
+                        func(Ti.App.allRewards);
+                    }
+                });
+        } else {
+            Ti.App.allRewards = [];
+            if(func) {
+                func(Ti.App.allRewards);
+            }
+        }
+    };
+    
+    function getShops(self, tags, onNewShop, finalFunc) {
+        var rayon = 1000; // ie. km (very large !!!)
+        var userloc = self.location;
+        var qparams = {};
+        qparams['location!near']  = '((' + userloc.lat +',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
+        qparams.per_page = 20;
+        // We only get the shops with beancode
+        qparams["beancode!gt"] = 6000;
+        
+        if(tags && tags.length > 0) {
+            var i;
+            for(i = 0; i < tags.length; i++) {
+                var tag = tags[i];
+                if(tag.value) {
+                    qparams["tags!in[]"] = tag.tag;
                 }
             }
-            // TODO : for test, we only get the shops with beancode
-            qparams += '&beancode!gt=6000';
-            
-            self.getList(shop, qparams, function(result) {
-                var i, data = null;
-                if(result && result.length > 0) {
-                    data = [];
-                    for(i = 0 ; i < result.length; i++) {
-                        data.push(new Shop(result[i]));    
-                    }
+        }
+        
+        function addNewShop(shop) {
+            shop = AppUser.addShop(shop);
+            onNewShop(shop);
+        }
+        
+        var Shop = require('model/Shop'),
+            shop = new Shop();
+        self.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
+            Ti.App.allShops = [];
+            var i, data = null;
+            if(result && result.length > 0) {
+                for(i = 0 ; i < result.length; i++) {
+                    var s = new Shop(result[i]);
+                    s.retrieveScansAndComputeAvailablePoints(addNewShop, Ti.App.allRewards, (i === result.length -1 ? finalFunc : null));
                 }
-                if(func) {
-                    func(data);
-                }
-            });
+            }
+        });
+    }
+    
+    this.retrieveShops = function(tags, onNewShop, finalFunc) {
+        this.geolocalize(function(self) {
+            self.setCurrentUser();
+            if(! Ti.App.allRewards) {
+                self.retrieveRewards(function(allRewards) {
+                    if(allRewards) {
+                        getShops(self, tags, onNewShop, finalFunc);
+                    } else {
+                        alert("Houston we have a problem !!!"); 
+                    } 
+                });              
+            } else {
+                getShops(self, tags, onNewShop, finalFunc);
+            }
         });
     };
     
-    this.retrieveShop = function(func, qparams) {
-        if(this.shop) {
-            func(this.shop);
-        } else {
-            var Shop = require('model/Shop'),
-                shop = new Shop();
-            qparams = qparams || {};
-            qparams["app_user.url"] = Ti.Network.encodeURIComponent(this.getUrl());
-            qparams.per_page = 15;
-            
-            this.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
-                // Ti.API.info('GET shop : ' + JSON.stringify(result));
-                if(!result || result.length === 0) { 
-                    result = null;
-                } else {
-                    this.shop = new Shop(result[0]);
-                    result = this.shop;
+    this.checkAll = function(func) {
+        // We need to retrieve Rewards and then go through all shops and compute their rewards availability
+        this.retrieveRewards(function(allRewards) {
+            var i;
+            for(i = 0; i < Ti.App.allShops.length; i ++) {
+                var shop = Ti.App.allShops[i];
+                shop.computeAvailablePoints(allRewards);
+            }
+            if(func) {
+                func();
+            }
+        });
+    };
+    
+    this.deleteAllRewards = function(func) {
+        var rew = new Reward();
+        var self = this;
+        this.getList(rew, Tools.Hash2Qparams({
+                'user.url' : this.getUrl(),
+                'per_page' : 1000}), 
+            function(result) {
+                var i;
+                if(result && result.length > 0) {
+                    for(i = 0 ; i < result.length; i++) {
+                        var r = new Reward(result[i]);
+                        r.remove();
+                    }
                 }
-                func(result);
+                if(func) {
+                    func(self);
+                }
             });
+    };
+    
+    this.updateReward = function(reward) {
+        var shop = AppUser.getShop(reward.shop.index);
+        if(! shop) {
+            shop = AppUser.findShop(reward.shop.url);
         }
+        if(reward.getActionKind() === Reward.ACTION_KIND_STEPIN) {
+            reward.setNbPoints(shop.getStepinPoints());
+        } else if(reward.getActionKind() === Reward.ACTION_KIND_SCAN) {
+            reward.setNbPoints(shop.getScanPoints(reward.code));
+        }
+        return reward;
+    };
+    
+    this.getTwoFreeShops = function() {
+        var ret = null;
+        if(Ti.App.allShops) {
+            var i;
+            for(i = 0; i < Ti.App.allShops.length; i ++) {
+                var shop = Ti.App.allShops[i];
+                if(! ret) { ret = []; }
+                if(! shop.checkin) {
+                    ret.push(shop);
+                }
+            }
+        }
+        return ret;
     };
     
     this.retrieveUser = function(args, func) {
@@ -201,24 +274,30 @@ function AppUser(json) {'use strict';
             if(result.length === 0) { 
                 result = null;
             } else {
-                // TODO : return the list and not only the first AppUser !
                 result = new AppUser(result[0]);
             }
             func(result); 
         });
     };
     this.reload = function(func) {
-        this.retrieveUser({m_url : this.m_url}, function(newUser) {
-            if(newUser) {
-                func(newUser);
-            }
-        });
+        if(! this.isDummy()) {
+            this.retrieveUser({m_url : this.m_url}, function(newUser) {
+                if(newUser) {
+                    func(newUser);
+                }
+            });
+        } else {
+            func(this);
+        }
     };
     
     this.setCurrentUser = function() {
-        // Ti.API.info("AppUser JSON = " + JSON.stringify(this));
         Ti.App.Properties.setString('AppUser', JSON.stringify(this));
-        AppUser.currentUser = this;
+        // If the new current user is not the same as the previous one, we need to reset the rewards
+        if(Ti.App.currentUser && ! this.isDummy() && Ti.App.currentUser.m_url !== this.m_url) {
+            Ti.App.allRewards = null;
+        }
+        Ti.App.currentUser = this;
     };
     
     this.isAdmin = function() {
@@ -237,21 +316,21 @@ function AppUser(json) {'use strict';
         this.setCurrentUser();
         this.save();
     };
-    var self = this;
-    function getGeocoded(e, func) {
+    function getGeocoded(e, func, me) {
         if (!e.success || e.error)
         {
             Ti.API.info("Code translation: "+ Geoloc.translateErrorCode(e.code) + JSON.stringify(e.error));
         } else {
-            self.setLocation(e.coords.longitude, e.coords.latitude);
-            func(self);
+            me.setLocation(e.coords.longitude, e.coords.latitude);
+            func(me);
         }
     }
     
     this.geolocalize = function(func) {
         if(Geoloc.isLocationServicesEnabled()) {
+            var self = this;
             Titanium.Geolocation.getCurrentPosition(function(e) { 
-                getGeocoded(e, func); 
+                getGeocoded(e, func, self); 
             });
         }
     };
@@ -264,15 +343,13 @@ function AppUser(json) {'use strict';
 AppUser.prototype = CloudObject.prototype;
 AppUser.prototype.constructor = AppUser;
 
-AppUser.currentUser = null;
-
 AppUser.getCurrentUser = function() {'use strict';
     // Ti.API.info("AppUser JSON = " + Ti.App.Properties.getString('AppUser'));
-    if (!AppUser.currentUser && Ti.App.Properties.getString('AppUser')) {
+    if (!Ti.App.currentUser && Ti.App.Properties.getString('AppUser')) {
         var json = JSON.parse(Ti.App.Properties.getString('AppUser'));
-        AppUser.currentUser = new AppUser(json);
+        Ti.App.currentUser = new AppUser(json);
     }
-    return AppUser.currentUser;
+    return Ti.App.currentUser;
 };
 
 AppUser.prototype.getEmail = function() {'use strict';
@@ -293,6 +370,38 @@ AppUser.prototype.setIsUser = function(p) {'use strict';
 };
 AppUser.prototype.setPhoneNumber = function(p) {'use strict';
     this.phone_number = p;
+};
+
+AppUser.getShop = function(index) { 'use strict';
+    return Ti.App.allShops[index - 1];
+};
+AppUser.findShop = function(url) { 'use strict';
+    var i, shop = null;
+    for(i = 0; !shop && i < Ti.App.allShops.length; i ++) {
+        if(Ti.App.allShops[i].m_url === url) {
+            shop = Ti.App.allShops[i];
+        }
+    }
+    return shop;
+};
+AppUser.addShop = function(shop) { 'use strict';
+    var data = Ti.App.allShops;
+    shop.index = data.length + 1;
+    data.push(shop);
+    Ti.App.allShops = data;
+    return shop;       
+};
+
+AppUser.addReward = function(rew) { 'use strict';
+    Ti.App.allRewards.push(rew);
+};
+
+AppUser.updateShop = function(shop) { 'use strict';
+    if(shop.index) {
+        var data = Ti.App.allShops;
+        data[shop.index-1] = shop;
+        Ti.App.allShops = data;
+    }
 };
 
 AppUser.prototype.geoLocalize = function(func) {'use strict';

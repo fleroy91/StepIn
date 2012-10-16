@@ -14,6 +14,7 @@ var ApplicationTabGroup = require("/ui/common/ApplicationTabGroup");
 function SuperAdminWindow(args) {'use strict';
     var AppUser = require("model/AppUser"),
         user = AppUser.getCurrentUser();
+    var tabGroup = args.tabGroup;
     
 	var self = Ti.UI.createWindow({ 
 	    title : 'Super Admin', 
@@ -180,7 +181,32 @@ function SuperAdminWindow(args) {'use strict';
     }
     
     function simulateStepIn(code) {
-        args.tabGroup.didHearCode(code);        
+        tabGroup.didHearCode(code);        
+    }
+    
+    function clearAllRewards() {
+        user = AppUser.getCurrentUser();
+        if(user.isDummy()) {
+            alert("Cela ne peut fonctionner que sur le user connecté !");
+        } else {
+            var dlg = Ti.UI.createAlertDialog({
+                title:'Attention',
+                message:"Cette action va supprimer tous les rewards de l'utilisateur loggé",
+                buttonNames : ['Oui on supprime', 'Annuler']
+            });
+            dlg.addEventListener('click', function(e) {
+                if(e.index === 0) {
+                    user.deleteAllRewards(function() {
+                        user.setTotalPoints(0);
+                        user.save();
+                        user.setCurrentUser();
+                        user.checkAll();
+                        tabGroup.updateAllRows();
+                    });
+                }
+            });
+            dlg.show();
+        }
     }
     
     var data = [
@@ -191,6 +217,7 @@ function SuperAdminWindow(args) {'use strict';
         { title : "Simulate Step-In Shop 6228", hasChild :false, action : function(e) { simulateStepIn(6228); } },
         { title : "Simulate Step-In Shop 6229", hasChild :false, action : function(e) { simulateStepIn(6229); } },
         { title : "Simulate Step-In Shop 6230", hasChild :false, action : function(e) { simulateStepIn(6230); } },
+        { title : "Clear all user rewards", hasChild :false, action : clearAllRewards },
         { title : "List users", hasChild :true, req : "/ui/admin/ListUsersWindow"},
         { title : "List shops", hasChild :true, req : "/ui/admin/ListShopsWindow"},
         { title : "Clean file cache", hasChild :false, action : cleanFileCache},

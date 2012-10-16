@@ -483,40 +483,29 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
 };
 
 // To create a view of points !
-Image.createPointView = function(points, height, width) { 'use strict';
+Image.createPointView = function(points, height, width, disabled) { 'use strict';
     var pv = Ti.UI.createView({
-        width : width,
         height : height
     });
-    
-    /*
-    var img = Ti.UI.createImageView({
-        image : '/images/stepin.png',
-        width : width,
-        height : height,
-        left : 0,
-        top : 0
-    });
-    pv.add(img);
-    */
+    var color = (disabled ? '#b9b9b9' :  '#d92276'); 
     
     var lbl = Ti.UI.createLabel({
-        text : (points > 0 ? '+' : '') + points,
+        text : (disabled ? '' : '+') + points,
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-        font : {fontSize : 18, fontWeight : 'bold'},
-        color : '#d92276',
+        font : {fontSize : 20, fontWeight : 'bold'},
+        color : color,
         height : height,
-        right : 20
+        right : 18
     });
     pv.add(lbl);
     var lblSmall = Ti.UI.createLabel({
         text : " pts",
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
         verticalAlign : Ti.UI.TEXT_VERTICAL_ALIGNMENT_BOTTOM,
-        font : {fontSize : 12, fontWeight : 'bold'},
-        color : '#d92276',
+        font : {fontSize : 10, fontWeight : 'bold'},
+        color : color,
         height : height,
-        right : 1
+        right : 0
     });
     pv.add(lblSmall);
     

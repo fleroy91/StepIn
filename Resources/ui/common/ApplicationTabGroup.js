@@ -11,15 +11,7 @@
 var Spinner = require("etc/Spinner");
 var Tools = require("etc/Tools");
 
-function addBackButton(win) { 'use strict';
-    var btRefresh = Ti.UI.createButton({title : 'Accueil', win:win});
-    win.setLeftNavButton(btRefresh);
-    btRefresh.addEventListener('click', function(e) {
-        win.tabGroup.close();
-    });
-}
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
-var allTags;
 var _tabGroup;
 var _allWindows = [];
 
@@ -30,7 +22,12 @@ function ApplicationTabGroup() { 'use strict';
     var AppUser = require("model/AppUser"),
         user = AppUser.getCurrentUser();
     
-    self = Titanium.UI.createTabGroup({});
+    // FIXME : colors checking
+    self = Titanium.UI.createTabGroup({
+        activeTabBackgroundColor : 'red',
+        activeTabBackgroundFocusedColor : '#d92276',
+        activeTabBackgroundSelectedColor : 'yellow'
+    });
     
     var TabWindow = require('ui/common/TabviewWindow');
        
@@ -109,7 +106,6 @@ function ApplicationTabGroup() { 'use strict';
 	});
 	winAccount.containingTab = tabAccount;
     Spinner.add(winAccount);
-    addBackButton(winAccount);
 
 	//
 	//  add tabs
@@ -138,80 +134,40 @@ function ApplicationTabGroup() { 'use strict';
         }
         return ret;
     }
-    allTags = [];
-    self.fillTable = function(allObjects) {
-        if(allObjects) {
-            var newTags = allTags;
-            Ti.API.info("In refresh table");
-            self.tvSearch.setData([]);
-            var i;
-            for(i = 0; i < allObjects.length; i ++) {
-                var obj = allObjects[i];
-                var j, tags = obj.tags;
-                if(tags){
-                    for(j = 0; j < tags.length; j ++) {
-                        var tag = tags[j];
-                        var curTag = tagAlreadyIn(newTags, tag);
-                        if(! curTag) {
-                            var prevtag = tagAlreadyIn(allTags, tag);
-                            newTags.push({'tag':tag, 'value':(prevtag ? prevtag.value : true)});
-                        }   
-                    }
-                }
-                var row = obj.createTableRow();
-                self.tvSearch.appendRow(row, {animated: true});
-            }
-            allTags = newTags;
-        }
+    self.addNewObject = function(obj) {
+        var row = obj.createTableRow();
+        self.tvSearch.appendRow(row, {animated: true});
         if(self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
         }
-        setTimeout(self.hideIndicator, 250);
-        
-        // We sort the tags
-        allTags.sort(function(t1, t2) { return strcmp(t1.tag,t2.tag); });
+    };
+    
+    self.createPointsButton = function() {
+        // We change the titleControl of the current window
+        var points = user.getTotalPoints();
+        var btPoints = Ti.UI.createButtonBar({
+            height : 30,
+            width : 70 + 15 * (points > 10000) + 15 * (points > 100000),
+            backgroundColor : '#d92276',
+            labels : [(points || "0") + " points"]
+        });
+        btPoints.addEventListener('click', function(e) {
+            self.setActiveTab(1); 
+        });
+        return btPoints;
     };
     
     self.createTitle = function(win) {
-        // We change the titleControl of the current window
-        var points = user.getTotalPoints();
-        // For platinum !
-        var min = 20000;
-        var max = 100000;
-        
-        var image = 'platinum.gif';
-        if(points < 1500) {
-            min = 0;
-            max = 1500;
-            image = 'ivory.gif';
-        } else if(points < 5000) {
-            min = 1500;
-            max = 5000;
-            image = 'silver.gif';
-        } else if(points < 20000) {
-            min = 5000;
-            max = 20000;
-            image = 'gold.gif';
-        }
-        var prog = Ti.UI.createProgressBar({
-            min : min,
-            max : max,
-            value : points,
-            width : 150,
-            message : (points || "0") + " points",
-            color:'#fff',
-            font : {fontSize : 12, fontWeight : 'normal'},
-            style : Ti.UI.iPhone.ProgressBarStyle.BAR
-        });
-        prog.show();
-        win.prog = prog;
-        
         win.addEventListener('focus', function(e) {
             self.updateTitle(win);
         });
         
         win.barColor = 'black';
-        win.setTitleControl(prog);
+        win.setTitle(null);
+        
+        var btPoints = self.createPointsButton();
+        win.setRightNavButton(btPoints);
+        win.btPoints = btPoints;
     };
     
     self.createTitle(winSearch);
@@ -220,12 +176,12 @@ function ApplicationTabGroup() { 'use strict';
     self.createTitle(winMorePoints);
     
     self.updateTitleWindow = function(win) {
-        if(win && win.prog) {
+        if(win && win.btPoints) {
             var user = AppUser.getCurrentUser();
             var points = user.getTotalPoints();
-            win.prog.show();
-            win.prog.setValue(points);
-            win.prog.setMessage((points || "0") + " points");
+            win.btPoints.setLabels([(points || "0") + " points"]);
+            win.btPoints.setWidth(70 + 10 * (points > 10000) + 10 * (points > 100000));
+            win.setTitle(null);
         }
     };
     
@@ -248,61 +204,47 @@ function ApplicationTabGroup() { 'use strict';
         if(self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
         }
-        setTimeout(self.hideIndicator, 250);
     };
     
-    self.addNewReward = function(rew, verbose, func) {
-        var ret = false;
-        // We need to check that the reward doesn't exist
-        // FIXME : inutile de regarder dans tvPresents !!!!
-        var found = false;
-        
-        // var section = self.tvPresents.getData(), i, found = false;
-        // if(section && section.length > 0 && rew.points > 0) {
-            // var rows = section[0].getRows();
-            // for(i = 0; !found && i < rows.length; i ++) {
-                // found = rew.isClosedTo(rows[i].object);
-            // }
-        // }
-        if(found) {
-            rew.points = 0;
-            if(verbose) {
-                self.setDisplayMessage("Désolé mais vous avez déjà fait un " + rew.getActionKind() + " récemment dans cette boutique !");
-            }
-            if(func) {
-                func(rew);                
-            }
-        } else {
-            ret = true;
-            user.total_points += rew.getNbPoints();
-            user.saveAll();
-            self.updateTitle();
-            if(verbose) {
-                self.setDisplayNewPoints("Bravo !", "Vous venez de gagner " + rew.getNbPoints() + " points grâce à ce " + rew.getActionKind(), rew.getNbPoints());
-            }
-            rew.create();
-            if(func) {
-                func(rew);
-            }
-            return true;
+    self.getTwoMorePoints = function() {
+        // TODO : to implement
+        return null;
+    };
+    
+    self.addNewReward = function(rew, shop, func) {
+        // We display the screen but we need to compute the next actions
+        var nextActions = null;
+        if(shop && shop.getTwoFreeScans) {
+            // We have a shop so we search for free scans
+            nextActions = shop.getTwoFreeScans();
         }
-        return ret;
-    };
-    
-    self.getIndex = function(tv, object) {
-        var index = null;
-        var found = false;
-        var section = tv.getData();
-        if(section && section.length > 0) {
-            var rows = section[0].getRows(), i;
-            for(i = 0; !found && i < rows.length; i++) {
-                if(rows[i].object.getUrl() === object.getUrl()) {
-                    index = i;
-                    found = true;
+        if(! nextActions) {
+            // No scans or no shops, we look for free shops
+            nextActions = user.getTwoFreeShops();
+        }
+        if(! nextActions) {
+            nextActions = self.getTwoMorePoints();
+        }
+        displayNewPoints = true;
+        messageLabel.text = null;
+        var NewRewardWindow = require("ui/common/NewRewardWindow");
+        rewardWindow = new NewRewardWindow(self, rew, nextActions);
+        rewardWindow.addEventListener('close', function(e) {
+            if(e.source.object) {
+                var newRew = e.source.object;
+                newRew.create();
+                user = AppUser.getCurrentUser();
+                user.setTotalPoints(user.getTotalPoints() + newRew.getNbPoints());
+                user.saveAll();
+                self.updateTitle();
+                if(! e.source.managedWindow) {
+                    if(func) {
+                        func(newRew);
+                    }
                 }
             }
-        }
-        return index;
+        });
+        rewardWindow.open();
     };
     
     function getNbRows(tv) {
@@ -314,25 +256,12 @@ function ApplicationTabGroup() { 'use strict';
         return nb;
     }
     
-    self.updateobj = function(obj, func) {
-        var index, row;
-        index = self.getIndex(self.tvSearch, obj);
-        if(index) {
-            row = obj.createTableRow();
-            self.tvSearch.updateRow(index, row);
-        } else {
-            // It's a new object
-            obj.index = getNbRows(self.tvSearch);
-            row = obj.createTableRow();
-            self.tvSearch.appendRow(row);
-        }
-        if(func) {
-            func(obj);
-        }
-    };
     self.getAllObjects = function() {
         self.showIndicator();
-        mainObject.retrieveShops(allTags, self.fillTable, true);
+        self.tvSearch.setData([]);
+        mainObject.retrieveShops(null, self.addNewObject, function(e) {
+            self.hideIndicator();
+        });
     };
 
     self.getAllPresents = function() {
@@ -384,30 +313,6 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
     
-    self.chooseFilter = function() {
-        var ChooseFilterWindow = require("/ui/common/ChooseFilterWindow"),
-            win = new ChooseFilterWindow(allTags);
-            
-        win.addEventListener('close', function(e) {
-            if(e.source.tags) {
-                allTags = e.source.tags;
-                self.getAllObjects();
-            }
-        });
-        self.activeTab.open(win, {animated:true});
-    };
-    
-    self.setDisplayNewPoints = function(title, details, points) {
-        displayNewPoints = true;
-        messageLabel.text = null;
-        var NewRewardWindow = require("ui/common/NewRewardWindow");
-        rewardWindow = new NewRewardWindow({title : title, details : details, points : points});
-        Titanium.Media.vibrate();
-        setTimeout(function(e) {
-            rewardWindow.open();
-        }, 250);
-    };
-    
     self.displayMessage = function(message) {
         Titanium.UI.setBackgroundColor('#fff');
         if(message) {
@@ -423,98 +328,72 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
 
-    var timer = null;
-    // Function we have to call every X secs
-    self.updateAllRows = function() {
-        self.tvSearch.startLayout();
-        var section = self.tvSearch.getData();
-        if (section && section.length > 0) {
-            var data = section[0].getRows();
-            var i, booked = false;
-            for ( i = 0; i < data.length; i++) {
-                var obj = data[i].object;
-                var row = data[i];
-                if (obj) {
-                    row = obj.updateRow(row);
-                    self.tvSearch.updateRow(i, row);
-                }
-            }
-        }
-        self.tvSearch.finishLayout();
-    };
     var allCodes = [];
     self.didHearCode = function(code) {
         if(allCodes.indexOf(code) >= 0) {
             Ti.API.info("Code already heard so ignored : " + code);
         } else {
-            allCodes.push(code);
             // The shop must be in the tvSearch
             var section = self.tvSearch.getData(); 
-            var shopFound = null;
+            var shopFound = null, row_index, obj_index;
             if(section && section.length > 0) {
                 var rows = section[0].getRows();
-                var indexFound = null;
                 if(rows) {
                     var i;
                     for(i = 0; !shopFound && i < rows.length; i++) {
-                        if(rows[i].object && rows[i].object.beancode.toString() === code.toString() && rows[i].hasDetail) {
-                            indexFound = i;
-                            rows[i].backgroundColor = '#eadae3';
-                            rows[i].hasDetail = false;
-                            rows[i].hasCheck = true;
-                            shopFound = rows[i].object;
-                            shopFound.checkin = true;
-                            rows[i] = shopFound;
-                        }
-                    }
-                    /*
-                    if(shopFound) {
-                        for(i = 0; i < rows.length; i++) {
-                            if(i !== indexFound && rows[i].object.checkin) {
-                                var s = rows[i].object;
-                                s.checkin = false;
-                                rows[i].hasCheck = false;
-                                rows[i].hasDetail = true;
-                                rows[i].object = s;
-                                rows[i].backgroundColor = null;
+                        if(rows[i].object_index) {
+                            var s = AppUser.getShop(rows[i].object_index);
+                            if(s.beancode.toString() === code.toString() && ! s.isCheckin()) {
+                                shopFound = s;
+                                obj_index = rows[i].object_index;
+                                row_index = i;
                             }
                         }
                     }
-                    */
                 }
             }
-            // We need to look for the shop
             if(shopFound) {
                 Ti.API.info("Shop found for code : " + code + " :" + shopFound.getJSON());
                 // We create a reward
+                var row = shopFound.createTableRow();
+                self.tvSearch.updateRow(row_index, row);
+                
                 var Reward = require("model/Reward"), 
                     rew = new Reward();
                 rew.setUser(user);
                 rew.setShop(shopFound);
-                rew.setNbPoints(shopFound.getPoints('stepin'));
-                rew.setActionKind("Step-in");
-                self.addNewReward(rew, true, function(reward) {
-                    // We open the shop window
-                    var checkin = shopFound.checkin; 
-                    var FormWindow = require("ui/common/FormWindow"),
-                        subwin = new FormWindow(null, 'read', shopFound, self);
-                    self.setActiveTab(0);
-                    self.tabSearch.open(subwin, {animated:true});
+                rew.setNbPoints(shopFound.getPoints(Reward.ACTION_KIND_STEPIN));
+                rew.setActionKind(Reward.ACTION_KIND_STEPIN);
+                self.closeAllWindows();
+                self.setActiveTab(0);
+
+                self.addNewReward(rew, shopFound, function(reward) {
+                    if(reward) {
+                        allCodes.push(code);
+                        // We open the shop window
+                        shopFound.setCheckin(true);
+                        var FormWindow = require("ui/common/FormWindow"),
+                            swin = new FormWindow(null, 'read', shopFound, self);
+    
+                        swin.addEventListener('close', function() {
+                            var newShop = AppUser.getShop(obj_index);
+                            var row = newShop.createTableRow();
+                            self.tvSearch.updateRow(row_index, row);
+                        });
+                        self.setActiveTab(0);
+                        self.tabSearch.open(swin, {animated:true});
+                    }
                 });
             }
         } 
     };
-    // Creates the timer
-    // TODO : not useful
-    // timer = setInterval(self.updateAllRows, 1000);
     
-    self.addEventListener('open', self.getAllObjects);
     self.addEventListener('open', self.getAllPresents);
+    self.addEventListener('open', self.getAllObjects);
     
     // To hear the sound
     var SonicModule = require('com.sonic');
-    self.addEventListener('open', function(e) {
-        _tabGroup = self;
+    function sonicOn() {
         if(! Ti.App.Properties.getBool('isSonicRunning', false)) {
             // alert("On lance Sonic");
             if(! Tools.isSimulator()) {
@@ -533,18 +412,25 @@ function ApplicationTabGroup() { 'use strict';
                 });
             }
         }
-    }); 
+    }
+    function sonicOff() {
+        if(Ti.App.Properties.setBool('isSonicRunning', false)) {
+            SonicModule.StopSonic();
+            Ti.API.info("==> Arrêt de Sonic");
+            Ti.App.Properties.setBool('isSonicRunning', false);
+        }
+    }
+    
+    self.addEventListener('open', sonicOn);
+    Ti.App.addEventListener("resumed", sonicOn);
+    Ti.App.addEventListener("paused", sonicOff);
+    // Should never happen
+    self.addEventListener('close', sonicOff);
    
     self.addEventListener('focus', function(e) {
         _tabGroup = self;
     }); 
 
-    self.addEventListener('close', function(e){
-        clearInterval(timer);
-        SonicModule.StopSonic();
-        Ti.API.info("==> Arrêt de Sonic");
-        Ti.App.Properties.setBool('isSonicRunning', false);
-    });
     
     // TODO : Implement the management by tab !!!!
     self.closeWindow = function(win) {
@@ -561,56 +447,40 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
     
-    self.openWindow = function(win) {
+    self.openWindow = function(tab, win, options) {
         self.createTitle(win);
         _allWindows.push(win);
-        win.containingTab = self.activeTab;
-        win.containingTab.open(win, {animated:true});
+        tab = tab || self.tabSearch;
+        win.containingTab = tab;
+        tab.open(win, options);
     };
     
-    self.closeAllWindows = function() {
+    self.closeAllWindows = function(options) {
         var i = 0;
         for(i = _allWindows.length-1; i >=0; i--) {
-            _allWindows[i].containingTab.close(_allWindows[i], {animated:false});    
+            _allWindows[i].containingTab.close(_allWindows[i], options || {animated : false});    
         }
         _allWindows = [];
     };
+    
+    self.updateAllRows = function() {
+        var section = self.tvSearch.getData(); 
+        if(section && section.length > 0) {
+            var rows = section[0].getRows();
+            if(rows) {
+                var i;
+                for(i = 0; i < rows.length; i++) {
+                    if(rows[i].object_index) {
+                        var s = AppUser.getShop(rows[i].object_index);
+                        var row = s.createTableRow();
+                        self.tvSearch.updateRow(i, row);
+                    }
+                }
+            }
+        }
+    };
+    
 	return self;
 }
-
-ApplicationTabGroup.startSonic = function() { 'use strict';
-    if(! Ti.App.Properties.getBool('isSonicRunning', false)) {
-        // alert("On lance Sonic");
-        if(! Tools.isSimulator()) {
-            Ti.App.Properties.setBool('isSonicRunning', true);
-            Ti.API.info("==> Lancement de Sonic");
-            var SonicModule = require('com.sonic');
-            SonicModule.StartSonic({
-                onHear : function(e) {
-                    alert("Hear from Sonic : " + e + " -" + JSON.stringify(_tabGroup));
-                    Ti.API.info("Hear from Sonic : " + e);
-                    if(_tabGroup) {
-                        _tabGroup.didHearCode(e);
-                    }
-                },
-                onError : function(e) {
-                    Ti.API.info("Error : " + e);
-                    alert("Erreur : On a entendu le son" + e.toString() +"\nMais rien ne correspond !");
-                }
-            });
-        }
-    }
-};
-
-ApplicationTabGroup.stopSonic = function() { 'use strict';
-    if(Ti.App.Properties.getBool('isSonicRunning', false)) {
-        // alert("On stoppe Sonic");
-        var SonicModule = require('com.sonic');
-        if(! Tools.isSimulator()) {
-            Ti.API.info("==> Arrêt de Sonic");
-            Ti.App.Properties.setBool('isSonicRunning', false);
-        }
-    }
-};
 
 module.exports = ApplicationTabGroup;

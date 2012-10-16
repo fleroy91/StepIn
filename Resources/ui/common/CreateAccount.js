@@ -23,7 +23,7 @@ function CreateAccountWindow(args) {'use strict';
     
     var ShopFormWindow = require("ui/common/FormWindow"),
         win = new ShopFormWindow({ title : "Nouveau compte"}, 'create', user, tabGroup);
-    
+        
     win.addEventListener('close', function(e) {
         if(e.source.object) {
             e.source.object.setCurrentUser();

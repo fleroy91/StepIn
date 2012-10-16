@@ -12,7 +12,9 @@ var CloudObject = require("model/CloudObject");
 var Geoloc = require("/etc/Geoloc");
 var Tools = require("/etc/Tools");
 var Image = require("/etc/Image");
+var Scan = require("/model/Scan");
 var AppUser = require("/model/AppUser");
+var Reward = require("/model/Reward");
 
 var _currentShop = null;
 // var _currentObject = null;
@@ -28,19 +30,6 @@ function getReverseGeocoded(evt, func, me) { 'use strict';
     }
 }
 
-function getGeocoded(e, func, me) { 'use strict';
-    if (!e.success || e.error)
-    {
-        Ti.API.info("Code translation: "+ Geoloc.translateErrorCode(e.code) + JSON.stringify(e.error));
-        // alert('error ' + JSON.stringify(e.error));
-    } else {
-        me.setLocation(e.coords.longitude, e.coords.latitude);
-        // Try to reverse geocoding
-        Titanium.Geolocation.reverseGeocoder(e.coords.latitude,e.coords.longitude,
-            function(e) { getReverseGeocoded(e, func, me); });
-    }
-}
- 
 function Shop(json) {'use strict';
     CloudObject.call(this);
     
@@ -69,6 +58,31 @@ function Shop(json) {'use strict';
     // -------------------------------------------------------
     this.setUser = function(user) {
         this.setFieldObject('user', 'AppUser');
+    };
+    
+    this.setCheckin = function(val) {
+        this.checkin = val;
+        if(val) {
+            this.allPoints -= this.stepinPoints;
+        } else {
+            this.allPoints += this.stepinPoints;
+        }
+        AppUser.updateShop(this);  
+    };
+    
+    this.getStepinPoints = function() {
+        return this.stepinPoints;
+    };
+    
+    this.getScanPoints = function(code) {
+        var i, ret = 0;
+        var data = this.scans;
+        for(i = 0; i < data.length; i++) {
+            if(data[i].code === code && ! data[i].scanned) {
+                ret = data[i].getNbPoints();
+            }
+        }
+        return ret;
     };
     
     this.retrieveArticles = function(func) {
@@ -102,28 +116,6 @@ function Shop(json) {'use strict';
         });
     };
     
-    this.retrieveShops = function(func) {
-        var Shop = require('model/Shop'),
-            shop = new Shop();
-        var qparams = { 'shop.url' : this.getUrl() };
-        this.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
-            var i, data = null;
-            if(result && result.length > 0) {
-                data = [];
-                for(i = 0 ; i < result.length; i++) {
-                    data.push(new Shop(result[i]));    
-                }
-            }
-            func(data);
-        });
-    };
-    this.geolocalize = function(func) {
-        // _currentObject = this;
-        if(Geoloc.isLocationServicesEnabled()) {
-            Titanium.Geolocation.getCurrentPosition(function(e) { getGeocoded(e, func, this); });
-        }
-    };
-    
     // --------------------------------------------------------
     // Internal method
     // --------------------------------------------------------
@@ -146,13 +138,15 @@ function Shop(json) {'use strict';
     this.getExtraFormWindowOptions = function(crud) {
         return ((crud === 'read') ? { addStepsActions : true } : { addLocalizationButton : true });
     };
-    
+    this.saveAll = function() {
+        AppUser.updateShop(this);  
+    };
     this.isCheckin = function() {
         return this.checkin;
     };
 
     this.getPoints = function(action_kind) {
-        action_kind = action_kind || 'stepin';
+        action_kind = action_kind || Reward.ACTION_KIND_STEPIN;
         var ret = 250; // Default value for points !!!
         if(this.points) {
             ret = this.points[action_kind];
@@ -172,6 +166,94 @@ function Shop(json) {'use strict';
             });
         }
     };
+    this.enableAllScans = function() {
+        var i;
+        var data = this.scans;
+        for(i = 0; i < data.length; i++) {
+            data[i].scanned = false;
+            this.allPoints += data[i].points;
+            this.allPossiblePoints += data[i].points;
+        }  
+        this.scans = data;
+    };
+    this.disableScan = function(rew) {
+        var i;
+        var data = this.scans;
+        for(i = 0; i < data.length; i++) {
+            if(rew.code === data[i].code) {
+                data[i].scanned = true;
+                this.allPoints -= data[i].points;
+            }
+        }  
+        this.scans = data;
+    };
+    this.getScan = function(index) {
+        return this.scans[index - 1];
+    };
+    this.setScan = function(scan) {
+        var data = this.scans;
+        data[scan.index - 1] = scan;
+        this.scans = data;
+        this.saveAll();
+    };
+    this.computeAvailablePoints = function(rewards) {
+        // We have to check for :
+        // - Checkin
+        // - Scans
+        this.checkin = false;
+        this.allPoints = 0;
+        this.allPossiblePoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
+        this.stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
+        this.enableAllScans();
+        var i, nb_checkins = 0;
+        for(i = 0; i < rewards.length; i++) {
+            var rew = rewards[i];
+            var now = new Date();
+            if(rew.shop && rew.shop.url === this.m_url) {
+                var elapsedTime = rew.howLong(now); 
+                if(rew.getActionKind() === Reward.ACTION_KIND_STEPIN) {
+                    var points = this.getPoints(Reward.ACTION_KIND_STEPIN);
+                    // We count the number of CI done during the week
+                    nb_checkins ++;
+                    if(elapsedTime <= 24 * 60) {
+                        this.checkin = true;
+                        this.stepinPoints = 0;
+                    }     
+                } else if(rew.getActionKind() === Reward.ACTION_KIND_SCAN) {
+                    if(elapsedTime <= 24 * 60) {
+                        this.disableScan(rew);                        
+                    }
+                }
+            }
+        }
+        if(! this.checkin && nb_checkins > 0) {
+            this.stepinPoints = Math.round(this.getPoints(Reward.ACTION_KIND_STEPIN) / (nb_checkins * nb_checkins));
+        }
+        this.allPoints += this.stepinPoints;
+        AppUser.updateShop(this);
+    };
+    
+    this.retrieveScansAndComputeAvailablePoints = function(func, rewards, finalFunc) {
+        var Scan = require("/model/Scan"),
+            scan = new Scan();
+        var self = this;
+        this.getList(scan, Tools.Hash2Qparams({ "shop.url" : this.getUrl() }), function(scans) {
+            var i, data = [];
+            for(i = 0; i < scans.length; i++) {
+                data.push(new Scan(scans[i]));
+            }
+            self.scans = data;
+            
+            self.computeAvailablePoints(rewards);
+            if(func) {
+                func(self);
+            }
+            if(finalFunc) {
+                finalFunc();
+            }
+        });
+    };
+    
     this.doActionsAfterCrud = function(tabGroup) {
         tabGroup.updateObject(this);
     };
@@ -215,18 +297,30 @@ function Shop(json) {'use strict';
         var shoploc = this.location;
         var self = this;
         var shopImg = Image.createImageView('read', this.getPhotoUrl(0), null, { height : 30, width : 30});
+        
+        var myDisclosure = Ti.UI.createImageView({
+            image : '/images/bullet.png',
+            width : 25,
+            height : 25
+        });
+        
         var annotation = Titanium.Map.createAnnotation({
             latitude:shoploc.lat,
             longitude:shoploc.lng,
+            image : '/images/pointer-regular.png',
             leftView : shopImg,
-            rightButton : (tabGroup ? Titanium.UI.iPhone.SystemButton.DISCLOSURE : null),
+            rightView : (tabGroup ? myDisclosure : null),
             title : this.getName(),
             subtitle : this.getDetails(),
-            animate:true
+            animate:true,
+            shop:this
         });
         
         annotation.addEventListener('click', function(e) {
-            if(e.clicksource === "rightButton") {
+            if(e.annotation) {
+                e.annotation.setImage( e.clicksource ? '/images/pointer-over.png' : '/images/pointer-regular.png');
+            }
+            if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
                 var obj = self,
                     FormWindow = require('ui/common/FormWindow'),
                     crud, title;
@@ -244,36 +338,6 @@ function Shop(json) {'use strict';
         });
         return annotation;
     };
-    this.updateReadViewWithLocation = function(view) {
-        var mapview = view.mapview;
-            
-        if(this.location) {
-            var shoploc = this.location;
-            var region = {latitude: shoploc.lat,longitude:shoploc.lng,latitudeDelta:0.01, longitudeDelta:0.01, regionFit:false},
-                user = AppUser.getCurrentUser();
-
-            if(user.location) {
-                var userloc = user.location;
-                var w = Math.abs(shoploc.lat - userloc.lat);
-                var h = Math.abs(shoploc.lng - userloc.lng);
-                region.latitudeDelta = w * 1.15;
-                region.longitudeDelta = h * 1.15;
-            }
-            mapview.setRegionFit(false);
-            mapview.setRegion(region);
-            mapview.setLocation(region);
-            var annotation = this.createAnnotation();
-            mapview.addAnnotation(annotation);
-            // mapview.selectAnnotation(annotation);
-            
-            if(this.distance === null) {
-                this.computeDistance();
-            }
-            if(this.distance !== null && view.labelDistance) {
-                view.labelDistance.setText((this.distance || "0") + " mètres");
-            }
-        }
-    };
     
     this.createReadView = function(header, footer, tabGroup) {
         var internBorder = 2;
@@ -290,117 +354,106 @@ function Shop(json) {'use strict';
         Image.cacheImage(this.getPhotoUrl(0), function(image) {
             newHeader.setBackgroundImage(image);
         });
-        /*
-        // First view
-        var imgView = Image.createImageView('read', this.getPhotoUrl(0), null, {
-            width : '100%',
-            height : Titanium.UI.SIZE,
-            top : 0,
-            zIndex : -1
-        });
-        newHeader.add(imgView);
-        */
         
         // we create a view for shop details in the header
         var shopdetails = Ti.UI.createView({
             top : 97,
             height : 36,
             backgroundColor : 'black',
-            opacity : 0.8,
+            opacity : 0.6,
             zIndex : 0
         });
+        newHeader.add(shopdetails);
         
         // Line 1
         var labelName = Ti.UI.createLabel({
             font : {fontSize: 12, fontWeight : 'bold'},
             left : 70,
-            top : internBorder,
+            top : shopdetails.top + internBorder,
             color:'white',
-            opacity : 1,
             zIndex : 1,
             text : this.getName(),
             height : labelHeight
         });
-        shopdetails.add(labelName);
+        newHeader.add(labelName);
     
         // line 2
         var labelDetails = Ti.UI.createLabel({
             color : 'white',
             left : 70,
-            opacity : 1,
-            top : 20,
+            top : shopdetails.top + 20,
             zIndex : 1,
             font : { fontSize : 10, fontWeight : 'normal'},
             text : this.getDetails()
         }); 
-        shopdetails.add(labelDetails);
-        var btShowMap = Ti.UI.createButton({
-            image : '/images/actionpink.png',
-            width : 22, 
-            height: 22,
+        newHeader.add(labelDetails);
+        var btShowMap = Ti.UI.createImageView({
+            image : '/images/bullet.png',
+            width : 25, 
+            height: 25,
+            top : shopdetails.top + 6,
             zIndex : 1,
-            right : 2
+            right : 5
         });
-        shopdetails.add(btShowMap);
-        newHeader.add(shopdetails);
+        newHeader.add(btShowMap);
         
         // Mini map
         var user = AppUser.getCurrentUser();
         var loc = (this.location || user.location || {lat : 48.833, lng : 2.333});
         
-        var mapview = Titanium.Map.createView({
-            mapType: Titanium.Map.STANDARD_TYPE,
+        var mapview = Ti.UI.createImageView({
+            image : "/images/smallmap.png",
             borderRadius : 1,
             borderWidth : 2,
             borderColor : 'white',
-            animate:true,
-            region : { latitude: loc.lat,
-                longitude: loc.lng,
-                latitudeDelta:0.005, 
-                longitudeDelta:0.005},
-            regionFit:true,
-            userLocation:false,
             zIndex : 1,
             height : 60,
             width : 60,
             bottom : 2,
-            top : 76,
+            top : 80,
             left : 9 
         });
         newHeader.add(mapview);
-        btShowMap.addEventListener('click', function(e) {
-            Image.displayMapZoom(mapview);
-        });
-        newHeader.mapview = mapview;
-
-        var points_to_win = 0;
-        if(! this.checkin) {
-            points_to_win += this.getPoints('stepin');
+        
+        var self = this;
+        function showMap() {
+            var MapDetailWindow = require('/ui/common/MapDetailWindow'),
+                swin = new MapDetailWindow(self);
+            tabGroup.activeTab.open(swin, {animated:true});
         }
         
+        btShowMap.addEventListener('click', showMap);
+        mapview.addEventListener('click', showMap);
+        newHeader.mapview = mapview;
+
         // Add the points
         var pointsView = Ti.UI.createView({
             bottom : 0,
             height : 63,
             backgroundColor : '#d92276'
         });
-        var lblPoints = Ti.UI.createLabel({
-            top : 5,
-            color : 'white',
-            text : points_to_win + ' points',
-            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
-            font : {fontSize : 24, fontWeight : 'bold'}
-        });
-        var lblDetails = Ti.UI.createLabel({
-            bottom : 5,
-            color : 'white',
-            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
-            font : {fontSize : 13, fontWeight : 'normal'},
-            text : 'à gagner en vous rendant dans ce magasin'
-        });
-        pointsView.add(lblPoints);
-        pointsView.add(lblDetails);
-        this.lblPoints = lblPoints;
+        if(this.checkin) {
+            // We display adverts
+            pointsView.backgroundImage = '/images/advert.png';
+        } else {
+            var lblPoints = Ti.UI.createLabel({
+                top : 5,
+                color : 'white',
+                text : this.stepinPoints + ' points',
+                textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+                font : {fontSize : 24, fontWeight : 'bold'}
+            });
+            var lblDetails = Ti.UI.createLabel({
+                bottom : 5,
+                color : 'white',
+                textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+                font : {fontSize : 13, fontWeight : 'normal'},
+                text : 'à gagner en vous rendant dans ce magasin'
+            });
+            pointsView.add(lblPoints);
+            pointsView.add(lblDetails);
+            this.lblPoints = lblPoints;
+        }
         
         newHeader.add(pointsView);
         
@@ -436,136 +489,97 @@ function Shop(json) {'use strict';
         tv.setData(data);
         var checkin = this.checkin;
         
-        function createRow(options) {
-            var row = Ti.UI.createTableViewRow(options);
-            row.height = 44;
-            
-            var img = Image.createImageView('read', options.photo, null, {noEvent : true, borderWidth : 0, left : 2, top : 2, width : 40, height : 40});
-            row.add(img);
-            
-            var lbl = Ti.UI.createLabel({
-                left : 44,
-                top : 4,
-                font : {fontSize : 12},
-                color : '#4d4d4d',
-                text : options.what,
-                width : 190 - 40 
-            });
-            row.add(lbl);
-            
-            var pt = Image.createPointView(options.points, 40, 80);
-            pt.right = 5;
-            row.add(pt);
-            row.ptView = pt;
-            return row;
-        }
-        var self = this;
         tv.addEventListener('click', function(e) {
-            if(e.rowData && e.rowData.object && e.rowData.hasDetail) {
+            if(e.rowData && e.rowData.object_index) {
                 // We open a detailed window of the object to scan
-                var obj = e.rowData.object; 
-                obj.checkin = checkin;
-                obj.shop = self;
-                var FormWindow = require("/ui/common/FormWindow"),
-                    swin = new FormWindow(null, 'read', obj, tabGroup);
-                tabGroup.activeTab.open(swin, {animated:true});
+                var obj_index = e.rowData.object_index;
+                var shop_index = self.index;
+                var row_index = e.index;
+                var canScan = e.rowData.canScan;
+                var obj = self.getScan(obj_index);
+                if(! obj.scanned) { 
+                    // var FormWindow = require("/ui/common/FormWindow"),
+                    //     swin = new FormWindow(null, 'read', obj, tabGroup, {canScan : checkin});
+                    var ScanDetailWindow = require("/ui/common/ScanDetailWindow"),
+                        swin = new ScanDetailWindow(obj, tabGroup,{canScan : checkin});
+                        
+                    swin.addEventListener('close', function(e) {
+                        if(swin.object) {
+                            var scan = swin.object;
+                            var shop = AppUser.getShop(shop_index);
+                            if(scan.scanned) {
+                                shop.allPoints -= scan.points;
+                            }
+                            shop.setScan(scan);
+                            var row = scan.createTableRow({
+                                canScan : ! scan.scanned,
+                                object_index : obj_index
+                            });
+                            tv.updateRow(row_index, row);
+                        } 
+                    });
+                    tabGroup.openWindow(null,swin, {animated:true});
+                } else {
+                    tv.deselectRow(row_index);
+                }
             } 
         });
 
         // We add the scan articles
-        var Scan = require("/model/Scan"),
-            scan = new Scan();
-        this.getList(scan, Tools.Hash2Qparams({ "shop.url" : this.getUrl() }), function(scans) {
-            var j;
-            for(j = 0; j < scans.length; j++) {
-                var s = new Scan(scans[j]);
-                var row = createRow({
-                    what : s.title,
-                    points : s.points,
-                    hasDetail: checkin,
-                    object : s,
-                    photo : s.getPhotoUrl(0)
-                });
-                row.scan = s;
-                points_to_win += s.points;
-                lblPoints.setText(points_to_win + ' points');
-                section.add(row);
-            }
-            tv.setData([section]);
-        });
+        var j;
+        var scans = this.scans;
+        for(j = 0; scans && j < scans.length; j++) {
+            var s = scans[j];
+            var row = s.createTableRow({
+                canScan : (! checkin),
+                object_index : j + 1
+            });
+            row.scan = s;
+            section.add(row);
+        }
+        tv.setData([section]);
         
         this.tv = tv;
-        
-        // We need to update the view
-        this.updateReadViewWithLocation(newHeader);
         
         return tv;
     };
     
-    this.newObjectScanned = function(code, tabGroup, func) {
-        // We search for the object
-        var section = this.tv.getData(), scan = null;
-        if(section && section.length > 0) {
-            var rows = section[0].getRows();
-            var i;
-            for (i = 0 ; !scan && i < rows.length; i++) {
-                if(rows[i].scan && rows[i].scan.code.toString() === code.toString()) {
-                    var row = rows[i];
-                    scan = row.scan;
-                    row.backgroungColor = '#eadae3';
-                    row.hasDetail = false;
-                    row.hasCheck = true;
-                }
-            }
-        }
-        if(scan) {
-            // We have found it
-            var Reward = require("model/Reward"),
-                rew = new Reward({ nb_points : scan.points, action_kind : 'Scan', extra : {code : scan.code}});
-            rew.setShop(this);
-            rew.setUser(AppUser.getCurrentUser());
-            tabGroup.addNewReward(rew, true, func);
-        } else {
-            alert("Désolé mais l'article scanné ne correspond pas à un article de cette boutique !");
-        }
+    this.getTwoFreeScans = function() {
+        // TODO : to implement  
+        return null;
     };
     
     this.createTableRow = function() {
         var internBorder = 2;
         var internHeight = 75;
         var labelHeight = Math.round((internHeight - 2 * internBorder) / 3);
+        var allPoints = this.allPoints;
          
         var row = Ti.UI.createTableViewRow({
-            hasDetail : true,
+            className : 'shopRow',
             height : internHeight + 2 * internBorder,
-            backgroundColor : '#f0f0f0'
+            backgroundColor : (this.checkin ? '#eadae3' : '#f0f0f0')
         });
         
-        var nbPhotos = this.getNbPhotos();
-        if(nbPhotos === 0) { nbPhotos = 1;}
-        
-        var imgs = [];
-        var i;
-        for(i = 0; i < nbPhotos; i ++) {
-            var img = Image.createImageView('read', this.getNthPhotoUrl(i), null, {borderWidth : 0, borderRadius : 0, noEvent : true});
-            imgs.push(img);
-        }
-        
-        var sc = Ti.UI.createScrollableView({
-            views : imgs,
+        var img = Image.createImageView('read', this.getNthPhotoUrl(0), null, {
             left : 5,
             height : 60,
             width : 60,
             borderWith : 0,
             borderRadius : 2,
-            pagingControlHeight : 7,
-            pagingControlColor : 'gray',
-            showPagingControl : (nbPhotos > 1)
-        });
-        row.add(sc);
+            noEvent : true});
+        row.add(img);
         
-        var vPoints = Image.createPointView(this.getPoints(), 50,70);
-        vPoints.right = internBorder * 2;
+        var btAction = Ti.UI.createImageView({
+            image : (allPoints > 0 ? '/images/bullet.png' : '/images/checked.png'),
+            width : 25,
+            height : 25,
+            right : 5
+        });
+        row.add(btAction);
+    
+        var vPoints = Image.createPointView((allPoints > 0 ? allPoints : this.allPossiblePoints), 50,70, (allPoints === 0));
+        vPoints.right = btAction.right + btAction.width + internBorder;
         row.add(vPoints);
         row.ptView = vPoints;
 
@@ -575,7 +589,7 @@ function Shop(json) {'use strict';
             text : this.getName(),
             left : 70,
             top : 23,
-            width : 300 - (sc.width + 2 * internBorder + vPoints.width + 2 * internBorder), 
+            width : 140, 
             height : labelHeight
         });
         row.add(labelName);
@@ -584,16 +598,17 @@ function Shop(json) {'use strict';
             font : {fontSize: 12},
             color : '#646464', 
             text : null,
-            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
             left : labelName.left,
             top : 40,
+            width : labelName.width,
             height : labelHeight
         });
         row.add(labelDistance);
         row.labelDistance = labelDistance;
         this.updateRow(row);
                 
-        row.object = this;
+        row.object_index = this.index;
         return row;
     };
     

@@ -44,17 +44,6 @@ function ShopPresentsWindow(args) {'use strict';
         separatorStyle : Titanium.UI.iPhone.TableViewSeparatorStyle.NONE
     });
     
-    // TODO : we need to get back the presents from the cloud
-    var allPresents = [ 
-        { title : "Cappucino chez Starbuck", points : 1000, image : 'images/background.png' },
-        { title : "Chèque cadeau Amazon de 10€", points : 2000, image : 'images/background.png' },
-        { title : "Chèque cadeau Fnac de 10€", points : 2500, image : 'images/background.png' },
-        { title : "Chèque cadeau Amazon de 20€", points : 5000, image : 'images/background.png' },
-        { title : "Chèque cadeau Amazon de 30€", points : 8000, image : 'images/background.png' },
-        { title : "10 places de Ciné Gaumont", points : 8000, image : 'images/background.png' },
-        { title : "Tour du monde 5000€", points : 200000, image : 'images/background.png' }
-    ]; 
-    
     function createPresentView(present) {
         var isEnabled = (user.getTotalPoints() >= present.points);
         var v = Ti.UI.createView({
@@ -107,10 +96,9 @@ function ShopPresentsWindow(args) {'use strict';
                         rew = new Reward();
                     rew.setUser(user);
                     rew.setNbPoints(-1 * present.points);
-                    self.total_points -= present.points;
+                    user.setTotalPoints(user.getTotalPoints() - present.points);
                     rew.setActionKind(present.title);
-                    // FIXME
-                    tabGroup.addNewReward(rew, false, function(e) {
+                    rew.create( function(e) {
                         alert("Votre bon cadeau vous sera envoyé par email dans un délai de 15 jours maximum !");
                         self.close();
                     });
@@ -123,6 +111,7 @@ function ShopPresentsWindow(args) {'use strict';
     
     function createRow(presents, index1, index2) {
         var row = Ti.UI.createTableViewRow({
+            className : 'presentRow',
             backgroundColor : 'white'
         });
         
@@ -149,8 +138,6 @@ function ShopPresentsWindow(args) {'use strict';
         }
         tv.setData(data);
     };
-    
-    // self.setPresents(allPresents);
     
     self.add(tv);
     

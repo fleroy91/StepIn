@@ -24,6 +24,7 @@ function ChooseFilterWindow(tags) { 'use strict';
         var tag = allTags[i];
         
         var row = Ti.UI.createTableViewRow({
+            className : 'filterRow',
             title : tag.tag,
             index : i,
             hasCheck : tag.value

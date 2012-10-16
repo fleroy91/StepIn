@@ -493,6 +493,7 @@ function Article(json) {'use strict';
         }
         
         this.labelBooked = labelBooked;
+        // TODO : deprecated
         row.object = this;
         return row;
     };

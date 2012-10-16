@@ -2,6 +2,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var CloudObject = require("model/CloudObject");
 var Image = require("/etc/Image");
+var AppUser = require("/model/AppUser");
 
 function Scan(json) {'use strict';
     CloudObject.call(this);
@@ -28,67 +29,114 @@ function Scan(json) {'use strict';
     this.doActionsAfterCrud = function(tabGroup) {
     };
     
-    this.createReadView = function(header, footer) {
+    this.getPoints = function() {
+        var ret = this.points;
+        if(this.scanned) {
+            ret = 0;
+        }
+        return ret;
+    };
+    
+    this.createReadView = function(tabGroup) {
         var internBorder = 2;
-        var internHeight = 80;
-        var labelHeight = Math.round((internHeight - (4 * internBorder)) / 4);
+        var labelHeight = 13;
+
+        var main = Ti.UI.createView({height : 36});
         
-        var tv = Ti.UI.createTableView({
-            height : 'auto',
-            scrollable : true,
-            allowsSelection : false,
-            footerView : footer,
-            headerView : header,
-            style : Titanium.UI.iPhone.TableViewStyle.GROUPED
+        var opacView = Ti.UI.createView({
+            opacity : 0.5,
+            backgroundColor : 'black',
+            height : 36,
+            zIndex : -1
         });
+        main.add(opacView);
         
-        // The description of the article
-        var rowSelf = Ti.UI.createTableViewRow({
-            height : 45,
-            object : this
-        });
-        
+        // Line 1
         var labelName = Ti.UI.createLabel({
-            font : {fontSize: 14, fontWeight : 'bold'},
-            color:'#576996',
-            text : this.title,
-            left : internBorder,
+            font : {fontSize: 12, fontWeight : 'bold'},
+            left : 5,
             top : internBorder,
+            color: 'white',
+            zIndex : 1,
+            text : this.title,
             height : labelHeight
         });
-        rowSelf.add(labelName);
+        main.add(labelName);
     
+        // line 2
         var labelDetails = Ti.UI.createLabel({
-            color : '#222',
-            font : { fontSize : 12, fontWeight : 'normal'},
-            text : this.desc,
-            height : labelHeight,
-            left : labelName.left,
-            top : labelName.top + labelName.height + internBorder
+            color : 'white',
+            left : 5,
+            top : labelName.top + 20,
+            zIndex : 1,
+            font : { fontSize : 10, fontWeight : 'normal'},
+            text : this.desc
         }); 
-        rowSelf.add(labelDetails);
+        main.add(labelDetails);
         
-        var rowPt = Ti.UI.createTableViewRow({
-            height : 40
-        });
-        
-        var pt = Image.createPointView(this.points, 40, 80);
-        rowPt.add(pt);
-        
-        var data = [rowSelf, rowPt];
-        var rowScan = null;
-        /*
-        if(this.getPhotoUrl(1)) {
-            rowScan = Ti.UI.createTableViewRow({ height : 120});
-            Image.cacheImage(this.getPhotoUrl(1), function(image) {
-                rowScan.setBackgroundImage(image);
+        // Add the points
+        var vPoints = Image.createPointView(this.points, 50,70, this.scanned);
+        vPoints.right = 5;
+        main.add(vPoints);
+
+        return main;
+    };
+
+    this.newObjectScanned = function(code, tabGroup, func) {
+        if(code && this.code.toString() === code.toString()) {
+            this.scanned = true;
+            // We have found it
+            var Reward = require("model/Reward"),
+                rew = new Reward({ nb_points : this.points, code : this.code});
+            rew.setActionKind(Reward.ACTION_KIND_SCAN);
+            rew.setShop(this.shop);
+            rew.setUser(AppUser.getCurrentUser());
+            var self = this;
+            tabGroup.addNewReward(rew, this.shop, function(newRew) {
+                if(newRew) {
+                    if(func) {
+                        func(self);
+                    }
+                }
             });
-            data.push(rowScan);  
+        } else {
+            alert("Désolé mais l'article scanné ne correspond pas à un article de cette boutique !");
         }
-        */
-        tv.setData(data);
+    };
+    
+    this.createTableRow = function(options) {
+        var scanned = this.scanned;
         
-        return tv;
+        options.height = 44;
+        options.className = 'scanRow';
+        var row = Ti.UI.createTableViewRow(options);
+        
+        var img = Image.createImageView('read', this.getPhotoUrl(0), null, {noEvent : true, borderWidth : 0, left : 2, top : 2, width : 40, height : 40});
+        row.add(img);
+        
+        var lbl = Ti.UI.createLabel({
+            left : 44,
+            top : 4,
+            font : {fontSize : 12},
+            color : '#4d4d4d',
+            text : this.title,
+            width : 190 - 40 
+        });
+        row.add(lbl);
+        
+        var btAction = Ti.UI.createImageView({
+            image : (scanned ? '/images/checked.png' : '/images/bullet.png'),
+            width : 25,
+            height : 25,
+            right : 5
+        });
+        row.add(btAction);
+    
+        var pt = Image.createPointView(this.points, 40, 80, scanned);
+        pt.right = btAction.right + btAction.width + 2;
+        row.add(pt);
+        row.ptView = pt;
+        return row;
     };
 
     this.init(json);
