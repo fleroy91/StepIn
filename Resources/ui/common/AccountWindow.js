@@ -196,9 +196,9 @@ function AccountWindow(args) {'use strict';
 	function updateWindow(e, user) {
 	    if(user) {
             user.setCurrentUser();
-            user.checkAll();
+            tabGroup.updateTitle();
+            user.checkAll(tabGroup.updateAllRows);
             tabGroup.closeAllWindows();
-            tabGroup.updateAllRows();
 	    } else {
             user = AppUser.getCurrentUser();
         }

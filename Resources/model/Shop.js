@@ -302,27 +302,25 @@ function Shop(json) {'use strict';
         var self = this;
         var shopImg = Image.createImageView('read', this.getPhotoUrl(0), null, { height : 30, width : 30});
         
-        var myDisclosure = Ti.UI.createImageView({
-            image : '/images/bullet.png',
-            width : 25,
-            height : 25
-        });
-        
         var annotation = Titanium.Map.createAnnotation({
             latitude:shoploc.lat,
             longitude:shoploc.lng,
             image : '/images/pointer-regular.png',
             leftView : shopImg,
-            rightView : (tabGroup ? myDisclosure : null),
+            rightButton : (tabGroup ? '/images/bullet.png' : null),
             title : this.getName(),
             subtitle : this.getDetails(),
             animate:true,
             shop:this
         });
-        
         annotation.addEventListener('click', function(e) {
-            if(e.annotation) {
-                e.annotation.setImage( e.clicksource ? '/images/pointer-over.png' : '/images/pointer-regular.png');
+            if(e.annotation && e.clicksource === 'pin') {
+                if(e.map.selectedAnnotation && e.map.selectedAnnotation !== e.annotation) {
+                    // e.map.deselectAnnotation(e.map.selectedAnnotation);
+                    e.map.selectedAnnotation.setImage('/images/pointer-regular.png');
+                }
+                e.map.selectedAnnotation = e.annotation;
+                e.annotation.setImage('/images/pointer-over.png');
             }
             if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
                 var obj = self,
@@ -342,9 +340,6 @@ function Shop(json) {'use strict';
         var internBorder = 2;
         var internHeight = 74;
         var labelHeight = 13;
-        
-        // TODO : for debugging
-        toto.run();
         
         // Header : 135 + 63
         // Row : 74

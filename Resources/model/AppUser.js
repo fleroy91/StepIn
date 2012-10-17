@@ -293,7 +293,7 @@ function AppUser(json) {'use strict';
     };
     
     this.setCurrentUser = function() {
-        if(! Ti.App.currentUser || this.m_url !== Ti.App.currentUser.m_url) {
+        if(! this.isDummy() && (! Ti.App.currentUser || this.m_url !== Ti.App.currentUser.m_url)) {
             Ti.App.testflight.passCheckpoint("Set new user");
             Ti.App.testflight.addCustomEnvironmentInformation({
                 username : this.firstname,

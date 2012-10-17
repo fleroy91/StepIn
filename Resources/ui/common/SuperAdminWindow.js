@@ -202,8 +202,8 @@ function SuperAdminWindow(args) {'use strict';
                         user.setTotalPoints(0);
                         user.save();
                         user.setCurrentUser();
-                        user.checkAll();
-                        tabGroup.updateAllRows();
+                        tabGroup.updateTitle();
+                        user.checkAll(tabGroup.updateAllRows);
                         self.close();
                     });
                 }

@@ -12,7 +12,6 @@ var Spinner = require("etc/Spinner");
 var Tools = require("etc/Tools");
 
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
-var _tabGroup;
 var _allWindows = [];
 
 function ApplicationTabGroup() { 'use strict';
@@ -161,7 +160,6 @@ function ApplicationTabGroup() { 'use strict';
         win.addEventListener('focus', function(e) {
             self.updateTitle(win);
         });
-        
         win.barColor = 'black';
         win.setTitle(null);
         
@@ -426,11 +424,6 @@ function ApplicationTabGroup() { 'use strict';
     // Should never happen
     self.addEventListener('close', sonicOff);
    
-    self.addEventListener('focus', function(e) {
-        _tabGroup = self;
-    }); 
-
-    
     self.closeWindow = function(win) {
         var pos = _allWindows.indexOf(win);
         if(pos >= 0) {
@@ -470,12 +463,17 @@ function ApplicationTabGroup() { 'use strict';
                 for(i = 0; i < rows.length; i++) {
                     if(rows[i].object_index) {
                         var s = AppUser.getShop(rows[i].object_index);
-                        var row = s.createTableRow();
-                        self.tvSearch.updateRow(i, row);
+                        if(s.changed) {
+                            var row = s.createTableRow();
+                            self.tvSearch.updateRow(i, row);
+                            s.changed = false;
+                            AppUser.updateShop(s);
+                        }
                     }
                 }
             }
         }
+        self.updateTitle();
     };
     
 	return self;

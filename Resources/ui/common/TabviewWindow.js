@@ -29,7 +29,10 @@ function TabViewWindow(args) {
     var viewList = true;
     var btChangeView =Ti.UI.createButton({
         style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-        image : "/images/switch-map.png"
+        title : " ",
+        width : 81,
+        height : 28,
+        backgroundImage : "/images/switch-list.png"
     });
     self.setLeftNavButton(btChangeView);
     
@@ -131,7 +134,7 @@ function TabViewWindow(args) {
                 //mapView.animate({view : listView, transition : Ti.UI.iPhone.AnimationStyle.FLIP_FROM_RIGHT});            
             }
             viewList = ! viewList;
-            btChangeView.setImage((viewList ? "/images/switch-map.png" : "/images/switch-list.png"));
+            btChangeView.setImage((viewList ? "/images/switch-list.png" : "/images/switch-map.png"));
         }
     });
 
