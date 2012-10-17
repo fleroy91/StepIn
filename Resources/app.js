@@ -40,6 +40,16 @@ Ti.App.Properties.setInt('MaxBookingTime', 15);
 var Spinner = require("etc/Spinner");
 var Geoloc = require("etc/Geoloc");
 
+// ------------------------------------------------------------------------
+// TestFlight
+// ------------------------------------------------------------------------
+Ti.App.testflight = require('com.0x82.testflight');
+Ti.API.info("module is => " + Ti.App.testflight);
+
+// WARNING: ONLY USE THIS ON DEVELOPMENT! DON'T GO TO THE APP STORE WITH THIS LINE!!
+Ti.App.testflight.setDeviceIdenifier(Ti.Platform.id);
+// ------------------------------------------------------------------------
+
 var AppUser = require('model/AppUser');
 var Tools = require('/etc/Tools');
 
@@ -67,16 +77,10 @@ if(debug) {
 
 // Management of the Sonic Service !
 Ti.App.Properties.setBool('isSonicRunning', false);
-/*
-var service = Ti.App.iOS.registerBackgroundService({
-    url : 'bg-service.js'
-});
-*/
 
 var SplashWindow = require("ui/common/SplashWindow");
 var main = new SplashWindow();
 
-Ti.App.adminMode = false;
 function isArray(a) {'use strict';
     return Object.prototype.toString.apply(a) === '[object Array]';
 }
@@ -98,6 +102,14 @@ Ti.API.myLog = function(args) {'use strict';
 };
 
 function runApp() {'use strict';
+    var user = AppUser.getCurrentUser();
+    Ti.App.testflight.addCustomEnvironmentInformation({
+        username : user.firstname,
+        email : user.email,
+        total_points : user.total_points,
+        user_url : user.m_url,
+        session_id : Ti.App.sessionId
+    });
     Spinner.hide(main);
     var win = new ApplicationTabGroup();
     win.open({
@@ -131,5 +143,11 @@ main.addEventListener('open', function(e){ 'use strict';
     Spinner.show(main);
     checkUser();
 });
+
+var options = {};
+options[Ti.App.testflight.ATTACH_BACKTRACE_TO_FEEDBACK] = true;
+options[Ti.App.testflight.DISABLE_IN_APP_UPDATES] = true;
+
+Ti.App.testflight.takeOff('9e90e19a193196af8292ac34f6e3f8a6_MTQ0MTA0MjAxMi0xMC0xNiAxNToyNTo0MC42NjA0NTM', options);
 
 main.open();

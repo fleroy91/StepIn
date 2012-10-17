@@ -200,6 +200,9 @@ function Shop(json) {'use strict';
         // We have to check for :
         // - Checkin
         // - Scans
+        this.prev_checkin = this.checkin;
+        this.prev_points = this.allPoints;
+        
         this.checkin = false;
         this.allPoints = 0;
         this.allPossiblePoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
@@ -230,6 +233,7 @@ function Shop(json) {'use strict';
             this.stepinPoints = Math.round(this.getPoints(Reward.ACTION_KIND_STEPIN) / (nb_checkins * nb_checkins));
         }
         this.allPoints += this.stepinPoints;
+        this.changed = (this.prev_checkin !== this.checkin || this.prev_points !== this.allPoints);
         AppUser.updateShop(this);
     };
     
@@ -325,13 +329,8 @@ function Shop(json) {'use strict';
                     FormWindow = require('ui/common/FormWindow'),
                     crud, title;
                     
-                if(Ti.App.adminMode) {
-                    crud = 'update';
-                    title = 'Edition';
-                } else {
-                    crud = 'read';
-                    title = obj.getName();
-                }
+                crud = 'read';
+                title = obj.getName();
                 var win = new FormWindow(null, crud, obj, tabGroup, obj.getExtraFormWindowOptions(crud));
                 tabGroup.activeTab.open(win,{animated:true});
             }
@@ -343,6 +342,9 @@ function Shop(json) {'use strict';
         var internBorder = 2;
         var internHeight = 74;
         var labelHeight = 13;
+        
+        // TODO : for debugging
+        toto.run();
         
         // Header : 135 + 63
         // Row : 74

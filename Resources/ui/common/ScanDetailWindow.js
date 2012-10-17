@@ -89,6 +89,7 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
                 backgroundColor : 'black'
             });
             btBack.addEventListener('click', function(e) {
+                alert("On click ici pour fermer mais ça ne marche pas encore !");
                 Ti.UI.currentWindow.close();
                 self.object = null;
                 self.close({animated:true}); 
@@ -107,7 +108,8 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
                backgroundColor : 'black' 
             });
             overlayView.add(navBar);
-            view.top = 60;
+            view.top = 40;
+            view.left = 0;
             overlayView.add(view);
             
             self.addEventListener('open', function(e) {

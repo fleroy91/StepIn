@@ -22,7 +22,8 @@ function TabViewWindow(args) {
     var tabGroup = args.tabGroup;
     var self = Ti.UI.createWindow({
         navBarHidden : false,
-        backgroundColor : '#f0f0f0'
+        backgroundColor : '#f0f0f0',
+        barColor : 'black'
     });
     
     var viewList = true;
@@ -79,7 +80,6 @@ function TabViewWindow(args) {
     self.add(sheader);
 
 	var tv = TV.create({ 
-        editable:(Ti.App.adminMode && !args.booking)
 	}, refresh);
 	listView.add(tv);
 	self.add(listView);

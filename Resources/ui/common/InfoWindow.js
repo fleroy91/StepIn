@@ -12,7 +12,8 @@ var Image = require("/etc/Image");
 function InfoWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Infos', 
-	    backgroundColor : 'white'
+	    backgroundColor : 'white',
+        barColor : 'black'
     });
     
     function batteryStateToString(state)

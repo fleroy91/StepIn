@@ -293,6 +293,15 @@ function AppUser(json) {'use strict';
     };
     
     this.setCurrentUser = function() {
+        if(! Ti.App.currentUser || this.m_url !== Ti.App.currentUser.m_url) {
+            Ti.App.testflight.passCheckpoint("Set new user");
+            Ti.App.testflight.addCustomEnvironmentInformation({
+                username : this.firstname,
+                email : this.email,
+                user_url : this.m_url,
+                session_id : Ti.App.sessionId
+            });
+        }
         Ti.App.Properties.setString('AppUser', JSON.stringify(this));
         // If the new current user is not the same as the previous one, we need to reset the rewards
         if(Ti.App.currentUser && ! this.isDummy() && Ti.App.currentUser.m_url !== this.m_url) {

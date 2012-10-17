@@ -31,7 +31,7 @@ function ApplicationTabGroup() { 'use strict';
     
     var TabWindow = require('ui/common/TabviewWindow');
        
-    var mainObject = (Ti.App.adminMode ? shop : user); 
+    var mainObject = user; 
     var actInd = Titanium.UI.createActivityIndicator({
         style : Titanium.UI.iPhone.ActivityIndicatorStyle.PLAIN,
         font : {fontFamily:'Helvetica Neue', fontSize:15,fontWeight:'bold'},

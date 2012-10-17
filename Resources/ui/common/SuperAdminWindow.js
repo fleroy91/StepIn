@@ -18,7 +18,8 @@ function SuperAdminWindow(args) {'use strict';
     
 	var self = Ti.UI.createWindow({ 
 	    title : 'Super Admin', 
-	    backgroundColor : 'white'
+	    backgroundColor : 'white',
+        barColor : 'black'
     });
     
     var row1 = Ti.UI.createTableViewRow({

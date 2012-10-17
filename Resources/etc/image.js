@@ -514,8 +514,8 @@ Image.createPointView = function(points, height, width, disabled, options) { 'us
     var key;
     for(key in options) {
         if(options.hasOwnProperty(key)) {
-            lblOptions.key = options.key;
-            lblSmallOptions.key = options.key;
+            lblOptions[key] = options.key;
+            lblSmallOptions[key] = options.key;
         }
     }
     var lbl = Ti.UI.createLabel(lblOptions);

@@ -12,7 +12,8 @@ var AppUser = require("/model/AppUser");
 
 function MapDetailWindow(shop) { 'use strict';
     var self = Ti.UI.createWindow({
-        backgroundColor : '#f0f0f0'
+        backgroundColor : '#f0f0f0',
+        barColor : 'black'
     });
     
     var shoploc = shop.location;

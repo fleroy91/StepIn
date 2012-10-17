@@ -14,13 +14,14 @@ var refresh_all = true;
 var TV = require("/etc/TV");
 
 function HistoryWindow(args) { 'use strict';
-    var self = Ti.UI.createWindow();
+    var self = Ti.UI.createWindow({
+        barColor : 'black'});
     self.total_points = 0;
     var tabGroup = args.tabGroup;
     
     var tv = TV.create({
         scrollable : true, 
-        editable : (! Ti.App.adminMode)
+        editable : true
     }, function(e)  {
         tabGroup.getAllRewards();
     });
@@ -33,17 +34,15 @@ function HistoryWindow(args) { 'use strict';
         rew.remove();
     });
     
-    if(! Ti.App.adminMode) {
-        var btConvert = Ti.UI.createButton({
-            title : "Convertir"
-        });
-        self.setRightNavButton(btConvert);
-        btConvert.addEventListener('click', function(e) {
-            var ShopPresentsWindow = require("/ui/common/PresentsWindow"),
-                win = new ShopPresentsWindow(self);
-            self.containingTab.open(win, {animated:true});
-        });
-    }
+    var btConvert = Ti.UI.createButton({
+        title : "Convertir"
+    });
+    self.setRightNavButton(btConvert);
+    btConvert.addEventListener('click', function(e) {
+        var ShopPresentsWindow = require("/ui/common/PresentsWindow"),
+            win = new ShopPresentsWindow(self);
+        self.containingTab.open(win, {animated:true});
+    });
     
     self.updateTitle = function(nb) {
         self.total_points = nb;
@@ -52,9 +51,7 @@ function HistoryWindow(args) { 'use strict';
     
     self.addEventListener('focus', function(e) {
         self.containingTab.setBadge(null);
-        if(! Ti.App.adminMode) {
-            self.updateTitle(self.total_points);
-        }
+        self.updateTitle(self.total_points);
     });
     
     return self;

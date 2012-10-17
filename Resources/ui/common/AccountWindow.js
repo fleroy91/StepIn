@@ -14,7 +14,8 @@ var AppUser = require("/model/AppUser");
 function AccountWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Mon compte', 
-	    backgroundColor : '#f0f0f0'
+	    backgroundColor : '#f0f0f0',
+	    barColor : 'black'
     });
     var tabGroup = args.tabGroup;
     
@@ -59,14 +60,14 @@ function AccountWindow(args) {'use strict';
 	header.add(lbl2);
 	
 	var data = [];
-	var s1 = Ti.UI.createTableViewSection({});
+	var sProfil = Ti.UI.createTableViewSection({});
 	
     var r10 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('profil_text', 'Mon profil'), hasChild : true });
 	var r12 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('payments_text', 'Factures'), hasChild : true });
 	var r13 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('share_fb_text', 'Partager'), hasChild : true });
-    s1.add(r10);
-	// s1.add(r12);
-	// s1.add(r13);
+    sProfil.add(r10);
+	// sProfil.add(r12);
+	// sProfil.add(r13);
 	
 	function displayAccount() {
         var FormWindow = require("/ui/common/FormWindow"),
@@ -110,34 +111,36 @@ function AccountWindow(args) {'use strict';
 	r12.addEventListener('click', notImplemented);
     r13.addEventListener('click', notImplemented);
     
-	var s2 = Ti.UI.createTableViewSection({});
+	var sInfo = Ti.UI.createTableViewSection({});
 	var r21 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Comment ça marche', hasChild : true });
 	var r22 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Foire aux questions', hasChild : true });
 	var r23 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : "Conditions d'utilisations", hasChild : true });
-	s2.add(r21);
-	s2.add(r22);
-	s2.add(r23);
+	sInfo.add(r21);
+	sInfo.add(r22);
+	sInfo.add(r23);
 	
     r21.addEventListener('click', notImplemented);
     r22.addEventListener('click', notImplemented);
     r23.addEventListener('click', notImplemented);
 
-	var s3 = Ti.UI.createTableViewSection({});
-	var r31 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Contactez-nous', hasChild : true });
-	s3.add(r31);
-    r31.addEventListener('click', notImplemented);
+	var sContact = Ti.UI.createTableViewSection({});
+	var r31 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Feedback', hasChild : true });
+	sContact.add(r31);
+    r31.addEventListener('click', function(e) {
+        Ti.App.testflight.openFeedbackView();
+    });
 
-	var s4 = Ti.UI.createTableViewSection({});
+	var sLogin = Ti.UI.createTableViewSection({});
 	var r41 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Connexion'});
-	s4.add(r41);
+	sLogin.add(r41);
 	
-	var s5 = null, email = user.getEmail();
+	var sSuperAdmin = null, email = user.getEmail();
 	// TODO : debug - check if the user is marked in the DB as super admin
 	// if(! user.isDummy() || Tools.startsWith(email, "test2@gmail.com") || (Tools.startsWith(email, "flperso+") && Tools.endsWith(email, "@gmail.com"))) {
-	if(! s5) {
-        s5 = Ti.UI.createTableViewSection({});
+	if(! sSuperAdmin) {
+        sSuperAdmin = Ti.UI.createTableViewSection({});
         var r51 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Super-admin page'});
-        s5.add(r51);
+        sSuperAdmin.add(r51);
         
         r51.addEventListener('click', function(e) {
             var SuperAdminWindow = require("/ui/common/SuperAdminWindow"),
@@ -146,13 +149,13 @@ function AccountWindow(args) {'use strict';
             self.containingTab.open(win, {animated:true}); 
         });
 	}
-    data.push(s1);
-    if(s5) { 
-        data.push(s5);
+    data.push(sProfil);
+    if(sSuperAdmin) { 
+        data.push(sSuperAdmin);
     }
-    data.push(s2);
-    data.push(s3);
-    data.push(s4);
+    // data.push(sInfo);
+    data.push(sContact);
+    data.push(sLogin);
 	
 	var fv = Ti.UI.createView({
 	    bottom : 0,

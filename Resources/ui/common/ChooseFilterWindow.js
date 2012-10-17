@@ -12,6 +12,7 @@ function ChooseFilterWindow(tags) { 'use strict';
     
     var allTags = tags;
     var self = Ti.UI.createWindow({
+        barColor : 'black'
     });
     
     var tv = Ti.UI.createTableView({

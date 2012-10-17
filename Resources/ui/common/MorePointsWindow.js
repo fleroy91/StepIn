@@ -12,6 +12,7 @@ var Image = require("/etc/Image");
 function MorePointsWindow(args) {'use strict';
     var self = Ti.UI.createWindow(args);
     self.backgroundColor = '#f0f0f0';
+    self.barColor = 'black';
 
     var sheader = Ti.UI.createView({
         height : 40,

@@ -17,7 +17,8 @@ function ShopPresentsWindow(args) {'use strict';
 
 	var self = Ti.UI.createWindow({ 
 	    title : 'Les cadeaux !', 
-	    backgroundColor : '#f0f0f0'
+	    backgroundColor : '#f0f0f0',
+        barColor : 'black'
     });
     
     var sheader = Ti.UI.createView({
