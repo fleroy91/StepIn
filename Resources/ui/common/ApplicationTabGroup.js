@@ -270,8 +270,8 @@ function ApplicationTabGroup() { 'use strict';
 
     messageWin = Titanium.UI.createWindow({
         height:80,
-        width:250,
         bottom : 70,
+        width:250,
         borderRadius:10,
         touchEnabled:false,
         orientationModes : [
