@@ -423,41 +423,16 @@ function Shop(json) {'use strict';
         btShowMap.addEventListener('click', showMap);
         mapview.addEventListener('click', showMap);
         newHeader.mapview = mapview;
-
-        // Add the points
-        var pointsView = Ti.UI.createView({
-            bottom : 0,
-            height : 63,
-            backgroundColor : '#d92276'
+        
+        // TODO
+        // Footer view must be an ads view horizontal scrollable
+        var newFooter = Ti.UI.createScrollableView({
+            
         });
-        if(this.checkin) {
-            // We display adverts
-            pointsView.backgroundImage = '/images/advert.png';
-        } else {
-            var lblPoints = Ti.UI.createLabel({
-                top : 5,
-                color : 'white',
-                text : this.stepinPoints + ' points',
-                textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
-                font : {fontSize : 24, fontWeight : 'bold'}
-            });
-            var lblDetails = Ti.UI.createLabel({
-                bottom : 5,
-                color : 'white',
-                textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
-                font : {fontSize : 13, fontWeight : 'normal'},
-                text : 'à gagner en vous rendant dans ce magasin'
-            });
-            pointsView.add(lblPoints);
-            pointsView.add(lblDetails);
-            this.lblPoints = lblPoints;
-        }
         
-        newHeader.add(pointsView);
-        
+        // Nom we display the 'In' list
         var tv = Ti.UI.createTableView({
             height : 'auto',
-            scrollable : true,
             allowsSelection : true,
             footerView : footer,
             headerView : newHeader,
@@ -466,14 +441,35 @@ function Shop(json) {'use strict';
         });
         
         var data = [];
-        var section = Ti.UI.createTableViewSection();
-        
-        var sheader = Ti.UI.createView({
-            height : 20,
-            bakcgroundColor : '#f0f0f0'
+
+        // First row is the step-in!
+        var rowStepIn = Ti.UI.createTableViewRow({
+            height : 63,
+            backgroundColor : '#d92276'
         });
+        var lblPoints = Ti.UI.createLabel({
+            right : 5,
+            color : 'white',
+            text : this.stepinPoints + ' points',
+            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+            font : {fontSize : 24, fontWeight : 'bold'}
+        });
+        var lblDetails = Ti.UI.createLabel({
+            left : 5,
+            color : 'white',
+            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
+            font : {fontSize : 13, fontWeight : 'normal'},
+            text : 'Step-In dans ce magasin'
+        });
+        rowStepIn.add(lblPoints);
+        rowStepIn.add(lblDetails);
+        
+        var rowScans = Ti.UI.createTableViewRow({
+            height : 40
+        });
+        // TODO : reprendre ici        
         var lbl = Ti.UI.createLabel({
-            text : "Gagnez plus de points en scannant ces produits :",
+            text : "Scan de produits",
             top : internBorder,
             left : internBorder,
             color : '#4d4d4d',
@@ -481,8 +477,16 @@ function Shop(json) {'use strict';
             textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
             height : 15
         });
-        sheader.add(lbl);
-        section.headerView = sheader;
+        var lblPoints = Ti.UI.createLabel({
+            right : 5,
+            color : 'white',
+            text : this.stepinPoints + ' points',
+            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+            font : {fontSize : 24, fontWeight : 'bold'}
+        });
+        rowScans.add(lbl);
+        data.push(rowStepIn);
+        data.push(rowScans);
         data[0] = section;
         tv.setData(data);
         var checkin = this.checkin;
