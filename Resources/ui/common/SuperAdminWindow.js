@@ -186,6 +186,11 @@ function SuperAdminWindow(args) {'use strict';
         self.close();        
     }
     
+    function resetFirstLaunch() {
+        Ti.App.Properties.setBool('isFirstLaunch', true);
+        self.close();
+    }
+    
     function clearAllRewards() {
         user = AppUser.getCurrentUser();
         if(user.isDummy()) {
@@ -221,6 +226,7 @@ function SuperAdminWindow(args) {'use strict';
         { title : "Simulate Step-In Shop 6229", hasChild :false, action : function(e) { simulateStepIn(6229); } },
         { title : "Simulate Step-In Shop 6230", hasChild :false, action : function(e) { simulateStepIn(6230); } },
         { title : "Clear all user rewards", hasChild :false, action : clearAllRewards },
+        { title : "Reset first launch", hasChild :false, action : resetFirstLaunch },
         { title : "List users", hasChild :true, req : "/ui/admin/ListUsersWindow"},
         { title : "List shops", hasChild :true, req : "/ui/admin/ListShopsWindow"},
         { title : "Clean file cache", hasChild :false, action : cleanFileCache},

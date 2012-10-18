@@ -200,8 +200,10 @@ function Shop(json) {'use strict';
         // We have to check for :
         // - Checkin
         // - Scans
+        
+        // TODO : we don't need the rewards to do that
         this.prev_checkin = this.checkin;
-        this.prev_points = this.allPoints;
+        this.prev_points = this.allPossiblePoints;
         
         this.checkin = false;
         this.allPoints = 0;
@@ -233,7 +235,7 @@ function Shop(json) {'use strict';
             this.stepinPoints = Math.round(this.getPoints(Reward.ACTION_KIND_STEPIN) / (nb_checkins * nb_checkins));
         }
         this.allPoints += this.stepinPoints;
-        this.changed = (this.prev_checkin !== this.checkin || this.prev_points !== this.allPoints);
+        this.changed = (this.prev_checkin !== this.checkin || this.prev_points !== this.allPossiblePoints);
         AppUser.updateShop(this);
     };
     
@@ -316,7 +318,6 @@ function Shop(json) {'use strict';
         annotation.addEventListener('click', function(e) {
             if(e.annotation && e.clicksource === 'pin') {
                 if(e.map.selectedAnnotation && e.map.selectedAnnotation !== e.annotation) {
-                    // e.map.deselectAnnotation(e.map.selectedAnnotation);
                     e.map.selectedAnnotation.setImage('/images/pointer-regular.png');
                 }
                 e.map.selectedAnnotation = e.annotation;
@@ -508,6 +509,7 @@ function Shop(json) {'use strict';
                                 shop.allPoints -= scan.points;
                             }
                             shop.setScan(scan);
+                            AppUser.updateShop(shop);
                             var row = scan.createTableRow({
                                 canScan : ! scan.scanned,
                                 object_index : obj_index
@@ -559,7 +561,7 @@ function Shop(json) {'use strict';
         var internBorder = 2;
         var internHeight = 75;
         var labelHeight = Math.round((internHeight - 2 * internBorder) / 3);
-        var allPoints = this.allPoints;
+        var allPoints = this.allPossiblePoints;
          
         var row = Ti.UI.createTableViewRow({
             className : 'shopRow',
@@ -584,7 +586,7 @@ function Shop(json) {'use strict';
         });
         row.add(btAction);
     
-        var vPoints = Image.createPointView((allPoints > 0 ? allPoints : this.allPossiblePoints), 50,70, (allPoints === 0));
+        var vPoints = Image.createPointView(allPoints, 50,70, false);
         vPoints.right = btAction.right + btAction.width + internBorder;
         row.add(vPoints);
         row.ptView = vPoints;

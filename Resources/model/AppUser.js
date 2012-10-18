@@ -294,13 +294,14 @@ function AppUser(json) {'use strict';
     
     this.setCurrentUser = function() {
         if(! this.isDummy() && (! Ti.App.currentUser || this.m_url !== Ti.App.currentUser.m_url)) {
-            Ti.App.testflight.passCheckpoint("Set new user");
+            /* Ti.App.testflight.passCheckpoint("Set new user");
             Ti.App.testflight.addCustomEnvironmentInformation({
                 username : this.firstname,
                 email : this.email,
                 user_url : this.m_url,
                 session_id : Ti.App.sessionId
             });
+            */
         }
         Ti.App.Properties.setString('AppUser', JSON.stringify(this));
         // If the new current user is not the same as the previous one, we need to reset the rewards
@@ -382,9 +383,21 @@ AppUser.prototype.setPhoneNumber = function(p) {'use strict';
     this.phone_number = p;
 };
 
+/**
+ * Get a shop in the global array
+ * 
+ * @param {Number} index : the 1-N index in the array
+ * @returns {Shop} : the object found or null
+ */
 AppUser.getShop = function(index) { 'use strict';
     return Ti.App.allShops[index - 1];
 };
+/**
+ * Find a shop in the global array by using the m_url field
+ * 
+ * @param {String} url : m_url of the shop
+ * @returns {Shop} : the object found or null
+ */
 AppUser.findShop = function(url) { 'use strict';
     var i, shop = null;
     for(i = 0; !shop && i < Ti.App.allShops.length; i ++) {
@@ -394,6 +407,12 @@ AppUser.findShop = function(url) { 'use strict';
     }
     return shop;
 };
+/**
+ * Add a shop in the global array
+ * 
+ * @param {Shop} shop : the object to add
+ * @returns {Shop} : the object updated with the index (1-N) field (his place in the array)
+ */
 AppUser.addShop = function(shop) { 'use strict';
     var data = Ti.App.allShops;
     shop.index = data.length + 1;
@@ -402,36 +421,31 @@ AppUser.addShop = function(shop) { 'use strict';
     return shop;       
 };
 
+/**
+ * Add a reward in the global rewards array
+ * 
+ * @param {Reward} rew : the reward to add
+ * @returns {Reward} : the reward updated with the index (1-N) field (his place in the array)
+ */
 AppUser.addReward = function(rew) { 'use strict';
-    Ti.App.allRewards.push(rew);
+    rew.index = Ti.App.allRewards.length + 1;
+    var data = Ti.App.allRewards;  
+    data.push(rew);
+    Ti.App.allRewards = data;
+    return rew;
 };
-
+/**
+ * Update the shop in the global shops array
+ * 
+ * @param {shop} shop : the shop to update - we use the index of the shop to locate it
+ * @returns : nothing  
+ */
 AppUser.updateShop = function(shop) { 'use strict';
     if(shop.index) {
         var data = Ti.App.allShops;
         data[shop.index-1] = shop;
         Ti.App.allShops = data;
     }
-};
-
-AppUser.prototype.geoLocalize = function(func) {'use strict';
-    // We need to geolocalize the AppUser first !
-    if(Geoloc.isLocationServicesEnabled())
-    {
-        Titanium.Geolocation.getCurrentPosition(function(e){
-            if (!e.success || e.error)
-            {
-                Ti.API.info("Code translation: " + Geoloc.translateErrorCode(e.code));
-                return;
-            }
-    
-            var longitude = e.coords.longitude;
-            var latitude = e.coords.latitude;
-            this.setLocation(latitude, longitude);
-            this.save();
-            func();
-        });
-     }
 };
 
 module.exports = AppUser;

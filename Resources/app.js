@@ -103,6 +103,7 @@ Ti.API.myLog = function(args) {'use strict';
 
 function runApp() {'use strict';
     var user = AppUser.getCurrentUser();
+    alert("Run app");
     Ti.App.testflight.addCustomEnvironmentInformation({
         username : user.firstname,
         email : user.email,
@@ -118,6 +119,7 @@ function runApp() {'use strict';
 }
 
 function checkUser(e) {'use strict';
+    alert("Check User");
     Geoloc.isLocationServicesEnabled(true);
     // We must be logged
     var user = AppUser.getCurrentUser();
@@ -141,7 +143,13 @@ function checkUser(e) {'use strict';
 
 main.addEventListener('open', function(e){ 'use strict';
     Spinner.show(main);
-    checkUser();
+    if(Ti.App.Properties.getBool('isFirstLaunch', true)) {
+        Ti.App.Properties.setBool('isFirstLaunch', false);
+        Spinner.hide(main);
+        main.displayTutorial(checkUser);
+    } else {
+        checkUser();
+    }
 });
 
 var options = {};
@@ -149,5 +157,5 @@ options[Ti.App.testflight.ATTACH_BACKTRACE_TO_FEEDBACK] = true;
 options[Ti.App.testflight.DISABLE_IN_APP_UPDATES] = true;
 
 Ti.App.testflight.takeOff('9e90e19a193196af8292ac34f6e3f8a6_MTQ0MTA0MjAxMi0xMC0xNiAxNToyNTo0MC42NjA0NTM', options);
-
+Spinner.add(main);
 main.open();
