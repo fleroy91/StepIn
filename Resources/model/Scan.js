@@ -1,7 +1,7 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var CloudObject = require("model/CloudObject");
-var Image = require("/etc/Image");
+var Image = require("/etc/AppImage");
 var AppUser = require("/model/AppUser");
 
 function Scan(json) {'use strict';

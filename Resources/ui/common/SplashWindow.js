@@ -20,8 +20,7 @@ function SplashWindow() { 'use strict';
     var i, views = [];
     for(i = 0; i < screens.length; i ++) {
         var img = Ti.UI.createImageView({
-            image : '/images/' + screens[i],
-            isLast : (i === screens.length - 1)
+            image : '/images/' + screens[i]
         });
         views.push(img);
     }
@@ -49,9 +48,8 @@ function SplashWindow() { 'use strict';
         }
     });
     
-    // TODO = to check 
-    tutorial.addEventListener('change', function(e) {
-        btClose.visible = (e.page && e.page.isLast); 
+    tutorial.addEventListener('scrollEnd', function(e) {
+        btClose.visible = (e.currentPage === screens.length - 1); 
     });
     
     win.displayTutorial = function(func) {
