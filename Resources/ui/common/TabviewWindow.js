@@ -13,7 +13,7 @@
 // var allArticles = [];
 var refresh_all = true;
 
-var TV = require("/etc/TV");
+var TV = require("/etc/AppTV");
 var Tools = require("/etc/Tools");
 var AppUser = require("/model/AppUser");
 

@@ -103,7 +103,6 @@ Ti.API.myLog = function(args) {'use strict';
 
 function runApp() {'use strict';
     var user = AppUser.getCurrentUser();
-    alert("Run app");
     Ti.App.testflight.addCustomEnvironmentInformation({
         username : user.firstname,
         email : user.email,
@@ -119,7 +118,6 @@ function runApp() {'use strict';
 }
 
 function checkUser(e) {'use strict';
-    alert("Check User");
     Geoloc.isLocationServicesEnabled(true);
     // We must be logged
     var user = AppUser.getCurrentUser();

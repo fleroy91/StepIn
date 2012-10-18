@@ -11,7 +11,7 @@
 var allRewards = [];
 var refresh_all = true;
 
-var TV = require("/etc/TV");
+var TV = require("/etc/AppTV");
 
 function HistoryWindow(args) { 'use strict';
     var self = Ti.UI.createWindow({

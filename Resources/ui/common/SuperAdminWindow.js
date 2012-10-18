@@ -7,7 +7,7 @@
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
-var Image = require("/etc/Image");
+var Image = require("/etc/AppImage");
 var Tools = require("/etc/Tools");
 var ApplicationTabGroup = require("/ui/common/ApplicationTabGroup");
 

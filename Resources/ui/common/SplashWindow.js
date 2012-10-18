@@ -16,12 +16,11 @@ function SplashWindow() { 'use strict';
         navBarHidden : true
     });
 
-    var screens = ['tutorial1.png', 'tutorial2.jpg', 'tutorial3.jpg', 'tutorial4.jpg'];    
+    var screens = ['tutorial1.png', 'tutorial2.jpg', 'tutorial3.jpg'];    
     var i, views = [];
     for(i = 0; i < screens.length; i ++) {
         var img = Ti.UI.createImageView({
-            image : '/images/' + screens[i],
-            isLast : (i === screens.length - 1)
+            image : '/images/' + screens[i]
         });
         views.push(img);
     }
@@ -34,10 +33,10 @@ function SplashWindow() { 'use strict';
     
     var btClose = Ti.UI.createButton({
         style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-        right : 5,
-        top : 5,
+        right : 80,
+        bottom : 1,
         visible : false,
-        image : "/images/close.png"
+        image : "/images/bullet.png"
     });
     win.add(btClose);
     
@@ -49,9 +48,8 @@ function SplashWindow() { 'use strict';
         }
     });
     
-    // TODO = to check 
-    tutorial.addEventListener('change', function(e) {
-        btClose.visible = (e.page && e.page.isLast); 
+    tutorial.addEventListener('scrollEnd', function(e) {
+        btClose.visible = (e.currentPage === screens.length - 1); 
     });
     
     win.displayTutorial = function(func) {

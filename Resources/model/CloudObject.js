@@ -11,7 +11,7 @@
 var DataManager = require('services/DataManager'),
     _dm = new DataManager();
     
-var Image = require("/etc/Image");
+var Image = require("/etc/AppImage");
 
 function CloudObject(json) {'use strict';
 

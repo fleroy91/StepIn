@@ -18,7 +18,7 @@
 // - hint
 // - [keyboardType]
 // - [pickerOptions] : [array of values] --> if picker options, then the text field is not enabled
-var Image = require("/etc/Image");
+var Image = require("/etc/AppImage");
 var Geoloc = require("/etc/Geoloc");
 var Tools = require("/etc/Tools");
 var AppUser = require("/model/AppUser");

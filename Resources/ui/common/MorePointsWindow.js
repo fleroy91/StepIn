@@ -7,7 +7,7 @@
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
-var Image = require("/etc/Image");
+var Image = require("/etc/AppImage");
 
 function MorePointsWindow(args) {'use strict';
     var self = Ti.UI.createWindow(args);
