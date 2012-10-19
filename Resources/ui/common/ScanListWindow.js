@@ -98,7 +98,7 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
                     var newView = Image.createPointView(scan.points, 30, Ti.UI.FILL, scan.scanned);
                     newView.top = vPoints.top;
                     newView.right = vPoints.right;
-                    newView.backgroundColor = '#f0f0f0';
+                    newView.backgroundColor = 'white';
                     v.add(newView);
                     vPoints.animate({view : newView, duration : 500}, function(e) {
                         vPoints.visible = false;

@@ -9,6 +9,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var AppUser = require("/model/AppUser");
 var Spinner = require("/etc/Spinner");
+var Image = require("/etc/AppImage");
 
 function LoginView(tabGroup, header, onClose) { 'use strict';
     var bonus = 0;
@@ -165,6 +166,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
         tfPassword.blur();
         var ok = true;
         if(withFB) {
+            Ti.API.info("Retour de FB : " + result);
             FBResult = JSON.parse(result);
             qparams = { fb_token : Titanium.Facebook.getAccessToken()};
         } else {
@@ -205,8 +207,10 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
                                 user.is_user = true;
                                 if(FBResult) {
                                     user.firstname = FBResult.first_name;
-                                    if(FBResult.picture) {
-                                        Image.loadImage(FBResult.picture, function(blob) {
+                                    user.email = FBResult.email;
+                                    if(FBResult.picture && FBResult.picture.data && FBResult.picture.data.url) {
+                                        Spinner.show();
+                                        Image.loadImage(FBResult.picture.data.url, function(blob) {
                                             // TODO : we should be abel to send the url to the back end directly without loading first the image
                                             // via the client and send the file to the back end
                                             user.setPhoto(0, blob);
@@ -231,7 +235,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
     var logged = false;    
     function manageFBLogin() {
         Spinner.show();
-        Ti.Facebook.requestWithGraphPath('me', {}, 'GET', function(e) {
+        Ti.Facebook.requestWithGraphPath('me', {fields:'id,name,first_name,email,picture'}, 'GET', function(e) {
             if(e.success && e.result) {
                 doLogin(true, e.result);
             }

@@ -73,7 +73,6 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     var vPoints = Ti.UI.createLabel({
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
         font : {fontSize : 70, fontWeight : 'bold'},
-        text : reward.getNbPoints(),
         right : 120,
         color : '#d92276',
         shadowColor : 'white',
@@ -107,8 +106,8 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         font : {fontSize : 19, fontWeight : 'bold'},
         top : 0,
         height : 50,
-        right : 5,
-        left : 5
+        right : 15,
+        left : 15
     });
     var soundWin = Titanium.Media.createSound({url : '/sounds/gain.mp3'});
     var soundOpen = Titanium.Media.createSound({url :'/sounds/ouverture.mp3'});
@@ -133,6 +132,31 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         }
     }
     
+    function none() {
+        var i =0;
+    }
+    
+    var _timer = null;
+    function displayPoints(from, to, maxTime, func) {
+        if(! _timer) {
+            var timeout = Math.round(maxTime / (to - from));
+            Ti.API.info("Timeout pour display Points : " + timeout);
+            _timer = setInterval(function() {
+                if (from <= to) {
+                    vPoints.setText(from);
+                    from++;
+                } else {
+                    clearInterval(_timer);
+                    _timer = null;
+                    Ti.Media.vibrate();
+                    if(func) {
+                        func();
+                    }
+                }
+            }, timeout);
+        }
+    }
+    
     function onClose(bonus) {
         Spinner.show(self);
         reward.bonusFB = bonus;
@@ -140,24 +164,12 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         reward = user.updateReward(reward);
         self.object = reward;
         var newPoints = reward.getNbPoints();
-        var timeout = 200;
         Spinner.hide(self);
         if(newPoints > prevPoints) {
-            timeout = Math.round(2000 / (newPoints - prevPoints));
             soundOpen.play();
-            while(prevPoints <= newPoints) {
-                vPoints.setText(prevPoints);
-                prevPoints++;
-                var k;
-                for(k = 0; k < 500000; k++) {
-                    // We wait the hard way
-                    var i=0;  
-                }
-            }
-            timeout = 1000;
-            setTimeout(niceClose, timeout);
+            displayPoints(prevPoints, newPoints, 2000, niceClose);
         } else {
-            setTimeout(niceClose, timeout);
+            setTimeout(niceClose, 250);
         }
     }
 
@@ -205,7 +217,8 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
             a2.transform = t2;
             a2.duration = 750;
             a2.addEventListener('complete', function(e) {
-                Ti.Media.vibrate();
+                setTimeout(none, 750);
+                displayPoints(0, reward.getNbPoints(), 1500);
             });
             view.animate(a2);
         });
