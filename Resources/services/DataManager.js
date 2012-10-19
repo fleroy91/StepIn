@@ -22,7 +22,6 @@ function DataManager() {'use strict';
 	};
 	
     this.doCall = function(method, url, qparams, body, func, not_storage_room_call) {
-        Spinner.show();
         var silent = this.silent;
         
         if(url[0] === '/') {
@@ -41,7 +40,6 @@ function DataManager() {'use strict';
         var client = Ti.Network.createHTTPClient({
          // function called when the response data is available
          onload : function(e) {
-             Spinner.hide();
              // We cache the result
              Ti.App.Properties.setString(url, this.responseText);
              var response = JSON.parse(this.responseText);

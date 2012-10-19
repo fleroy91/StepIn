@@ -11,6 +11,7 @@
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("/etc/Geoloc");
 var Tools = require("/etc/Tools");
+var Spinner = require("/etc/Spinner");
 var Image = require("/etc/AppImage");
 var Scan = require("/model/Scan");
 var AppUser = require("/model/AppUser");
@@ -101,6 +102,7 @@ function Shop(json) {'use strict';
         });
     };
     this.retrieveRewards = function(func) {
+        Spinner.show();
         var Reward = require('model/Reward'),
             rew = new Reward();
         var qparams = { 'shop.url' : this.getUrl() };
@@ -113,6 +115,7 @@ function Shop(json) {'use strict';
                 }
             }
             func(data);
+            Spinner.hide();
         });
     };
     
@@ -243,6 +246,7 @@ function Shop(json) {'use strict';
     };
     
     this.retrieveScansAndComputeAvailablePoints = function(func, rewards, finalFunc) {
+        Spinner.show();
         var Scan = require("/model/Scan"),
             scan = new Scan();
         var self = this;
@@ -260,6 +264,7 @@ function Shop(json) {'use strict';
             if(finalFunc) {
                 finalFunc();
             }
+            Spinner.hide();
         });
     };
     
@@ -369,13 +374,15 @@ function Shop(json) {'use strict';
             width : 60,
             borderWith : 0,
             borderRadius : 0,
-            borderColor : '#999',
             shadow:{
                 shadowRadius:2,
-                shadowOpacity:0.7,
-                shadowOffset:{x:3, y:3}
+                shadowOpacity:0.3,
+                shadowOffset:{x:2, y:2}
             }
         });
+        Image.cacheImage(this.getPhotoUrl(0), function(image) {
+            img.setImage(Image.cropImage(image, 60,60));
+        }); 
         row.add(img);
         
         var btAction = Ti.UI.createImageView({

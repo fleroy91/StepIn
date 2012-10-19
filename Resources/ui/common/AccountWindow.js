@@ -10,6 +10,7 @@
 var Image = require("/etc/AppImage");
 var Tools = require("/etc/Tools");
 var AppUser = require("/model/AppUser");
+var Spinner = require("/etc/Spinner");
 
 function AccountWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
@@ -18,6 +19,8 @@ function AccountWindow(args) {'use strict';
 	    barColor : 'black'
     });
     var tabGroup = args.tabGroup;
+    
+    Spinner.add(self);
     
     var user = AppUser.getCurrentUser();
 	
@@ -69,15 +72,23 @@ function AccountWindow(args) {'use strict';
 	// sProfil.add(r12);
 	// sProfil.add(r13);
 	
+	function setNewUser(user, func){
+	    if(user) {
+	        user.setCurrentUser();
+            user.checkAll(function(e) {
+                tabGroup.updateAllRows();
+                updateWindow(null, user);
+                if(func) {
+                    func();
+                }
+            });
+	    }
+	}
+	
 	function displayAccount() {
         var FormWindow = require("/ui/common/FormWindow"),
            win = new FormWindow({ title : "Mon compte"}, 'update', user, tabGroup);
-        win.addEventListener('close', function(e) {
-           if(e.source.object) {
-                user = e.source.object;
-                updateWindow(null, user);
-           } 
-        });
+        win.addEventListener('close', function(e) { setNewUser(e.source.object); });
         self.containingTab.open(win, {animated:true});
 	}
 
@@ -85,12 +96,8 @@ function AccountWindow(args) {'use strict';
         var LoginWindow = require("/ui/common/LoginWindow"), 
             win = new LoginWindow({ tabGroup : tabGroup });
 
-        win.addEventListener('close', function(e) {
-            if (e.object) {
-                user = e.object;
-                updateWindow(null, user);
-                displayAccount();
-            }
+        win.addEventListener('close', function(e) { 
+            setNewUser(e.object, displayAccount); 
         });
         self.containingTab.open(win, {
             animated : true
@@ -195,9 +202,6 @@ function AccountWindow(args) {'use strict';
 	
 	function updateWindow(e, user) {
 	    if(user) {
-            user.setCurrentUser();
-            tabGroup.updateTitle();
-            user.checkAll(tabGroup.updateAllRows);
             tabGroup.closeAllWindows();
 	    } else {
             user = AppUser.getCurrentUser();
@@ -236,7 +240,7 @@ function AccountWindow(args) {'use strict';
                     Ti.App.Properties.setString('user', null);
                     Ti.Facebook.logout();
                     user = new AppUser();
-                    updateWindow(null, user);
+                    setNewUser(user);
                 }
             });
             dlg.show();

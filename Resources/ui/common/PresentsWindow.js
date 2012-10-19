@@ -146,19 +146,24 @@ function ShopPresentsWindow(args) {'use strict';
     
     self.addEventListener('focus', function(e) {
         var user = AppUser.getCurrentUser();
-        var points = user.getTotalPoints();
-        for(i = 0; i < data.length; i++) {
-            var bt1 = data[i].bt1,
-                bt2 = data[i].bt1,
-                p1 = data[i].p1,
-                p2 = data[i].p2;
-            if(p1 && bt1) {
-                bt1.setTitle(p1.points <= points ? 'Convertir' : 'Pas assez de points');
-                bt1.enabled = p1.points <= points;
-            }
-            if(p2 && bt2) {
-                bt2.setTitle(p2.points <= points ? 'Convertir' : 'Pas assez de points');
-                bt2.enabled = p2.points <= points;
+        var points = (user.getTotalPoints() || 0);
+        var section = tv.getData();
+        if(section && section.length > 0) {
+            var rows = section[0].getRows();
+            for(i = 0; rows && i < rows.length; i++) {
+                var bt1 = rows[i].bt1,
+                    bt2 = rows[i].bt2,
+                    p1 = rows[i].p1,
+                    p2 = rows[i].p2,
+                    isEnabled;
+                if(p1 && bt1) {
+                    isEnabled = (p1.points <= points);
+                    bt1.setLabels([{title:(isEnabled ? 'Convertir' : 'Pas assez de points'), enabled : isEnabled}]);
+                }
+                if(p2 && bt2) {
+                    isEnabled = (p2.points <= points);
+                    bt2.setLabels([{title:(isEnabled ? 'Convertir' : 'Pas assez de points'), enabled : isEnabled}]);
+                }
             }
         }
     });

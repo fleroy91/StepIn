@@ -506,8 +506,8 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
     return view;
 };
 
-Image.createStepInStar = function(options) { 'use strict';
-    options.image = options.image || '/images/stepin-star.png';
+Image.createStepInStar = function(options, disable) { 'use strict';
+    options.image = options.image || (disable ? '/images/checked.png' : '/images/stepin-star.png');
     options.height = options.height || 30;
     options.width = options.width || 30;
     var img = Ti.UI.createImageView(options);
@@ -538,14 +538,14 @@ Image.createPointView = function(points, height, width, disabled, options) { 'us
     }
     var lbl = Ti.UI.createLabel(lblOptions);
     pv.add(lbl);
-    var star = Image.createStepInStar({height : 18, right : 0, width : 18});
+    var star = Image.createStepInStar({height : 18, right : 0, width : 18}, disabled);
     pv.add(star);
     
     return pv;
 };
 
 Image.createIconsPointView = function(points, stepin, scanin, options) { 'use strict';
-    var size = options.height; 
+    var size = Math.round(options.height/ 2); 
     options.width = 90;
     var pv = Ti.UI.createView(options);
     var color = '#d92276';
@@ -565,8 +565,8 @@ Image.createIconsPointView = function(points, stepin, scanin, options) { 'use st
     pv.add(lbl);
     
     var nbIcons = (stepin ? 1 : 0) + (scanin ? 1 : 0);
-    var iconSize = size - 3;
-    var nleft = (options.width - nbIcons * iconSize) / (nbIcons + 1);
+    var iconSize = size - 5;
+    var nleft = ((options.width - nbIcons * iconSize) / (nbIcons * 2 + 1)) * 2;
     
     var iconStepIn = Ti.UI.createImageView({
         image : "/images/steps.png",
@@ -592,6 +592,41 @@ Image.createIconsPointView = function(points, stepin, scanin, options) { 'use st
     var star = Image.createStepInStar({right : 0, width : size - 7, height : size - 7});
     // pv.add(star);
     return pv;
+};
+
+/**
+ * 
+ * @param {Object} image : the image URL
+ * @param {Object} width : the desire width
+ * @param {Object} height : the desire 
+ */
+Image.cropImage = function(image, width, height) { 'use strict';
+    // Here's our base (full-size) image. 
+    // It's never displayed as-is.
+    
+    // We need to find the size of the image
+    var baseImage = Titanium.UI.createImageView({
+        image:image,
+        height : height,
+        top : 0
+    });
+    var blob = baseImage.toImage();
+     
+    // Here's the view we'll use to do the cropping. 
+    // It's never displayed either.
+    var cropView = Titanium.UI.createView({
+        width:width, height:height
+    });
+     
+    // Add the image to the crop-view.
+    // Position it left and above origin.
+    cropView.add(baseImage);
+    baseImage.left=(width - blob.width / (blob.height / height))/2;
+     
+    // now convert the crop-view to an image Blob
+    var croppedImage = cropView.toImage();
+    
+    return croppedImage;
 };
     
 module.exports = Image;

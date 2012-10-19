@@ -8,10 +8,9 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require("/etc/AppImage");
+var Spinner = require("/etc/Spinner");
 var AppUser = require("/model/AppUser");
 var Reward = require("/model/Reward");
-
-var FB_POINTS = 150;
 
 // Parameters : args.title, args.details, args.nb_points
 function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
@@ -99,274 +98,73 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         backgroundColor : '#d92276',
         height : 40,
         width : '90%',
-        top : 230
+        top : 220
     });
     view.add(continueButton);
-    
-    var loginView = Ti.UI.createView({
-        height : Ti.UI.FILL,
-        top : 480
-    });
     
     var lblLoginAction = Ti.UI.createLabel({
         text : 'Vous devez avoir un compte pour collecter vos points :',
         font : {fontSize : 19, fontWeight : 'bold'},
-        top : 0
+        top : 0,
+        height : 50
     });
-    loginView.add(lblLoginAction);
-    
-    var FBButton = Ti.UI.createButtonBar({
-        labels : ['Connexion avec Facebook'],
-        style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        backgroundColor : '#36549a',
-        height : 40,
-        width : '90%',
-        top : 55
-    });
-    loginView.add(FBButton);
-    
-    var FBpoints = Ti.UI.createLabel({
-        borderRadius : 10,
-        borderWidth : 2,
-        borderColor : 'white',
-        backgroundColor : '#d92276',
-        color: 'white',
-        textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
-        font : {fontSize : 12, fontWeight : 'bold'},
-        text : '+' + FB_POINTS + ' pts',
-        width : 70,
-        height : 20,
-        right : 3,
-        top : FBButton.top - 12
-    });
-    loginView.add(FBpoints);
-    
-    var lblOr = Ti.UI.createLabel({
-        top : 105,
-        color : '#32342',
-        font : {fontSize : 12, fontWeight : 'bold'},
-        text : 'Ou'
-    });
-    
-    var prevnext = Titanium.UI.createButtonBar({
-        style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        labels : ['Précédent', 'Suivant'],
-        height : 30 
-    });
-    var flexSpace = Titanium.UI.createButton({
-        systemButton : Titanium.UI.iPhone.SystemButton.FLEXIBLE_SPACE
-    });
-    var done = Titanium.UI.createButton({
-        systemButton : Titanium.UI.iPhone.SystemButton.DONE
-    });
-    
-    var tb = Ti.UI.iOS.createToolbar({
-        opacity : 0.9,
-        color : 'black',
-        height : 40,
-        items : [prevnext, flexSpace, done]
-    });
-    
-    var rowEmail = Ti.UI.createTableViewRow({
-        height : 40,
-        backgroundColor : '#fefefe'
-    });
-    var tfEmail = Ti.UI.createTextField({
-        borderStyle : Ti.UI.INPUT_BORDERSTYLE_NONE,
-        hintText : 'Email',
-        keyboardToolbar : tb,
-        textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT, 
-        autocorrect : false,
-        keyboardType : Ti.UI.KEYBOARD_EMAIL,
-        width : Ti.UI.FILL,
-        left : 10,
-        right : 10
-    });
-    rowEmail.add(tfEmail);
-    var rowPassword = Ti.UI.createTableViewRow({
-        height : 40,
-        backgroundColor : '#fefefe'
-    });
-    var tfPassword = Ti.UI.createTextField({
-        borderStyle : Ti.UI.INPUT_BORDERSTYLE_NONE,
-        hintText : 'Mot de passe',
-        textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT, 
-        keyboardToolbar : tb,
-        autocorrect : false,
-        passwordMask : true,
-        width : Ti.UI.FILL,
-        left : 10,
-        right : 10
-    }); 
-    rowPassword.add(tfPassword);
-    
-    var tv = Ti.UI.createTableView({
-        backgroundColor : 'transparent',
-        style : Ti.UI.iPhone.TableViewStyle.GROUPED,
-        top : 100,
-        allowsSelection : false, 
-        scrollable : false,
-        data : [rowEmail, rowPassword]
-    });
-    loginView.add(tv);
-
-    var btConnect = Ti.UI.createButtonBar({
-        labels : ['Valider'],
-        style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        backgroundColor : '#d92276',
-        height : 40,
-        width : '90%',
-        bottom : 5
-    });
-    loginView.add(btConnect);
-    view.add(loginView);
     
     function niceClose() {
-        var sound = Titanium.Media.createSound();
-        sound.url='/sounds/gain.mp3'; 
-        sound.play();
-        var t1 = Ti.UI.create3DMatrix();
-        t1 = t1.scale(0.00001);
-        t1 = t1.rotate(180,0,0,1);
-        var a1 = Titanium.UI.createAnimation();
-        a1.transform = t1;
-        a1.duration = 750;
-        a1.addEventListener('complete', function()
-        {
-            setTimeout(function() { self.close();}, 250);
-        });
-        view.animate(a1);
+        if(reward.getNbPoints() > 0) {
+            var sound = Titanium.Media.createSound();
+            sound.url='/sounds/gain.mp3'; 
+            sound.play();
+            var t1 = Ti.UI.create3DMatrix();
+            t1 = t1.scale(0.00001);
+            t1 = t1.rotate(180,0,0,1);
+            var a1 = Titanium.UI.createAnimation();
+            a1.transform = t1;
+            a1.duration = 750;
+            a1.addEventListener('complete', function()
+            {
+                setTimeout(function() { self.close();}, 250);
+            });
+            view.animate(a1);
+        } else {
+            self.close();
+            alert("Vous aviez déjà gagné ces points récemment !\nGagnez des points avec une autre action !");
+        }
     }
+    
+    function setPoints(points, timeout) {
+        setTimeout(function() { vPoints.setText(points); }, timeout);
+    }
+
+    function onClose(bonus) {
+        reward.bonusFB = bonus;
+        var prevPoints = reward.getNbPoints();
+        reward = user.updateReward(reward);
+        self.object = reward;
+        var newPoints = reward.getNbPoints();
+        var timeout = 200;
+        if(newPoints > prevPoints) {
+            timeout = Math.round(3000 / (newPoints - prevPoints));
+            var sound = Titanium.Media.createSound();
+            sound.url='/sounds/ouverture.mp3'; 
+            sound.play();
+            for(prevPoints = prevPoints+1; prevPoints <= newPoints; prevPoints ++) {
+                setPoints(prevPoints, timeout);
+            }
+            timeout = 1000;
+        }
+        setTimeout(niceClose, timeout);
+    }
+
+    var LoginView = require("/ui/common/LoginView"),
+        loginView = new LoginView(tabGroup, lblLoginAction, onClose);
+    loginView.top = 480;
+    view.add(loginView);
+
     button.addEventListener('click', function(e) {
         if(user.isDummy()) {
             self.close();
         } else {
             niceClose();
-        }
-    });
-    
-    function setNewUserAndClose(user) {
-        user.setCurrentUser();
-        user.checkAll(tabGroup.updateAllRows);
-        tabGroup.updateTitle();
-        self.object = reward;
-        setTimeout(niceClose,250);
-    }
-    
-    var FBResult = null;
-    
-    function createUser(user, withFB) {
-        user.create(function(newUser) {
-            if(newUser) {
-                reward.setNbPoints(reward.getNbPoints() + (withFB ? FB_POINTS : 0));
-                setNewUserAndClose(newUser);
-            } else {
-                alert("Une erreur s'est produite dans la création du compte. Recommencez !");
-            }
-        });
-    }
-    
-    function doLogin(withFB, result) {
-        var qparams;
-        var email = tfEmail.getValue();
-        var password = tfPassword.getValue();
-        tfEmail.blur();
-        tfPassword.blur(); 
-        var ok = true;
-        if(withFB) {
-            FBResult = JSON.parse(result);
-            qparams = { fb_token : Titanium.Facebook.getAccessToken()};
-        } else {
-            qparams = { email : email};
-            if(email.length < 5 || email.indexOf('@') === -1) {
-                alert("Email incorrect !");
-                tfEmail.focus();
-                ok = false;
-            } else if(password.length <= 3) {
-                alert("Mot de passe trop petit !");
-                ok = false;
-                tfPassword.focus();
-            }
-        }
-        
-        if(ok) {
-            user.retrieveUser(qparams, function (user) {
-                if(user) {
-                    if(! withFB && user.password !== password) {
-                        alert("L'email '" + email + "' est déjà utilisé !");
-                    } else {
-                        setNewUserAndClose(user, withFB);
-                    }
-                } else {
-                    var dlg = Ti.UI.createAlertDialog({
-                        buttonNames : ['On continue', 'Annuler'],
-                        title : 'Création de compte',
-                        message : 'Le compte ' + (withFB ? 'Facebook' : email) + ' va être créé'
-                    });
-                    dlg.addEventListener('click', function(e) {
-                        if(e.index === 0) {
-                            user = new AppUser();
-                            if(withFB) {
-                                user.setFBToken(Ti.Facebook.getAccessToken());
-                                user.is_user = true;
-                                if(FBResult) {
-                                    user.firstname = FBResult.first_name;
-                                    if(FBResult.picture) {
-                                        Image.loadImage(FBResult.picture, function(blob) {
-                                            // TODO : we should be abel to send the url to the back end directly without loading first the image
-                                            // via the client and send the file to the back end
-                                            user.setPhoto(0, blob);
-                                            createUser(user);
-                                        });
-                                    } else {
-                                        createUser(user);
-                                    }
-                                }
-                            } else {
-                                user.setEmail(email);
-                                user.setPassword(password);
-                                createUser(user);
-                            }
-                        }
-                    });
-                    dlg.show();
-                }
-            });
-        }
-    }
-    var logged = false;    
-    function manageFBLogin() {
-        Ti.Facebook.requestWithGraphPath('me', {}, 'GET', function(e) {
-            if(e.success && e.result) {
-                doLogin(true, e.result);
-            }
-        });
-    }
-    
-    Titanium.Facebook.addEventListener('login', function (e) {
-        if(e.success && Ti.Facebook.loggedIn && !logged) {
-            logged = true;
-            manageFBLogin();
-        }
-    });
-    
-    FBButton.addEventListener('click', function(e) {
-        if(Ti.Facebook.loggedIn) {
-            logged = true;
-            manageFBLogin();
-        } else {
-            Ti.Facebook.authorize();
-        }    
-    });
-    btConnect.addEventListener('click', function(e) { doLogin(false);});
-    done.addEventListener('click', function(e) {
-        doLogin(false);
-    });
-    prevnext.addEventListener('click', function(e) {
-        if(e.index === 0) {
-            tfEmail.focus();
-        } else {
-            tfPassword.focus();
         }
     });
     
@@ -376,13 +174,14 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         continueButton.visible = false;
         view.animate(a);
         middleView.animate({top:50});
-        loginView.animate({top:170});
+        loginView.animate({top:160});
     }
 
     main.add(view);
     
     self.addEventListener('open', function(e) {
         Titanium.Media.vibrate();
+        
         var t1 = Ti.UI.create3DMatrix();
         t1 = t1.scale(0.00001);
         t1 = t1.rotate(180,0,0,1);
@@ -391,12 +190,16 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         a1.duration = 1;
         a1.addEventListener('complete', function()
         {
+            var sound = Titanium.Media.createSound();
+            sound.url='/sounds/ouverture.mp3'; 
+            sound.play();
+            
             view.visible = true;
             // simply reset animation
             var t2 = Ti.UI.create3DMatrix();
             var a2 = Titanium.UI.createAnimation();
             a2.transform = t2;
-            a2.duration = 1000;
+            a2.duration = 750;
             a2.addEventListener('complete', function(e) {
                 Ti.Media.vibrate();
             });
@@ -411,6 +214,8 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
             manageLogin();
         }
     });
+    
+    Spinner.add(self);
 
     return self;
 }

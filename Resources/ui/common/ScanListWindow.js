@@ -42,7 +42,10 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         var v = Ti.UI.createButton({
             style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
             width : '50%',
-            height : 180
+            height : 170,
+            borderRadius : 0,
+            borderWidth : 1,
+            borderColor : '#e0e0e0'
         });
         
         var img = Image.createImageView('read', scan.getPhotoUrl(0), null, { borderWidth : 0,height : 100, width : 100});
@@ -66,9 +69,9 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         });
         v.add(lbl2);
         
-        var vPoints = Image.createPointView(scan.points, 30, Ti.UI.Fill, false);
-        vPoints.top = 150;
-        vPoints.width = Ti.UI.Fill;
+        var vPoints = Image.createPointView(scan.points, 30, Ti.UI.FILL, scan.scanned);
+        vPoints.top = 140;
+        vPoints.width = Ti.UI.FILL;
         vPoints.right = 40;
         v.add(vPoints);
         /*
@@ -87,7 +90,20 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         */
         v.addEventListener('click', function(e) {
             var ScanDetailWindow = require("/ui/common/ScanDetailWindow"),
-                swin = new ScanDetailWindow(scan, tabGroup, {canScan : shop.checkin});
+                swin = new ScanDetailWindow(scan, tabGroup, {canScan : shop.checkin && ! scan.scanned});
+            swin.addEventListener('close', function(e) {
+                if(e.source.object) {
+                    // The object was scanned
+                    var newView = Image.createPointView(scan.points, 30, Ti.UI.FILL, true);
+                    newView.top = vPoints.top;
+                    newView.right = vPoints.right;
+                    v.add(newView);
+                    vPoints.animate({view : newView, duration : 500}, function(e) {
+                        vPoints.visible = false;
+                    });
+                }
+            });
+                
             tabGroup.openWindow(null, swin, {animated:true});
         });
         return v;

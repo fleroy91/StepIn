@@ -206,6 +206,9 @@ function ApplicationTabGroup() { 'use strict';
         win.addEventListener('focus', function(e) {
             self.updateTitle(win);
         });
+        win.addEventListener('blur', function(e) {
+            Spinner.hide(win);
+        });
         win.barColor = 'black';
         win.setTitle(null);
         win.hiddenTitle = hiddenTitle || win.hiddenTitle;
@@ -431,6 +434,8 @@ function ApplicationTabGroup() { 'use strict';
                         newShop.checkin = true;
                         var row = newShop.createTableRow();
                         self.tvSearch.updateRow(row_index, row);
+                        newShop.saveAll();
+                        swin.setObject(newShop);
                     }
                 });
             }
@@ -506,7 +511,12 @@ function ApplicationTabGroup() { 'use strict';
         _allWindows = [];
     };
     
+    var count = 0;
     self.updateAllRows = function() {
+        Spinner.show();
+        var count2 = count;
+        count ++ ;
+        Ti.API.info("Start updateAllRows : " + count2);
         var section = self.tvSearch.getData(); 
         if(section && section.length > 0) {
             var rows = section[0].getRows();
@@ -526,6 +536,8 @@ function ApplicationTabGroup() { 'use strict';
             }
         }
         self.updateTitle();
+        Ti.API.info("End updateAllRows : " + count2);
+        Spinner.hide();
     };
     
 	return self;

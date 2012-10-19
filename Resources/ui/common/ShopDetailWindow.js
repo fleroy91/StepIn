@@ -156,8 +156,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     });
     
     var img1 = Ti.UI.createView({
-        width : 300,
-        backgroundColor : 'white'
+        width : 300
     });
     img1.add(Ti.UI.createImageView({
         left : 10, right : 10, width : 250,
@@ -167,14 +166,14 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         width : 300
     });
     img2.add(Ti.UI.createImageView({
-        left : 10, right : 10,
+        left : 10, right : 10,width : 250,
         image : '/images/advert.png'
     }));
     var img3 = Ti.UI.createView({
         width : 300
     });
     img3.add(Ti.UI.createImageView({
-        left : 10, right : 10,
+        left : 10, right : 10,width : 250,
         image : '/images/advert.png'
     }));
     
@@ -211,6 +210,11 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     self.add(tv);
     
     tabGroup.createTitle(self, shop.getTitle());
+    
+    self.setObject = function(newObject) {
+        shop = newObject;
+        rowStepIn.backgroundColor = (shop.checkin ? '#eadae3' : null); 
+    };
 
     return self;
 }

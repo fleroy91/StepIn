@@ -20,7 +20,17 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
     var view = scan.createReadView(tabGroup);
     view.top = 0;
     
-    if(canScan) {
+    // We display the picture of the scan instead of the scan
+    view.top = 0;
+    var img = Ti.UI.createView({
+        top : view.height - 5
+    });
+    self.add(img);
+    self.add(view);
+    Image.cacheImage(scan.getPhotoUrl(0), function(image) {
+        img.setBackgroundImage(image); 
+    });
+    function launchScan() {
         var TiBar = require("tibar");
         
         // Configuration
@@ -61,56 +71,16 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
                 "PDF417" : false
             }
         };
-        if(Tools.isSimulator()) {
-            self.add(view);
-            var bt = Ti.UI.createButtonBar({
-                labels : ["Simuler Scan OK"],
-                height : 35,
-                width : 200,
-                top : 150 
-            });
-            self.add(bt);
-            bt.addEventListener('click', function(e) {
-                // We need to find the article in the DB
-                scan.newObjectScanned(scan.code, tabGroup, function(obj) {
-                    self.object = obj;
-                    self.close({animated:true});
-                });
-            });
-        } else {
+        if(! Tools.isSimulator()) {
             var overlayView = Ti.UI.createView({
                 backgroundImage : "/images/scanner.png"
             });
             
-            // We need to create a nav bar
-            var btBack = Ti.UI.createButtonBar({
-                labels : ['Retour'],
-                height : 35,
-                backgroundColor : 'black'
-            });
-            btBack.addEventListener('click', function(e) {
-                alert("On click ici pour fermer mais ça ne marche pas encore ! : " + JSON.stringify(Ti.UI.getCurrentWindow()));
-                Ti.UI.currentWindow.close();
-                self.object = null;
-                self.close({animated:true}); 
-            });
-            
-            var fb = Ti.UI.createButton({
-                systemButton : Ti.UI.iPhone.SystemButton.FLEXIBLE_SPACE
-            });
-            
-            var btPoints = tabGroup.createPointsButton();
-            
-            var navBar = Ti.UI.iOS.createToolbar({
-               items : [btBack, fb, btPoints],
-               height : 40,
-               top : 0,
-               backgroundColor : 'black' 
-            });
-            overlayView.add(navBar);
-            view.top = 40;
-            view.left = 0;
-            overlayView.add(view);
+            var view2 = scan.createReadView(tabGroup);
+            view2.top = 0;
+            view2.zIndex = 200;
+
+            overlayView.add(view2);
             
             self.addEventListener('open', function(e) {
                 TiBar.scan({
@@ -137,19 +107,45 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
                 });
             });
         }
-    } else {
-        // We display the picture of the scan instead of the scan
-        view.top = 0;
-        var img = Ti.UI.createView({
-            top : view.height - 5
-        });
-        self.add(img);
-        self.add(view);
-        Image.cacheImage(scan.getPhotoUrl(0), function(image) {
-            img.setBackgroundImage(image); 
-        });
-        tabGroup.createTitle(self, "Scan");
     }
+    
+    if(canScan) {
+        var btScan = Ti.UI.createButtonBar({
+            labels : ['Scanner le produit'],
+            style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
+            backgroundColor : 'green',
+            height : 35,
+            width : '70%',
+            bottom : 10
+        });
+        self.add(btScan);
+        btScan.addEventListener('click', launchScan);
+        
+        if(Tools.isSimulator()) {
+            var bt = Ti.UI.createButtonBar({
+                labels : ["Simuler Scan OK"],
+                color : 'red',
+                height : 35,
+                width : 200,
+                bottom : 50 
+            });
+            self.add(bt);
+            bt.addEventListener('click', function(e) {
+                // We need to find the article in the DB
+                scan.newObjectScanned(scan.code, tabGroup, function(obj) {
+                    self.object = obj;
+                    self.close({animated:true});
+                });
+            });
+        } else {
+            // We run it immediately
+            launchScan();
+        }
+
+    }
+
+    tabGroup.createTitle(self, "Scan");
+    
     return self;
 }
 

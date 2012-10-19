@@ -10,6 +10,7 @@
 
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
+var Spinner = require("etc/Spinner");
 var Tools = require("etc/Tools");
 var Reward = require('model/Reward');
             
@@ -191,6 +192,7 @@ function AppUser(json) {'use strict';
     }
     
     this.retrieveShops = function(tags, onNewShop, finalFunc) {
+        Spinner.show();
         this.geolocalize(function(self) {
             self.setCurrentUser();
             if(! Ti.App.allRewards) {
@@ -198,6 +200,7 @@ function AppUser(json) {'use strict';
                     if(allRewards) {
                         getShops(self, tags, onNewShop, finalFunc);
                     } else {
+                        Spinner.hide();
                         alert("Houston we have a problem !!!"); 
                     } 
                 });              
@@ -208,6 +211,7 @@ function AppUser(json) {'use strict';
     };
     
     this.checkAll = function(func) {
+        Spinner.show();
         // We need to retrieve Rewards and then go through all shops and compute their rewards availability
         this.retrieveRewards(function(allRewards) {
             var i;
@@ -218,10 +222,12 @@ function AppUser(json) {'use strict';
             if(func) {
                 func();
             }
+            Spinner.hide();
         });
     };
     
     this.deleteAllRewards = function(func) {
+        Spinner.show();
         var rew = new Reward();
         var self = this;
         this.getList(rew, Tools.Hash2Qparams({
@@ -238,6 +244,7 @@ function AppUser(json) {'use strict';
                 if(func) {
                     func(self);
                 }
+                Spinner.hide();
             });
     };
     
@@ -247,9 +254,9 @@ function AppUser(json) {'use strict';
             shop = AppUser.findShop(reward.shop.url);
         }
         if(reward.getActionKind() === Reward.ACTION_KIND_STEPIN) {
-            reward.setNbPoints(shop.getStepinPoints());
+            reward.setNbPoints((shop.getStepinPoints() || 0) + (reward.bonusFB || 0));
         } else if(reward.getActionKind() === Reward.ACTION_KIND_SCAN) {
-            reward.setNbPoints(shop.getScanPoints(reward.code));
+            reward.setNbPoints((shop.getScanPoints(reward.code) || 0) + (reward.bonusFB || 0));
         }
         return reward;
     };
@@ -271,21 +278,25 @@ function AppUser(json) {'use strict';
     };
     
     this.retrieveUser = function(args, func) {
+        Spinner.show();
         this.getList(this, Tools.Hash2Qparams(args), function(result) {
             if(result.length === 0) { 
                 result = null;
             } else {
                 result = new AppUser(result[0]);
             }
-            func(result); 
+            func(result);
+            Spinner.hide(); 
         });
     };
+    
     this.reload = function(func) {
         if(! this.isDummy()) {
             this.retrieveUser({m_url : this.m_url}, function(newUser) {
-                if(newUser) {
-                    func(newUser);
+                if(! newUser) {
+                    newUser = new AppUser();
                 }
+                func(newUser);
             });
         } else {
             func(this);
