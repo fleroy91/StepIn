@@ -40,6 +40,9 @@ Ti.App.Properties.setInt('MaxBookingTime', 15);
 var Spinner = require("etc/Spinner");
 var Geoloc = require("etc/Geoloc");
 
+Titanium.Facebook.appid = "228159347198277";
+Titanium.Facebook.permissions = ['publish_stream', 'read_stream'];
+    
 // ------------------------------------------------------------------------
 // TestFlight
 // ------------------------------------------------------------------------

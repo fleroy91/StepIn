@@ -10,6 +10,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Spinner = require("etc/Spinner");
 var Tools = require("etc/Tools");
+var Image = require("etc/AppImage");
 
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
 var _allWindows = [];
@@ -143,54 +144,105 @@ function ApplicationTabGroup() { 'use strict';
     
     self.createPointsButton = function() {
         // We change the titleControl of the current window
-        var points = user.getTotalPoints();
-        var btPoints = Ti.UI.createButtonBar({
-            height : 30,
-            width : 70 + 15 * (points > 10000) + 15 * (points > 100000),
-            backgroundColor : '#d92276',
-            labels : [(points || "0") + " points"]
+        var points = user.getTotalPoints() || 0;
+        var maxWidth = 80;
+        var viewWidth = maxWidth - 14;
+        var w = Math.round(((points % 2000) + 1) / 2000 * viewWidth);
+        var enclosingView = Ti.UI.createView({
+            right : 10,
+            height : 20,
+            width : maxWidth
         });
-        btPoints.addEventListener('click', function(e) {
+        var view = Ti.UI.createView({
+            left : 0,
+            height : 16,
+            width : viewWidth,
+            borderRadius : 4,
+            borderColor : '#d92276',
+            borderWidth : 1
+        });
+        enclosingView.add(view);
+        var backView = Ti.UI.createView({
+            width : w,
+            left:0,
+            height : view.height,
+            backgroundColor : '#d92276',
+            borderRadius : view.borderRadius,
+            borderWidth : 0
+        });
+        view.add(backView);
+        var lblIn = Image.createStepInStar({
+            right : 0,
+            height : 13,
+            width : 13
+        });
+        enclosingView.add(lblIn);
+        var lblPoints = Ti.UI.createLabel({
+            text : points,
+            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+            right : 4,
+            font:{fontSize : 12, fontWeight : 'bold'},
+            color : 'white'
+        });
+        view.add(lblPoints);
+        enclosingView.addEventListener('click', function(e) {
             self.setActiveTab(1); 
         });
-        return btPoints;
+        enclosingView.setPoints = function(p, animated) {
+            p = p || 0;
+            lblPoints.setText(p);
+            var w = Math.round(((p % 2000) + 1) / 2000 * viewWidth);
+            if(animated) {
+                var a = Ti.UI.createAnimation({width : w, duration : 500});
+                backView.animate(a);
+            } else {
+                backView.setWidth(w);
+            }
+        };
+        return enclosingView;
     };
     
-    self.createTitle = function(win) {
+    self.createTitle = function(win, hiddenTitle) {
         win.addEventListener('focus', function(e) {
             self.updateTitle(win);
         });
         win.barColor = 'black';
         win.setTitle(null);
+        win.hiddenTitle = hiddenTitle || win.hiddenTitle;
+        if(Ti.UI.getCurrentWindow() && Ti.UI.getCurrentWindow().hiddenTitle) {
+            win.setLeftNavButtonTitle(Ti.UI.getCurrentWindow().hiddenTitle);
+        }
         
         var btPoints = self.createPointsButton();
         win.setRightNavButton(btPoints);
         win.btPoints = btPoints;
     };
     
-    self.createTitle(winSearch);
-    self.createTitle(winAccount);
-    self.createTitle(winPresents);
-    self.createTitle(winMorePoints);
+    self.createTitle(winSearch, "A coté");
+    self.createTitle(winAccount, "Mon compte");
+    self.createTitle(winPresents, "Cadeaux");
+    self.createTitle(winMorePoints, "Plus de points");
     
-    self.updateTitleWindow = function(win) {
+    self.updateTitleWindow = function(win, animated) {
         if(win && win.btPoints) {
             var user = AppUser.getCurrentUser();
             var points = user.getTotalPoints();
-            win.btPoints.setLabels([(points || "0") + " points"]);
-            win.btPoints.setWidth(70 + 10 * (points > 10000) + 10 * (points > 100000));
-            win.setTitle(null);
+            win.btPoints.setPoints(points || 0, animated);
         }
     };
     
-    self.updateTitle = function(win) {
+    self.updateTitle = function(win, animated) {
         if(! win) {
-            self.updateTitleWindow(winSearch);
-            self.updateTitleWindow(winAccount);
-            self.updateTitleWindow(winPresents);
-            self.updateTitleWindow(winMorePoints);
+            self.updateTitleWindow(winSearch, animated);
+            self.updateTitleWindow(winAccount, animated);
+            self.updateTitleWindow(winPresents, animated);
+            self.updateTitleWindow(winMorePoints, animated);
+            var i = 0;
+            for(i = _allWindows.length-1; i >=0; i--) {
+                self.updateTitleWindow(_allWindows[i], animated);
+            }
         } else {
-            self.updateTitleWindow(win);
+            self.updateTitleWindow(win, animated);
         }
     };
     
@@ -230,11 +282,12 @@ function ApplicationTabGroup() { 'use strict';
         rewardWindow.addEventListener('close', function(e) {
             if(e.source.object) {
                 var newRew = e.source.object;
-                newRew.create();
                 user = AppUser.getCurrentUser();
+                newRew.setUser(user);
+                newRew.create();
                 user.setTotalPoints(user.getTotalPoints() + newRew.getNbPoints());
                 user.saveAll();
-                self.updateTitle();
+                self.updateTitle(null, true);
                 if(! e.source.managedWindow) {
                     if(func) {
                         func(newRew);
@@ -364,21 +417,20 @@ function ApplicationTabGroup() { 'use strict';
                 rew.setActionKind(Reward.ACTION_KIND_STEPIN);
                 self.closeAllWindows();
                 self.setActiveTab(0);
+                
+                // We open the window 
+                // TODO (except if it's already opened)
+                var ShopDetailWindow = require("/ui/common/ShopDetailWindow"),
+                    swin = new ShopDetailWindow(shopFound, self);
+                self.openWindow(null, swin, {animated:true});
 
                 self.addNewReward(rew, shopFound, function(reward) {
                     if(reward) {
                         allCodes.push(code);
-                        // We open the shop window
-                        shopFound.setCheckin(true);
-                        var FormWindow = require("ui/common/FormWindow"),
-                            swin = new FormWindow(null, 'read', shopFound, self);
-    
-                        swin.addEventListener('close', function() {
-                            var newShop = AppUser.getShop(obj_index);
-                            var row = newShop.createTableRow();
-                            self.tvSearch.updateRow(row_index, row);
-                        });
-                        self.tabSearch.open(swin, {animated:true});
+                        var newShop = AppUser.getShop(obj_index);
+                        newShop.checkin = true;
+                        var row = newShop.createTableRow();
+                        self.tvSearch.updateRow(row_index, row);
                     }
                 });
             }
@@ -439,9 +491,9 @@ function ApplicationTabGroup() { 'use strict';
     };
     
     self.openWindow = function(tab, win, options) {
+        tab = tab || self.tabSearch;
         self.createTitle(win);
         _allWindows.push(win);
-        tab = tab || self.tabSearch;
         win.containingTab = tab;
         tab.open(win, options);
     };

@@ -137,23 +137,17 @@ function TabViewWindow(args) {
             btChangeView.setImage((viewList ? "/images/switch-list.png" : "/images/switch-map.png"));
         }
     });
-
+    
 	tv.addEventListener('click', function(e)
 	{
 		if (e.rowData && e.rowData.object_index)
 		{
-		    var row_index = e.index;
-		    var obj_index = e.rowData.object_index;
-		    var obj = AppUser.getShop(obj_index);
-			var FormWindow = require('ui/common/FormWindow'),
-                swin = new FormWindow(null, 'read', obj, tabGroup);
+            var row_index = e.index;
+            var obj_index = e.rowData.object_index;
+            var obj = AppUser.getShop(obj_index);
+			var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
+                swin = new ShopDetailWindow(obj, tabGroup);
             
-            swin.addEventListener('close', function() {
-                var newShop = AppUser.getShop(obj_index);
-                var row = newShop.createTableRow();
-                tv.updateRow(row_index, row);
-            });
-                
 			tabGroup.openWindow(self.containingTab,swin,{animated:true});
 		}
 	});

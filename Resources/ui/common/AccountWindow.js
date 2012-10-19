@@ -139,7 +139,7 @@ function AccountWindow(args) {'use strict';
 	// if(! user.isDummy() || Tools.startsWith(email, "test2@gmail.com") || (Tools.startsWith(email, "flperso+") && Tools.endsWith(email, "@gmail.com"))) {
 	if(! sSuperAdmin) {
         sSuperAdmin = Ti.UI.createTableViewSection({});
-        var r51 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Super-admin page'});
+        var r51 = Ti.UI.createTableViewRow({ hasChild : true, font:{fontWeight:'normal'},title : 'Super-admin page'});
         sSuperAdmin.add(r51);
         
         r51.addEventListener('click', function(e) {

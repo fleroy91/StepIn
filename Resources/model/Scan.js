@@ -36,6 +36,9 @@ function Scan(json) {'use strict';
         }
         return ret;
     };
+    this.getTitle = function() {
+        return this.title;
+    };
     
     this.createReadView = function(tabGroup) {
         var internBorder = 2;
@@ -45,25 +48,47 @@ function Scan(json) {'use strict';
             top : 0,
             left : 0,
             width : Ti.UI.FILL,
-            height : 36,
+            height : 60,
             zIndex : 100
         });
         
         var opacView = Ti.UI.createView({
             opacity : 0.5,
             backgroundColor : 'black',
-            zIndex : 150
+            zIndex : 150,
+            height : 36,
+            top : 17
         });
         main.add(opacView);
         
+        var img = Ti.UI.createImageView({
+            borderRadius : 1,
+            borderWidth : 2,
+            borderColor : 'white',
+            zIndex : 200,
+            height : 60,
+            width : 60,
+            top : 0,
+            left : 9,
+            shadow:{
+                shadowRadius:2,
+                shadowOpacity:0.5,
+                shadowOffset:{x:3, y:3}
+            }
+        });
+        main.add(img);
+        Image.cacheImage(this.getPhotoUrl(0), function(image) {
+            img.setBackgroundImage(image);
+        });
+        
         // Line 1
         var labelName = Ti.UI.createLabel({
-            font : {fontSize: 12, fontWeight : 'bold'},
-            left : 5,
-            top : internBorder,
+            font : {fontSize: 13, fontWeight : 'bold'},
+            left : 73,
+            top : 17,
             color: 'white',
             zIndex : 200,
-            width : 240,
+            width : 175,
             text : this.title,
             height : labelHeight
         });
@@ -72,17 +97,18 @@ function Scan(json) {'use strict';
         // line 2
         var labelDetails = Ti.UI.createLabel({
             color : 'white',
-            left : 5,
+            left : 73,
             top : labelName.top + 20,
+            height : 13,
             zIndex : 200,
-            width : 240,
-            font : { fontSize : 10, fontWeight : 'normal'},
+            width : 175,
+            font : { fontSize : 11, fontWeight : 'normal'},
             text : this.desc
         }); 
         main.add(labelDetails);
         
         // Add the points
-        var vPoints = Image.createPointView(this.points, 50,70, this.scanned, {shadowColor : 'white', shadowOffset : { x:1,y:1}});
+        var vPoints = Image.createPointView(this.points, 50,70, this.scanned);
         vPoints.right = 5;
         vPoints.zIndex = 200;
         main.add(vPoints);

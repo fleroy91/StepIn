@@ -8,10 +8,11 @@
         <target device="blackberry">false</target>
     </deployment-targets>
     <sdk-version>2.1.3.v20120915120319</sdk-version>
+    <property name="ti.facebook.appid">228159347198277</property >
     <id>com.stepin.app</id>
     <name>StepIn</name>
-    <version>0.5.1</version>
-    <publisher>Frédéric Leroy</publisher>
+    <version>0.6</version>
+    <publisher>Frederic Leroy</publisher>
     <url>http://www.stepin.fr</url>
     <description>Application de géolocalisation indoor permettant de gagner de l'argent en simplement entrant dans les boutiques !</description>
     <copyright>2012 by viaduc143</copyright>
@@ -49,6 +50,7 @@
         <module version="0.1">com.sonic</module>
         <module version="0.4.2d">tibar</module>
         <module version="1.5">com.0x82.testflight</module>
+        <module version="0.4">ti.viewshadow</module>
     </modules>
     <ios>
         <min-ios-ver>4.3</min-ios-ver>

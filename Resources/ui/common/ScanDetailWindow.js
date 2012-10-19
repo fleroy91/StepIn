@@ -2,7 +2,7 @@
 //  ScanDetailWindow.js
 //  StepIn
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-12.
+//  Created by Fr√©d√©ric Leroy on 2012-10-18.
 //  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
@@ -10,14 +10,14 @@
 var Tools = require("/etc/Tools");
 var Image = require("/etc/AppImage");
 
-function ScanDetailWindow(object, tabGroup, args) { 'use strict';
+function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
     var self = Ti.UI.createWindow({
-        backgroundColor : '#f0f0f0'
+        backgroundColor : '#d92276'
     });
     
     var canScan = args.canScan;
     
-    var view = object.createReadView(tabGroup);
+    var view = scan.createReadView(tabGroup);
     view.top = 0;
     
     if(canScan) {
@@ -72,7 +72,7 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
             self.add(bt);
             bt.addEventListener('click', function(e) {
                 // We need to find the article in the DB
-                object.newObjectScanned(object.code, tabGroup, function(obj) {
+                scan.newObjectScanned(scan.code, tabGroup, function(obj) {
                     self.object = obj;
                     self.close({animated:true});
                 });
@@ -89,7 +89,7 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
                 backgroundColor : 'black'
             });
             btBack.addEventListener('click', function(e) {
-                alert("On click ici pour fermer mais ça ne marche pas encore !");
+                alert("On click ici pour fermer mais ça ne marche pas encore ! : " + JSON.stringify(Ti.UI.getCurrentWindow()));
                 Ti.UI.currentWindow.close();
                 self.object = null;
                 self.close({animated:true}); 
@@ -120,8 +120,8 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
                         if(data && data.barcode){
                             Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
                             // We need to find the article in the DB
-                            if(object) {
-                                object.newObjectScanned(data.barcode, tabGroup, function(obj) {
+                            if(scan) {
+                                scan.newObjectScanned(data.barcode, tabGroup, function(obj) {
                                     self.object = obj;
                                     self.close({animated:true});
                                 });
@@ -138,17 +138,17 @@ function ScanDetailWindow(object, tabGroup, args) { 'use strict';
             });
         }
     } else {
-        // We display the picture of the object instead of the scan
+        // We display the picture of the scan instead of the scan
         view.top = 0;
         var img = Ti.UI.createView({
-            top : view.height
+            top : view.height - 5
         });
         self.add(img);
         self.add(view);
-        Image.cacheImage(object.getPhotoUrl(0), function(image) {
+        Image.cacheImage(scan.getPhotoUrl(0), function(image) {
             img.setBackgroundImage(image); 
         });
-        tabGroup.createTitle(self);
+        tabGroup.createTitle(self, "Scan");
     }
     return self;
 }

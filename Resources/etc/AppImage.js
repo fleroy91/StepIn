@@ -2,6 +2,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
 var Tools = require("/etc/Tools");
+require("ti.viewshadow");
 
 // To be able to delete an image, just give {update : true}. The object must have a defaultFilename property
 function Image() { 'use strict';
@@ -351,6 +352,23 @@ Image.convertUrlInFile = function(url) { 'use strict';
     var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, Image.imageDirectoryName, filename);
     return file;
 };
+/**
+ * Load the image from the URL and returns a blob
+ * 
+ * @param {url} url: The url of the image to load
+ * @param {callback} func : the callback
+ * @returns : nothing because blbo is sent via the callback
+ */
+Image.loadImage = function(url, func) { 'use strict';
+    var xhr = Ti.Network.createHTTPClient();
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            func(xhr.responseData);
+        }
+    };
+    xhr.open('GET', url);
+    xhr.send();
+};
 
 // Return the image to set to the image view
 Image.cacheImage = function(url, func) { 'use strict';
@@ -488,6 +506,14 @@ Image.createImageView = function(crud, image, defaultFilename, options) {'use st
     return view;
 };
 
+Image.createStepInStar = function(options) { 'use strict';
+    options.image = options.image || '/images/stepin-star.png';
+    options.height = options.height || 30;
+    options.width = options.width || 30;
+    var img = Ti.UI.createImageView(options);
+    return img;
+};
+
 // To create a view of points !
 Image.createPointView = function(points, height, width, disabled, options) { 'use strict';
     var pv = Ti.UI.createView({
@@ -495,34 +521,76 @@ Image.createPointView = function(points, height, width, disabled, options) { 'us
     });
     var color = (disabled ? '#b9b9b9' :  '#d92276'); 
     var lblOptions = {
-        text : (disabled ? '' : '+') + points,
+        text : '+' + points,
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
         font : {fontSize : 20, fontWeight : 'bold'},
         color : color,
         height : height,
-        right : 18
-    };
-    var lblSmallOptions = {
-        text : " pts",
-        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-        verticalAlign : Ti.UI.TEXT_VERTICAL_ALIGNMENT_BOTTOM,
-        font : {fontSize : 10, fontWeight : 'bold'},
-        color : color,
-        height : height,
-        right : 0
+        right : 22,
+        shadowOffset : {x:1,y:1},
+        shadowColor : 'white'
     };
     var key;
     for(key in options) {
         if(options.hasOwnProperty(key)) {
             lblOptions[key] = options.key;
-            lblSmallOptions[key] = options.key;
         }
     }
     var lbl = Ti.UI.createLabel(lblOptions);
-    var lblSmall = Ti.UI.createLabel(lblSmallOptions);
     pv.add(lbl);
-    pv.add(lblSmall);
+    var star = Image.createStepInStar({height : 18, right : 0, width : 18});
+    pv.add(star);
     
+    return pv;
+};
+
+Image.createIconsPointView = function(points, stepin, scanin, options) { 'use strict';
+    var size = options.height; 
+    options.width = 90;
+    var pv = Ti.UI.createView(options);
+    var color = '#d92276';
+    
+    var lblOptions = {
+        text : '+' + points,
+        width : options.width,
+        top : 2,
+        textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+        font : {fontSize : size - 7, fontWeight : 'bold'},
+        color : color,
+        height : size,
+        shadowColor: 'white',
+        shadowOffset: {x:1,y:1}
+    };
+    var lbl = Ti.UI.createLabel(lblOptions);
+    pv.add(lbl);
+    
+    var nbIcons = (stepin ? 1 : 0) + (scanin ? 1 : 0);
+    var iconSize = size - 3;
+    var nleft = (options.width - nbIcons * iconSize) / (nbIcons + 1);
+    
+    var iconStepIn = Ti.UI.createImageView({
+        image : "/images/steps.png",
+        left : nleft,
+        height : iconSize,
+        width : iconSize,
+        bottom : 2
+    });
+    var iconScan = Ti.UI.createImageView({
+        image : "/images/tag.png",
+        right : nleft,
+        height : iconSize,
+        width : iconSize,
+        bottom : 2
+    });
+    if(stepin) {
+        pv.add(iconStepIn);
+    }
+    if(scanin) {
+        pv.add(iconScan);
+    }
+    
+    var star = Image.createStepInStar({right : 0, width : size - 7, height : size - 7});
+    // pv.add(star);
     return pv;
 };
     

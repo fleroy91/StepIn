@@ -33,8 +33,8 @@ function SplashWindow() { 'use strict';
     
     var btClose = Ti.UI.createButton({
         style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-        right : 80,
-        bottom : 1,
+        right : 120,
+        bottom : 0,
         visible : false,
         image : "/images/bullet.png"
     });
@@ -43,6 +43,7 @@ function SplashWindow() { 'use strict';
     var _callback = null;
     btClose.addEventListener('click', function(e) {
         tutorial.visible = false;
+        btClose.visible = false;
         if(_callback) {
             _callback();
         }

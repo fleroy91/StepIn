@@ -28,6 +28,15 @@ function Reward(json) {    'use strict';
     this.getActionKind = function() {
         return this.getField('action_kind');
     };
+    this.getActionKindTitle = function() {
+        var ret = "";
+        if(this.getActionKind() === Reward.ACTION_KIND_STEPIN) {
+            ret = "Step-In";
+        } else if(this.getActionKind() === Reward.ACTION_KIND_SCAN) {
+            ret = "Scan-In";
+        }
+        return ret;
+    };
     this.getWhen = function() {
         return this.getField('when');
     };

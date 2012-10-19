@@ -133,7 +133,7 @@ function FormWindow(win_options, crud, object, tabG, extra) { 'use strict';
     });
     
     if(read) {
-        tabGroup.createTitle(win);
+        tabGroup.createTitle(win, object.getTitle());
     }
     
     return win;

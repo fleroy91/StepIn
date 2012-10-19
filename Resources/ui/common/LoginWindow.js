@@ -20,9 +20,6 @@ function LoginWindow(args) {'use strict';
         modalTransition : (modal ? Ti.UI.iPhone.MODAL_TRANSITION_STYLE_CROSS_DISSOLVE : null),
         modalStyle : (modal ? Ti.UI.iPhone.MODAL_PRESENTATION_FORMSHEET : null)
     });
-    Titanium.Facebook.appid = "228159347198277";
-    Titanium.Facebook.permissions = ['publish_stream', 'read_stream'];
-    
     var view = Ti.UI.createScrollView({
     });
     

@@ -122,6 +122,9 @@ function Shop(json) {'use strict';
     this.getName = function() {
         return this.name;
     };
+    this.getTitle = function() {
+        return this.getName();
+    };
     
     this.getCity = function() {
         return this.city;
@@ -324,227 +327,12 @@ function Shop(json) {'use strict';
                 e.annotation.setImage('/images/pointer-over.png');
             }
             if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
-                var obj = self,
-                    FormWindow = require('ui/common/FormWindow'),
-                    crud, title;
-                    
-                crud = 'read';
-                title = obj.getName();
-                var win = new FormWindow(null, crud, obj, tabGroup, obj.getExtraFormWindowOptions(crud));
-                tabGroup.activeTab.open(win,{animated:true});
+                var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
+                    win = new ShopDetailWindow(self, tabGroup);
+                tabGroup.openWindow(null,win,{animated:true});
             }
         });
         return annotation;
-    };
-    
-    this.createReadView = function(header, footer, tabGroup) {
-        var internBorder = 2;
-        var internHeight = 74;
-        var labelHeight = 13;
-        
-        // Header : 135 + 63
-        // Row : 74
-        
-        // We create a new header view
-        var newHeader = Ti.UI.createView({
-            height : 135+63
-        });
-        Image.cacheImage(this.getPhotoUrl(0), function(image) {
-            newHeader.setBackgroundImage(image);
-        });
-        
-        // we create a view for shop details in the header
-        var shopdetails = Ti.UI.createView({
-            top : 97,
-            height : 36,
-            backgroundColor : 'black',
-            opacity : 0.6,
-            zIndex : 0
-        });
-        newHeader.add(shopdetails);
-        
-        // Line 1
-        var labelName = Ti.UI.createLabel({
-            font : {fontSize: 12, fontWeight : 'bold'},
-            left : 70,
-            top : shopdetails.top + internBorder,
-            color:'white',
-            zIndex : 1,
-            text : this.getName(),
-            height : labelHeight
-        });
-        newHeader.add(labelName);
-    
-        // line 2
-        var labelDetails = Ti.UI.createLabel({
-            color : 'white',
-            left : 70,
-            top : shopdetails.top + 20,
-            zIndex : 1,
-            font : { fontSize : 10, fontWeight : 'normal'},
-            text : this.getDetails()
-        }); 
-        newHeader.add(labelDetails);
-        var btShowMap = Ti.UI.createImageView({
-            image : '/images/bullet.png',
-            width : 25, 
-            height: 25,
-            top : shopdetails.top + 6,
-            zIndex : 1,
-            right : 5
-        });
-        newHeader.add(btShowMap);
-        
-        // Mini map
-        var user = AppUser.getCurrentUser();
-        var loc = (this.location || user.location || {lat : 48.833, lng : 2.333});
-        
-        var mapview = Ti.UI.createImageView({
-            image : "/images/smallmap.png",
-            borderRadius : 1,
-            borderWidth : 2,
-            borderColor : 'white',
-            zIndex : 1,
-            height : 60,
-            width : 60,
-            bottom : 2,
-            top : 80,
-            left : 9 
-        });
-        newHeader.add(mapview);
-        
-        var self = this;
-        function showMap() {
-            var MapDetailWindow = require('/ui/common/MapDetailWindow'),
-                swin = new MapDetailWindow(self);
-            tabGroup.activeTab.open(swin, {animated:true});
-        }
-        
-        btShowMap.addEventListener('click', showMap);
-        mapview.addEventListener('click', showMap);
-        newHeader.mapview = mapview;
-        
-        // TODO
-        // Footer view must be an ads view horizontal scrollable
-        var newFooter = Ti.UI.createScrollableView({
-            
-        });
-        
-        // Nom we display the 'In' list
-        var tv = Ti.UI.createTableView({
-            height : 'auto',
-            allowsSelection : true,
-            footerView : footer,
-            headerView : newHeader,
-            style : Titanium.UI.iPhone.TableViewStyle.PLAIN,
-            backgroundColor : '#f0f0f0'
-        });
-        
-        var data = [];
-
-        // First row is the step-in!
-        var rowStepIn = Ti.UI.createTableViewRow({
-            height : 63,
-            backgroundColor : '#d92276'
-        });
-        var lblPoints = Ti.UI.createLabel({
-            right : 5,
-            color : 'white',
-            text : this.stepinPoints + ' points',
-            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-            font : {fontSize : 24, fontWeight : 'bold'}
-        });
-        var lblDetails = Ti.UI.createLabel({
-            left : 5,
-            color : 'white',
-            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
-            font : {fontSize : 13, fontWeight : 'normal'},
-            text : 'Step-In dans ce magasin'
-        });
-        rowStepIn.add(lblPoints);
-        rowStepIn.add(lblDetails);
-        
-        var rowScans = Ti.UI.createTableViewRow({
-            height : 40
-        });
-        // TODO : reprendre ici        
-        var lbl = Ti.UI.createLabel({
-            text : "Scan de produits",
-            top : internBorder,
-            left : internBorder,
-            color : '#4d4d4d',
-            font : {fontSize : '12', fontWeight : 'bold'},
-            textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
-            height : 15
-        });
-        var lblPoints = Ti.UI.createLabel({
-            right : 5,
-            color : 'white',
-            text : this.stepinPoints + ' points',
-            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-            font : {fontSize : 24, fontWeight : 'bold'}
-        });
-        rowScans.add(lbl);
-        data.push(rowStepIn);
-        data.push(rowScans);
-        data[0] = section;
-        tv.setData(data);
-        var checkin = this.checkin;
-        
-        tv.addEventListener('click', function(e) {
-            if(e.rowData && e.rowData.object_index) {
-                // We open a detailed window of the object to scan
-                var obj_index = e.rowData.object_index;
-                var shop_index = self.index;
-                var row_index = e.index;
-                var canScan = e.rowData.canScan;
-                var obj = self.getScan(obj_index);
-                if(! obj.scanned) { 
-                    // var FormWindow = require("/ui/common/FormWindow"),
-                    //     swin = new FormWindow(null, 'read', obj, tabGroup, {canScan : checkin});
-                    var ScanDetailWindow = require("/ui/common/ScanDetailWindow"),
-                        swin = new ScanDetailWindow(obj, tabGroup,{canScan : checkin});
-                        
-                    swin.addEventListener('close', function(e) {
-                        if(swin.object) {
-                            var scan = swin.object;
-                            var shop = AppUser.getShop(shop_index);
-                            if(scan.scanned) {
-                                shop.allPoints -= scan.points;
-                            }
-                            shop.setScan(scan);
-                            AppUser.updateShop(shop);
-                            var row = scan.createTableRow({
-                                canScan : ! scan.scanned,
-                                object_index : obj_index
-                            });
-                            tv.updateRow(row_index, row);
-                        } 
-                    });
-                    tabGroup.openWindow(null,swin, {animated:true});
-                } else {
-                    tv.deselectRow(row_index);
-                }
-            } 
-        });
-
-        // We add the scan articles
-        var j;
-        var scans = this.scans;
-        for(j = 0; scans && j < scans.length; j++) {
-            var s = scans[j];
-            var row = s.createTableRow({
-                canScan : (! checkin),
-                object_index : j + 1
-            });
-            row.scan = s;
-            section.add(row);
-        }
-        tv.setData([section]);
-        
-        this.tv = tv;
-        
-        return tv;
     };
     
     this.getTwoFreeScans = function() {
@@ -566,6 +354,8 @@ function Shop(json) {'use strict';
         var internHeight = 75;
         var labelHeight = Math.round((internHeight - 2 * internBorder) / 3);
         var allPoints = this.allPossiblePoints;
+        var stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN);
+        var scanPoints = allPoints - stepinPoints;
          
         var row = Ti.UI.createTableViewRow({
             className : 'shopRow',
@@ -573,13 +363,19 @@ function Shop(json) {'use strict';
             backgroundColor : (this.checkin ? '#eadae3' : '#f0f0f0')
         });
         
-        var img = Image.createImageView('read', this.getNthPhotoUrl(0), null, {
+        var img = Ti.UI.createImageView({
             left : 5,
             height : 60,
             width : 60,
             borderWith : 0,
-            borderRadius : 2,
-            noEvent : true});
+            borderRadius : 0,
+            borderColor : '#999',
+            shadow:{
+                shadowRadius:2,
+                shadowOpacity:0.7,
+                shadowOffset:{x:3, y:3}
+            }
+        });
         row.add(img);
         
         var btAction = Ti.UI.createImageView({
@@ -590,10 +386,12 @@ function Shop(json) {'use strict';
         });
         row.add(btAction);
     
-        var vPoints = Image.createPointView(allPoints, 50,70, false);
-        vPoints.right = btAction.right + btAction.width + internBorder;
+        var vPoints = Image.createIconsPointView(allPoints, (stepinPoints > 0), (scanPoints > 0),
+        {
+            right : btAction.right + btAction.width + internBorder,
+            height : 60
+        });
         row.add(vPoints);
-        row.ptView = vPoints;
 
         var labelName = Ti.UI.createLabel({
             font : {fontSize: 14, fontWeight : 'bold'},
