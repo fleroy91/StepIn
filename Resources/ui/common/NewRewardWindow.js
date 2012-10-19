@@ -106,14 +106,16 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         text : 'Vous devez avoir un compte pour collecter vos points :',
         font : {fontSize : 19, fontWeight : 'bold'},
         top : 0,
-        height : 50
+        height : 50,
+        right : 5,
+        left : 5
     });
+    var soundWin = Titanium.Media.createSound({url : '/sounds/gain.mp3'});
+    var soundOpen = Titanium.Media.createSound({url :'/sounds/ouverture.mp3'});
     
     function niceClose() {
         if(reward.getNbPoints() > 0) {
-            var sound = Titanium.Media.createSound();
-            sound.url='/sounds/gain.mp3'; 
-            sound.play();
+            soundWin.play();
             var t1 = Ti.UI.create3DMatrix();
             t1 = t1.scale(0.00001);
             t1 = t1.rotate(180,0,0,1);
@@ -132,22 +134,22 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     }
     
     function onClose(bonus) {
+        Spinner.show(self);
         reward.bonusFB = bonus;
         var prevPoints = reward.getNbPoints();
         reward = user.updateReward(reward);
         self.object = reward;
         var newPoints = reward.getNbPoints();
         var timeout = 200;
+        Spinner.hide(self);
         if(newPoints > prevPoints) {
             timeout = Math.round(2000 / (newPoints - prevPoints));
-            var sound = Titanium.Media.createSound();
-            sound.url='/sounds/ouverture.mp3'; 
-            sound.play();
+            soundOpen.play();
             while(prevPoints <= newPoints) {
                 vPoints.setText(prevPoints);
                 prevPoints++;
                 var k;
-                for(k = 0; k < 10000000; k++) {
+                for(k = 0; k < 500000; k++) {
                     // We wait the hard way
                     var i=0;  
                 }
@@ -194,9 +196,7 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         a1.duration = 1;
         a1.addEventListener('complete', function()
         {
-            var sound = Titanium.Media.createSound();
-            sound.url='/sounds/ouverture.mp3'; 
-            sound.play();
+            soundOpen.play();
             
             view.visible = true;
             // simply reset animation
