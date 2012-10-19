@@ -30,9 +30,8 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
     Image.cacheImage(scan.getPhotoUrl(0), function(image) {
         img.setBackgroundImage(image); 
     });
+    var TiBar = require("tibar");
     function launchScan() {
-        var TiBar = require("tibar");
-        
         // Configuration
         // VC - ZBarReaderViewController
         // C - ZBarReaderController
@@ -46,7 +45,7 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
                 "showsZBarControls" : true,
                 "tracksSymbols" : true,
                 "enableCache" : true,
-                "showsHelpOnFail" : true,
+                "showsHelpOnFail" : false,
                 "takesPicture" : false
             },
             custom : {// not implemented yet
@@ -73,38 +72,36 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
         };
         if(! Tools.isSimulator()) {
             var overlayView = Ti.UI.createView({
-                backgroundImage : "/images/scanner.png"
+                backgroundImage : "/images/scanner.png",
+                zIndex : 999
             });
             
             var view2 = scan.createReadView(tabGroup);
             view2.top = 0;
-            view2.zIndex = 200;
 
             overlayView.add(view2);
             
-            self.addEventListener('open', function(e) {
-                TiBar.scan({
-                    configure: config,
-                    overlay : overlayView, 
-                    success:function(data){
-                        if(data && data.barcode){
-                            Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
-                            // We need to find the article in the DB
-                            if(scan) {
-                                scan.newObjectScanned(data.barcode, tabGroup, function(obj) {
-                                    self.object = obj;
-                                    self.close({animated:true});
-                                });
-                            }
+            TiBar.scan({
+                configure: config,
+                overlay : overlayView, 
+                success:function(data){
+                    if(data && data.barcode){
+                        Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
+                        // We need to find the article in the DB
+                        if(scan) {
+                            scan.newObjectScanned(data.barcode, tabGroup, function(obj) {
+                                self.object = obj;
+                                self.close({animated:true});
+                            });
                         }
-                    },
-                    cancel:function(){
-                        Ti.API.info('TiBar cancel callback!');
-                    },
-                    error:function(){
-                        Ti.API.info('TiBar error callback!');
                     }
-                });
+                },
+                cancel:function(){
+                    Ti.API.info('TiBar cancel callback!');
+                },
+                error:function(){
+                    Ti.API.info('TiBar error callback!');
+                }
             });
         }
     }
@@ -118,8 +115,10 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
             width : '70%',
             bottom : 10
         });
+        btScan.addEventListener('click', function(e) {
+            launchScan();
+        });
         self.add(btScan);
-        btScan.addEventListener('click', launchScan);
         
         if(Tools.isSimulator()) {
             var bt = Ti.UI.createButtonBar({
@@ -139,7 +138,7 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
             });
         } else {
             // We run it immediately
-            launchScan();
+            self.addEventListener('open', launchScan);
         }
 
     }

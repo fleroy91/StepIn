@@ -94,13 +94,16 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
             swin.addEventListener('close', function(e) {
                 if(e.source.object) {
                     // The object was scanned
-                    var newView = Image.createPointView(scan.points, 30, Ti.UI.FILL, true);
+                    scan = e.source.object;
+                    var newView = Image.createPointView(scan.points, 30, Ti.UI.FILL, scan.scanned);
                     newView.top = vPoints.top;
                     newView.right = vPoints.right;
+                    newView.backgroundColor = '#f0f0f0';
                     v.add(newView);
                     vPoints.animate({view : newView, duration : 500}, function(e) {
                         vPoints.visible = false;
                     });
+                    shop.setScan(scan);
                 }
             });
                 
@@ -116,7 +119,6 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         });
         
         var p1 = scans[index1];
-        p1.index = index1;
         var v1 = createScanView(p1);
         v1.left = 0;
         row.add(v1);
@@ -125,7 +127,6 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         
         if(index2 < scans.length) {
             var p2 = scans[index2];
-            p2.index = index2;
             var v2 = createScanView(p2);
             v2.right = 0;
             row.add(v2);

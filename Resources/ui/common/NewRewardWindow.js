@@ -131,28 +131,31 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         }
     }
     
-    function setPoints(points, timeout) {
-        setTimeout(function() { vPoints.setText(points); }, timeout);
-    }
-
+    // TODO : ugly but ...
+    var prevPoints = 0;
+    function incrPrevPoints() { prevPoints++; }
+    
     function onClose(bonus) {
         reward.bonusFB = bonus;
-        var prevPoints = reward.getNbPoints();
+        prevPoints = reward.getNbPoints();
         reward = user.updateReward(reward);
         self.object = reward;
         var newPoints = reward.getNbPoints();
         var timeout = 200;
         if(newPoints > prevPoints) {
-            timeout = Math.round(3000 / (newPoints - prevPoints));
+            timeout = Math.round(2000 / (newPoints - prevPoints));
             var sound = Titanium.Media.createSound();
             sound.url='/sounds/ouverture.mp3'; 
             sound.play();
-            for(prevPoints = prevPoints+1; prevPoints <= newPoints; prevPoints ++) {
-                setPoints(prevPoints, timeout);
+            while(prevPoints <= newPoints) {
+                vPoints.setText(prevPoints);
+                setTimeout(incrPrevPoints, timeout);
             }
             timeout = 1000;
+            setTimeout(niceClose, timeout);
+        } else {
+            setTimeout(niceClose, timeout);
         }
-        setTimeout(niceClose, timeout);
     }
 
     var LoginView = require("/ui/common/LoginView"),

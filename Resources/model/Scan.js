@@ -49,13 +49,13 @@ function Scan(json) {'use strict';
             left : 0,
             width : Ti.UI.FILL,
             height : 60,
-            zIndex : 100
+            zIndex : 1000
         });
         
         var opacView = Ti.UI.createView({
             opacity : 0.5,
             backgroundColor : 'black',
-            zIndex : 150,
+            zIndex : 1500,
             height : 36,
             top : 17
         });
@@ -65,7 +65,7 @@ function Scan(json) {'use strict';
             borderRadius : 1,
             borderWidth : 2,
             borderColor : 'white',
-            zIndex : 200,
+            zIndex : 2000,
             height : 60,
             width : 60,
             top : 0,
@@ -87,7 +87,7 @@ function Scan(json) {'use strict';
             left : 73,
             top : 17,
             color: 'white',
-            zIndex : 200,
+            zIndex : 2000,
             width : 175,
             text : this.title,
             height : labelHeight
@@ -100,7 +100,7 @@ function Scan(json) {'use strict';
             left : 73,
             top : labelName.top + 20,
             height : 13,
-            zIndex : 200,
+            zIndex : 2000,
             width : 175,
             font : { fontSize : 11, fontWeight : 'normal'},
             text : this.desc
@@ -110,7 +110,7 @@ function Scan(json) {'use strict';
         // Add the points
         var vPoints = Image.createPointView(this.points, 50,70, this.scanned);
         vPoints.right = 5;
-        vPoints.zIndex = 200;
+        vPoints.zIndex = 2000;
         main.add(vPoints);
 
         return main;

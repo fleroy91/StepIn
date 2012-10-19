@@ -253,7 +253,9 @@ function Shop(json) {'use strict';
         this.getList(scan, Tools.Hash2Qparams({ "shop.url" : this.getUrl() }), function(scans) {
             var i, data = [];
             for(i = 0; i < scans.length; i++) {
-                data.push(new Scan(scans[i]));
+                var s = new Scan(scans[i]);
+                s.index = i + 1;
+                data.push(s);
             }
             self.scans = data;
             
