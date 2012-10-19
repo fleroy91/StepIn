@@ -131,13 +131,9 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         }
     }
     
-    // TODO : ugly but ...
-    var prevPoints = 0;
-    function incrPrevPoints() { prevPoints++; }
-    
     function onClose(bonus) {
         reward.bonusFB = bonus;
-        prevPoints = reward.getNbPoints();
+        var prevPoints = reward.getNbPoints();
         reward = user.updateReward(reward);
         self.object = reward;
         var newPoints = reward.getNbPoints();
@@ -149,7 +145,12 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
             sound.play();
             while(prevPoints <= newPoints) {
                 vPoints.setText(prevPoints);
-                setTimeout(incrPrevPoints, timeout);
+                prevPoints++;
+                var k;
+                for(k = 0; k < 10000000; k++) {
+                    // We wait the hard way
+                    var i=0;  
+                }
             }
             timeout = 1000;
             setTimeout(niceClose, timeout);
