@@ -32,8 +32,8 @@ function TabViewWindow(args) {
         style : Ti.UI.iPhone.SystemButtonStyle.BAR,
         color : 'black',
         labels : [{image : '/images/switch-map.png'}],
-        width : 81,
-        height : 28
+        width : 46,
+        height : 16
     });
     self.setLeftNavButton(btChangeView);
     
