@@ -14,7 +14,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
 
     var self = Ti.UI.createWindow({
         barColor : 'black',
-        barImage : '/images/topbar.png'
+        barImage : '/images/topbar-stepin.png'
     });
     var popup = (options && options.popup);
     var pointsToInvite = 10;

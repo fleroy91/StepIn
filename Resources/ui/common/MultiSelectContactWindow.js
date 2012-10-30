@@ -13,7 +13,7 @@ var Tools = require('/etc/Tools');
 function MultiSelectContactWindow(people, pointsToInvite, pointsIfInviteOk, tabGroup) { 'use strict';
     var self = Ti.UI.createWindow({
         backgroundColor : "#f0f0f0",
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
     

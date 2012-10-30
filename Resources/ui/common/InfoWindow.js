@@ -13,7 +13,7 @@ function InfoWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Infos', 
 	    backgroundColor : 'white',
-        barImage : '/images/topbar.png'
+        barImage : '/images/topbar-stepin.png'
     });
     
     function batteryStateToString(state)

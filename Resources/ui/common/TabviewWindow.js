@@ -23,7 +23,7 @@ function TabViewWindow(args) {
     var self = Ti.UI.createWindow({
         navBarHidden : false,
         backgroundColor : '#f0f0f0',
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
     

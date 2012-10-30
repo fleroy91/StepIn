@@ -19,7 +19,7 @@ function SuperAdminWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Super Admin', 
 	    backgroundColor : 'white',
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
     

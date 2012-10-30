@@ -11,7 +11,7 @@ var Image = require('/etc/AppImage');
 
 function ScanListWindow(shop, tabGroup) { 'use strict';
     var self = Ti.UI.createWindow({
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black',
         backgroundColor : '#f0f0f0'
     });

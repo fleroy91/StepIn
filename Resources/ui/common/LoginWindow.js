@@ -12,7 +12,7 @@ function LoginWindow(tabGroup, headerView) {'use strict';
 
     var win = Ti.UI.createWindow({
         backgroundColor : '#f0f0f0',
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black',
         navBarHidden : false
     });

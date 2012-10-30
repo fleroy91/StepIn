@@ -16,7 +16,7 @@ function PresentListWindow(tabGroup, options) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Les cadeaux !', 
 	    backgroundColor : '#f0f0f0',
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
     
@@ -100,7 +100,7 @@ function PresentListWindow(tabGroup, options) {'use strict';
                         user.setTotalPoints(user.getTotalPoints() - present.points);
                         rew.setActionKind(present.title);
                         rew.create( function(e) {
-                            alert("Votre bon cadeau vous sera envoyé par email dans un délai de 15 jours maximum !");
+                            alert("Votre bon cadeau vous sera envoyé par email dans quelques instants !");
                             self.close();
                         });
                     }
@@ -128,7 +128,7 @@ function PresentListWindow(tabGroup, options) {'use strict';
                 convert = false;
                 lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
                 bt.setLabels([{title:'Gagner plus de points'}]);
-                bt.setBackgroundColor('#dedede');
+                bt.setBackgroundColor('#d9b9c8');
             }
         };
         

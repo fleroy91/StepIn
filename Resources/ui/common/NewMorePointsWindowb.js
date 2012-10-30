@@ -255,12 +255,12 @@ function MorePointsWindow(tabGroup, options) {'use strict';
             className : 'MorePoints',
             backgroundColor : 'white',
             width : 142,
-            height : 170
+            height : 140
         });
         
         var img = Ti.UI.createImageView({
             borderWidth : 0,
-            top : 35, 
+            top : 25, 
             width : 60, 
             height : 60,
             image : options.image
@@ -278,7 +278,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         var lblDetails = Ti.UI.createLabel({
             left : 3,
             right : 3,
-            top : 97,
+            top : 85,
             font : {fontSize : 10},
             color : '#989898',
             text : options.detail,
@@ -286,21 +286,33 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         });
         row.add(lblDetails);
         
+        /*
+        var pt = Image.createPointView(options.points, 40, 80, null, { bottom : 10, right : 20});
+        row.add(pt);
+        
+        var btAction = Ti.UI.createImageView({
+            image : '/images/bullet.png',
+            width : 25,
+            height : 25,
+            right : 5
+        });
+        row.add(btAction);
+        */
+       
         var bt = Ti.UI.createButtonBar({
             style : Ti.UI.iPhone.SystemButtonStyle.BAR,
             labels : ["+" + options.points + " steps"],
             color : 'white',
-            bottom : 8,
+            bottom : 3,
             height : 22,
             backgroundColor : '#d92276'
         });
         row.add(bt);
         
         bt.addEventListener('click', function(e) {
-            options.action();
-        });
-        img.addEventListener('click', function(e) {
-            options.action();
+            if(options.action) {
+                options.action();
+            }
         });
 
         return row;
@@ -313,8 +325,15 @@ function MorePointsWindow(tabGroup, options) {'use strict';
     }
     
     var BigScrollView = require("ui/common/BigScrollView"),
-        bsc = new BigScrollView({ data : data}, 142, 170);
+        bsc = new BigScrollView({ data : data});
     view.add(bsc);
+    
+    /*
+    var tv = Ti.UI.createTableView({
+       data : data
+    });
+    view.add(tv);
+    */
     
     niceClose = function(func) {
         if(popup) {
@@ -336,6 +355,32 @@ function MorePointsWindow(tabGroup, options) {'use strict';
     };
     
     if(popup) {
+        var opacView = Ti.UI.createView({
+            backgroundColor : 'black',
+            opacity : 0.2,
+            borderRadius : 2,
+            borderWidth : 0,
+            top : 0,
+            right : 0,
+            height : 35,
+            width : 35,
+            zIndex : 100
+        });
+        // view.add(opacView);
+        
+        var btClose = Ti.UI.createButton({
+            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+            top : 2,
+            right : 2,
+            width : 30,
+            height : 30,
+            zIndex : 200,
+            image : "/images/close.png"
+        });
+        // view.add(btClose);
+        
+        btClose.addEventListener('click', function(e) { niceClose();} );
+        
         var t2 = Ti.UI.create2DMatrix({scale : 1});
         var a = Ti.UI.createAnimation({ transform : t2, duration : 500});
         a.addEventListener('complete', function() {

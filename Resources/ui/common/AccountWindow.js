@@ -16,7 +16,7 @@ function AccountWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Mon compte', 
 	    backgroundColor : '#f0f0f0',
-	    barImage : '/images/topbar.png',
+	    barImage : '/images/topbar-stepin.png',
 	    barColor : 'black'
     });
     var tabGroup = args.tabGroup;

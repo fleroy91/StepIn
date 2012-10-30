@@ -12,7 +12,7 @@ function ChooseFilterWindow(tags) { 'use strict';
     
     var allTags = tags;
     var self = Ti.UI.createWindow({
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
     

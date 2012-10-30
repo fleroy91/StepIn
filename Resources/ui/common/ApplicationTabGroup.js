@@ -310,7 +310,7 @@ function ApplicationTabGroup() { 'use strict';
         win.addEventListener('blur', function(e) {
             Spinner.hide(win);
         });
-        win.barImage = '/images/topbar.png';
+        win.barImage = '/images/topbar-stepin.png';
         win.barColor = 'black';
         win.setTitle(null);
         win.hiddenTitle = hiddenTitle || win.hiddenTitle;

@@ -37,7 +37,7 @@ function FormWindow(win_options, crud, object, tabG, extra) { 'use strict';
     win.backgroundColor = 'white';
     win.navBarHidden = false;
     win.currentObject = object;
-    win.barImage = '/images/topbar.png';
+    win.barImage = '/images/topbar-stepin.png';
     win.barColor = 'black';
     
     var enclosingView = Ti.UI.createView({

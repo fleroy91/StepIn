@@ -13,7 +13,7 @@ var AppUser = require("/model/AppUser");
 function MapDetailWindow(shop) { 'use strict';
     var self = Ti.UI.createWindow({
         backgroundColor : '#f0f0f0',
-        barImage : '/images/topbar.png',
+        barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
     
