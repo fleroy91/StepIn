@@ -291,6 +291,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
             labels : ["+" + options.points + " steps"],
             color : 'white',
             bottom : 8,
+            width : 125,
             height : 22,
             backgroundColor : '#d92276'
         });
