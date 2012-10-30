@@ -2,13 +2,13 @@
 //  LoginView.js
 //  StepIn
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-19.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-19.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var AppUser = require("/model/AppUser");
-var Spinner = require("/etc/Spinner");
+var Spinner = require("/etc/AppSpinner");
 var Image = require("/etc/AppImage");
 
 function LoginView(tabGroup, header, onClose) { 'use strict';
@@ -117,6 +117,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
         backgroundColor : 'transparent',
         style : Ti.UI.iPhone.TableViewStyle.GROUPED,
         top : ntop,
+        width : '90%',
         allowsSelection : false, 
         scrollable : false,
         data : [rowEmail, rowPassword]
@@ -211,7 +212,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
                                     if(FBResult.picture && FBResult.picture.data && FBResult.picture.data.url) {
                                         Spinner.show();
                                         Image.loadImage(FBResult.picture.data.url, function(blob) {
-                                            // TODO : we should be abel to send the url to the back end directly without loading first the image
+                                            // TODO : we should be able to send the url to the back end directly without loading first the image
                                             // via the client and send the file to the back end
                                             user.setPhoto(0, blob);
                                             createUser(user, withFB);
@@ -232,8 +233,12 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
             });
         }
     }
-    var logged = false;    
+    var logged = false;
+    var FB_Listener = null;    
     function manageFBLogin() {
+        if(FB_Listener) {
+            Ti.Facebook.removeEventListener('login', FB_Listener);
+        }
         Spinner.show();
         Ti.Facebook.requestWithGraphPath('me', {fields:'id,name,first_name,email,picture'}, 'GET', function(e) {
             if(e.success && e.result) {
@@ -242,12 +247,13 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
         });
     }
     
-    Titanium.Facebook.addEventListener('login', function (e) {
+    FB_Listener = function (e) {
         if(e.success && Ti.Facebook.loggedIn && !logged) {
             logged = true;
             manageFBLogin();
         }
-    });
+    };
+    
     
     FBButton.addEventListener('click', function(e) {
         tfEmail.blur();
@@ -256,6 +262,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
             logged = true;
             manageFBLogin();
         } else {
+            Titanium.Facebook.addEventListener('login', FB_Listener);
             Ti.Facebook.authorize();
         }    
     });

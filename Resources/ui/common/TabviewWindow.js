@@ -23,16 +23,17 @@ function TabViewWindow(args) {
     var self = Ti.UI.createWindow({
         navBarHidden : false,
         backgroundColor : '#f0f0f0',
+        barImage : '/images/topbar.png',
         barColor : 'black'
     });
     
     var viewList = true;
-    var btChangeView =Ti.UI.createButton({
-        style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-        title : " ",
+    var btChangeView =Ti.UI.createButtonBar({
+        style : Ti.UI.iPhone.SystemButtonStyle.BAR,
+        color : 'black',
+        labels : [{image : '/images/switch-map.png'}],
         width : 81,
-        height : 28,
-        backgroundImage : "/images/switch-list.png"
+        height : 28
     });
     self.setLeftNavButton(btChangeView);
     
@@ -40,7 +41,7 @@ function TabViewWindow(args) {
         tabGroup.getAllObjects();
 	}
 	
-	var listView = Ti.UI.createView({ top : 40});
+	var listView = Ti.UI.createView({ top : 0});
 
     var mapView = null;
     
@@ -51,7 +52,7 @@ function TabViewWindow(args) {
             mapView = Ti.Map.createView({
                 mapType : Titanium.Map.STANDARD_TYPE,
                 animate : true,
-                top : 40,
+                top : 0,
                 userLocation : false,
                 zIndex : -1,
                 region : {
@@ -65,23 +66,6 @@ function TabViewWindow(args) {
         }
     }
 	
-    var sheader = Ti.UI.createView({
-        height : 40,
-        top : 0,
-        backgroundColor : '#d92276'
-    });
-    var lbl = Ti.UI.createLabel({
-        text : "Gagnez des points en visitant ces magasins :",
-        top : 2,
-        left : 2,
-        color : 'white',
-        font : {fontSize : '15', fontWeight : 'normal'},
-        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
-        height : 40
-    });
-    sheader.add(lbl);
-    self.add(sheader);
-
 	var tv = TV.create({ 
 	}, refresh);
 	listView.add(tv);
@@ -126,21 +110,19 @@ function TabViewWindow(args) {
                 if(mapViewOk) {
                     updateMapView();                    
                 }
-                // listView.animate({view : mapView, transition : Ti.UI.iPhone.AnimationStyle.FLIP_FROM_LEFT});          
             } else {
                 mapView.hide();
                 mapView.setUserLocation(false);
                 listView.show();
-                //mapView.animate({view : listView, transition : Ti.UI.iPhone.AnimationStyle.FLIP_FROM_RIGHT});            
             }
             viewList = ! viewList;
-            btChangeView.setImage((viewList ? "/images/switch-list.png" : "/images/switch-map.png"));
+            btChangeView.setLabels([{image : (viewList ? "/images/switch-map.png" : "/images/switch-list.png")}]);
         }
     });
     
 	tv.addEventListener('click', function(e)
 	{
-		if (e.rowData && e.rowData.object_index)
+	    if (e.rowData && e.rowData.object_index)
 		{
             var row_index = e.index;
             var obj_index = e.rowData.object_index;

@@ -331,11 +331,17 @@ Image.displayViewZoomMany = function(imgs) { 'use strict';
    Expects parameters of the directory name you wish to save it under, the url of the remote image, 
    and the Image View Object its being assigned to. */
 Image.isGoodUrl = function(url) { 'use strict';
-    return (url && Tools.startsWith(url, "http:"));
+    return (url && Tools.startsWith(url, "http"));
 };
 Image.imageDirectoryName = 'cachedImages';
-Image.convertUrlInFile = function(url) { 'use strict';
+Image.convertUrlInFile = function(url, width, height) { 'use strict';
     var filenames = url.split('/'), filename;
+    
+    var suffix = '';
+    if(width && height) {
+        suffix = width + 'x' + height + '_';
+    }
+    
     // URL are always like "http://files.storageroomapp.com/accounts/4ff6ebed1b338a6ace001893/collection/4ff6f9851b338a3e72000c64/entries/4ff6fa0d1b338a5c1e0007f5/fields/k4ff6f9ec1b338a5c1e0007af/file.jpg?m_version=xxx"
     if(url.indexOf("files.storageroomapp.com") > 0) {
         filename = filenames[filenames.length - 4] + "_" + filenames[filenames.length - 2] ;
@@ -343,10 +349,10 @@ Image.convertUrlInFile = function(url) { 'use strict';
         if(end.length > 1) {
             filename += '_' + end[1];
         }
-        filename += '_' + end[0];
+        filename += suffix + '_' + end[0];
     } else {
         // We only keep the name of the file
-        filename =  filenames[filenames.length - 1];
+        filename = suffix + filenames[filenames.length - 1];
     }
 
     var file = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, Image.imageDirectoryName, filename);
@@ -360,23 +366,27 @@ Image.convertUrlInFile = function(url) { 'use strict';
  * @returns : nothing because blbo is sent via the callback
  */
 Image.loadImage = function(url, func) { 'use strict';
-    var xhr = Ti.Network.createHTTPClient();
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            func(xhr.responseData);
-        }
-    };
-    xhr.open('GET', url);
-    xhr.send();
+    if(url) {
+        var xhr = Ti.Network.createHTTPClient();
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                func(xhr.responseData);
+            }
+        };
+        xhr.open('GET', url);
+        xhr.send();
+    } else {
+        func(null);
+    }
 };
 
 // Return the image to set to the image view
-Image.cacheImage = function(url, func) { 'use strict';
+Image.cacheImage = function(url, func, width, height) { 'use strict';
     // Grab the filename
     // Ti.API.info("Cache Photo : " + url);
     var ret = null, imageDirectoryName = 'cachedImages';
-    if(Image.isGoodUrl(url)) {
-        var file = Image.convertUrlInFile(url);
+    if(typeof url === "string" && Image.isGoodUrl(url)) {
+        var file = Image.convertUrlInFile(url, width, height);
     
         if (file.exists()) {
             // If it has been cached, assign the local asset path to the image view object.
@@ -401,7 +411,8 @@ Image.cacheImage = function(url, func) { 'use strict';
                 if (xhr.status === 200) {
                     // On successful load, take that image file we tried to grab before and 
                     // save the remote image data to it.
-                    file.write(xhr.responseData);
+                    var data = xhr.responseData;
+                    file.write(data);
                     // Assign the local asset path to the image view object.
                     ret = file.nativePath;
                     if(func) {
@@ -515,7 +526,7 @@ Image.createStepInStar = function(options, disable) { 'use strict';
 };
 
 // To create a view of points !
-Image.createPointView = function(points, height, width, disabled, options) { 'use strict';
+Image.createPointView_v1 = function(points, height, width, disabled, options) { 'use strict';
     var pv = Ti.UI.createView({
         height : height
     });
@@ -544,7 +555,46 @@ Image.createPointView = function(points, height, width, disabled, options) { 'us
     return pv;
 };
 
-Image.createIconsPointView = function(points, stepin, scanin, options) { 'use strict';
+Image.createPointView_v2 = function(points, height, width, disabled, options) { 'use strict';
+    var pv = Ti.UI.createView(options);
+    pv.height = height;
+    pv.width = width;
+    var color = (disabled ? '#b9b9b9' :  '#d92276');
+
+    var lblOptions = {
+        text : (disabled ? '✔ ' : '+') + points,
+        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+        font : {fontSize : 23, fontWeight : 'bold'},
+        color : color,
+        bottom :2,
+        right : 27,
+        shadowOffset : (options && options.shadowOffset),
+        shadowColor : (options && options.shadowColor)
+    };
+
+    var lbl = Ti.UI.createLabel(lblOptions);
+    pv.add(lbl);
+    
+    lblOptions.text = "steps";
+    lblOptions.font = {fontSize : 10, fontWeight : 'normal'};
+    lblOptions.bottom = 5;
+    lblOptions.right = 0;
+    
+    var lblSmall = Ti.UI.createLabel(lblOptions);
+    pv.add(lblSmall);
+    
+    pv.setPoints = function(newPoints) {
+        lbl.text = (disabled ? '✔ ' : '+') + newPoints;
+    };
+    
+    return pv;
+};
+
+Image.createPointView = function(points, height, width, disabled, options) { 'use strict';
+    return Image.createPointView_v2(points, height, width, disabled, options);
+};
+
+Image.createIconsPointView_v1 = function(points, stepin, scanin, options) { 'use strict';
     var size = Math.round(options.height/ 2); 
     options.width = 90;
     var pv = Ti.UI.createView(options);
@@ -593,6 +643,44 @@ Image.createIconsPointView = function(points, stepin, scanin, options) { 'use st
     // pv.add(star);
     return pv;
 };
+Image.createIconsPointView_v2 = function(points, stepin, scanin, options) { 'use strict';
+    var size = Math.round(options.height); 
+    options.width = 90;
+    var pv = Ti.UI.createView(options);
+    var color = '#d92276';
+    
+    var lblOptions = {
+        text : '+' + points,
+        width : options.width,
+        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+        font : {fontSize : 26, fontWeight : 'bold'},
+        color : color,
+        shadowColor: 'white',
+        shadowOffset: {x:1,y:1},
+        right : 30,
+        bottom : 2
+    };
+    var lbl = Ti.UI.createLabel(lblOptions);
+    pv.add(lbl);
+    
+    var lblSmall = Ti.UI.createLabel({
+        text : "steps",
+        font : {fontSize : 12, fontWeight : 'normal'},
+        color : color,
+        right : 0,
+        bottom : 5,
+        shadowColor: 'white',
+        shadowOffset: {x:1,y:1},
+        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT
+    });
+    pv.add(lblSmall);    
+    
+    return pv;
+};
+
+Image.createIconsPointView = function(points, stepin, scanin, options) { 'use strict';
+    return Image.createIconsPointView_v2(points, stepin, scanin, options);
+};
 
 /**
  * 
@@ -600,33 +688,47 @@ Image.createIconsPointView = function(points, stepin, scanin, options) { 'use st
  * @param {Object} width : the desire width
  * @param {Object} height : the desire 
  */
-Image.cropImage = function(image, width, height) { 'use strict';
+Image.squareImage = function(image, size) { 'use strict';
     // Here's our base (full-size) image. 
     // It's never displayed as-is.
-    
-    // We need to find the size of the image
-    var baseImage = Titanium.UI.createImageView({
-        image:image,
-        height : height,
-        top : 0
-    });
-    var blob = baseImage.toImage();
-     
-    // Here's the view we'll use to do the cropping. 
-    // It's never displayed either.
-    var cropView = Titanium.UI.createView({
-        width:width, height:height
-    });
-     
-    // Add the image to the crop-view.
-    // Position it left and above origin.
-    cropView.add(baseImage);
-    baseImage.left=(width - blob.width / (blob.height / height))/2;
-     
-    // now convert the crop-view to an image Blob
-    var croppedImage = cropView.toImage();
-    
-    return croppedImage;
+    var ret = null;
+    if(image) {
+        var blob;
+        if(typeof image === "string") {
+            // It's a file so we load it !!
+            var file = Ti.Filesystem.getFile(image);
+            blob = file.read();
+        } else {
+            blob = image;
+        }
+        
+        ret = blob.imageAsThumbnail(size, 0);
+    } 
+    return ret;
 };
+
+Image.createStepInStarPoints = function(image, points, over) { 'use strict';
+    var view = Ti.UI.createView({
+        width : 100,
+        height : 50 
+    });
+    var img = Ti.UI.createImageView({
+        image : image,
+        height : 40,
+        bottom : 0
+    });
+    view.add(img);
+    var lbl = Ti.UI.createLabel({
+        text : '+' + points,
+        color : (over ? 'black' : "#d92276"),
+        font : {fontSize : 14, fontWeight : 'bold'},
+        shadowColor : (over ? '#f0f0f0' : '#f0f0f1'),
+        shadowOffset : {x:1,y:1},
+        top : 0,
+        left : 25
+    });
+    view.add(lbl);
+    return view.toImage();
+};        
     
 module.exports = Image;

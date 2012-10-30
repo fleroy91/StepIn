@@ -40,7 +40,7 @@ function Scan(json) {'use strict';
         return this.title;
     };
     
-    this.createReadView = function(tabGroup) {
+    this.createHeaderView = function() {
         var internBorder = 2;
         var labelHeight = 13;
 
@@ -61,34 +61,13 @@ function Scan(json) {'use strict';
         });
         main.add(opacView);
         
-        var img = Ti.UI.createImageView({
-            borderRadius : 1,
-            borderWidth : 2,
-            borderColor : 'white',
-            zIndex : 2000,
-            height : 60,
-            width : 60,
-            top : 0,
-            left : 9,
-            shadow:{
-                shadowRadius:2,
-                shadowOpacity:0.5,
-                shadowOffset:{x:3, y:3}
-            }
-        });
-        main.add(img);
-        Image.cacheImage(this.getPhotoUrl(0), function(image) {
-            img.setBackgroundImage(image);
-        });
-        
         // Line 1
         var labelName = Ti.UI.createLabel({
             font : {fontSize: 13, fontWeight : 'bold'},
-            left : 73,
+            left : 75,
             top : 17,
             color: 'white',
             zIndex : 2000,
-            width : 175,
             text : this.title,
             height : labelHeight
         });
@@ -97,23 +76,49 @@ function Scan(json) {'use strict';
         // line 2
         var labelDetails = Ti.UI.createLabel({
             color : 'white',
-            left : 73,
+            left : labelName.left,
             top : labelName.top + 20,
             height : 13,
             zIndex : 2000,
-            width : 175,
             font : { fontSize : 11, fontWeight : 'normal'},
             text : this.desc
         }); 
         main.add(labelDetails);
         
-        // Add the points
-        var vPoints = Image.createPointView(this.points, 50,70, this.scanned);
-        vPoints.right = 5;
-        vPoints.zIndex = 2000;
-        main.add(vPoints);
-
         return main;
+    };
+    
+    this.addOverHeader = function(view) {
+        var img = Ti.UI.createImageView({
+            borderRadius : 1,
+            borderWidth : 2,
+            borderColor : 'darkgray',
+            zIndex : 2000,
+            height : 60,
+            width : 60,
+            top : 1,
+            left : 9,
+            shadow:{
+                shadowColor:'gray',
+                shadowRadius:2,
+                shadowOpacity:0.8,
+                shadowOffset:{x:3, y:3}
+            }
+        });
+        view.add(img);
+        Image.cacheImage(this.getPhotoUrl(0), function(image) {
+            img.setImage(Image.squareImage(image, 60));
+        });
+
+        // Add the points
+        var vPoints = Image.createPointView(this.points, 50,120, this.scanned, {
+            right : 10,
+            bottom : 10,
+            zIndex : 2000,
+            shadowColor : 'gray',
+            shadowOffset : {x:1,y:1}            
+        });
+        view.add(vPoints);
     };
 
     this.newObjectScanned = function(code, tabGroup, func) {

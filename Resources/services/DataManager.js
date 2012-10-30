@@ -8,7 +8,7 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-var Spinner = require("/etc/Spinner");
+var Spinner = require("/etc/AppSpinner");
 
 function DataManager() {'use strict';
 	// Initialisation of the calls to the API
@@ -63,6 +63,7 @@ function DataManager() {'use strict';
                      } else { 
                          alert('Impossible to connect to network' + client.status + '-' + client.statusText);
                      }
+                     func(null);
                  }
              }
          },

@@ -19,6 +19,7 @@ function SuperAdminWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Super Admin', 
 	    backgroundColor : 'white',
+        barImage : '/images/topbar.png',
         barColor : 'black'
     });
     
@@ -217,6 +218,27 @@ function SuperAdminWindow(args) {'use strict';
         }
     }
     
+    function clearAllInvitations() {
+        user = AppUser.getCurrentUser();
+        if(user.isDummy()) {
+            alert("Cela ne peut fonctionner que sur le user connecté !");
+        } else {
+            var dlg = Ti.UI.createAlertDialog({
+                title:'Attention',
+                message:"Cette action va supprimer toutes les invitations de l'utilisateur loggé",
+                buttonNames : ['Oui on supprime', 'Annuler']
+            });
+            dlg.addEventListener('click', function(e) {
+                if(e.index === 0) {
+                    user.deleteAllInvitations(function() {
+                        self.close();
+                    });
+                }
+            });
+            dlg.show();
+        }
+    }
+    
     var data = [
         { title : "Sonic is running", hasCheck :Ti.App.Properties.getBool('isSonicRunning', false)},
         { title : "Start Sonic", hasChild :false, action : function(e) { ApplicationTabGroup.startSonic(); } },
@@ -226,6 +248,7 @@ function SuperAdminWindow(args) {'use strict';
         { title : "Simulate Step-In Shop 6229", hasChild :false, action : function(e) { simulateStepIn(6229); } },
         { title : "Simulate Step-In Shop 6230", hasChild :false, action : function(e) { simulateStepIn(6230); } },
         { title : "Clear all user rewards", hasChild :false, action : clearAllRewards },
+        { title : "Clear all user invitations", hasChild :false, action : clearAllInvitations },
         { title : "Reset first launch", hasChild :false, action : resetFirstLaunch },
         { title : "List users", hasChild :true, req : "/ui/admin/ListUsersWindow"},
         { title : "List shops", hasChild :true, req : "/ui/admin/ListShopsWindow"},

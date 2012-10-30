@@ -33,7 +33,7 @@ function Reward(json) {    'use strict';
         if(this.getActionKind() === Reward.ACTION_KIND_STEPIN) {
             ret = "Step-In";
         } else if(this.getActionKind() === Reward.ACTION_KIND_SCAN) {
-            ret = "Scan-In";
+            ret = "Scan";
         }
         return ret;
     };

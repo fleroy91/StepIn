@@ -2,8 +2,8 @@
 //  MapDetailWindow.js
 //  StepIn
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-12.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-12.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true, TV : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
@@ -13,6 +13,7 @@ var AppUser = require("/model/AppUser");
 function MapDetailWindow(shop) { 'use strict';
     var self = Ti.UI.createWindow({
         backgroundColor : '#f0f0f0',
+        barImage : '/images/topbar.png',
         barColor : 'black'
     });
     

@@ -8,12 +8,80 @@
 // Display tabWindows for Objects + bookings
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
-var Spinner = require("etc/Spinner");
+var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var Image = require("etc/AppImage");
 
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
 var _allWindows = [];
+var _allPresents = null;
+var _prevPresents = [];
+var _nextPresent = null;
+
+/**
+ * Override a tab group's tab bar on iOS.
+ *
+ * NOTE: Call this function on a tabGroup AFTER you have added all of your tabs to it! We'll look at the tabs that exist
+ * to generate the overriding tab bar view. If your tabs change, call this function again and we'll update the display.
+ *
+ * @param tabGroup The tab group to override
+ * @param backgroundOptions The options for the background view; use properties like backgroundColor, or backgroundImage.
+ * @param selectedOptions The options for a selected tab button.
+ * @param deselectedOptions The options for a deselected tab button.
+ */
+function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOptions) { 'use strict';
+
+    // are we restyling the tab groups?
+    if (tabGroup.overrideTabs) {
+        tabGroup.remove(tabGroup.overrideTabs);
+    }
+
+    // a bunch of our options need to default to 0 for everything to position correctly; we'll do it en mass:
+    deselectedOptions.top = deselectedOptions.bottom = selectedOptions.top = selectedOptions.bottom = backgroundOptions.left
+            = backgroundOptions.right = backgroundOptions.bottom = 0;
+
+    // create the overriding tab bar using the passed in background options
+    backgroundOptions.height = 50;
+    var background = Ti.UI.createView(backgroundOptions);
+
+    // and create our individual tab buttons
+    var activeTab = null, increment = 100 / tabGroup.tabs.length;
+    deselectedOptions.width = selectedOptions.width = String(increment) + '%';
+    
+    function setOverride(tab, i) {
+        selectedOptions.left = deselectedOptions.left = String(increment * i) + '%';
+
+        // set the title of the button to be the title of the tab
+        selectedOptions.title = deselectedOptions.title = tab.title;
+        
+        tab.selected = Ti.UI.createButton(selectedOptions);
+        tab.deselected = Ti.UI.createButton(deselectedOptions);
+        tab.deselected.addEventListener('click', function() {
+            if (activeTab) {
+                activeTab.selected.visible = false;
+            }
+            tab.selected.visible = true;
+            activeTab = tab;
+            tabGroup.setActiveTab(i);
+        });
+        tab.selected.visible = false;
+        background.add(tab.deselected);
+        background.add(tab.selected);
+    }
+    
+    var i, l = tabGroup.tabs.length;
+    for (i = 0; i < l; i++) {
+        var tab = tabGroup.tabs[i];
+        setOverride(tab, i);
+    }
+
+    tabGroup.add(background);
+    tabGroup.overrideTabs = background;
+
+    // "click" the first tab to get things started
+    tabGroup.tabs[0].deselected.fireEvent('click');
+}
+
 
 function ApplicationTabGroup() { 'use strict';
 
@@ -22,11 +90,7 @@ function ApplicationTabGroup() { 'use strict';
     var AppUser = require("model/AppUser"),
         user = AppUser.getCurrentUser();
     
-    // FIXME : colors checking
     self = Titanium.UI.createTabGroup({
-        activeTabBackgroundColor : 'red',
-        activeTabBackgroundFocusedColor : '#d92276',
-        activeTabBackgroundSelectedColor : 'yellow'
     });
     
     var TabWindow = require('ui/common/TabviewWindow');
@@ -72,9 +136,9 @@ function ApplicationTabGroup() { 'use strict';
     tabSearch.tv = winSearch.tv;
     
     var MorePointsWindow = require("/ui/common/MorePointsWindow");
-    var winMorePoints = new MorePointsWindow({booking : false, tabGroup : self});
+    var winMorePoints = new MorePointsWindow(self);
     var tabMorePoints = Ti.UI.createTab({
-        title : "Plus de points",
+        title : "Plus de steps",
         icon : '/images/Sin-plus-pts.png',
         window : winMorePoints
     });
@@ -84,8 +148,8 @@ function ApplicationTabGroup() { 'use strict';
     self.tvMorePoints = winMorePoints.tv;
     tabMorePoints.tv = winMorePoints.tv;
 
-	var PresentsWindow = require('ui/common/PresentsWindow');
-	var winPresents = new PresentsWindow({tabGroup : self});
+	var PresentListWindow = require('ui/common/PresentListWindow');
+	var winPresents = new PresentListWindow(self);
 	var tabPresents = Ti.UI.createTab({
 		title : 'Cadeaux',
         icon : '/images/Sin-cadeaux.png',
@@ -118,12 +182,6 @@ function ApplicationTabGroup() { 'use strict';
 	//
 	// Management of arrays of objects
 	//
-	function strcmp(a, b) {
-        if (a.toString() < b.toString()) { return -1; }
-        if (a.toString() > b.toString()) { return 1; }
-        return 0;
-    }
-    
     function tagAlreadyIn(all, tag) {
         var i, ret = null;
         for(i = 0 ; !ret && i< all.length; i ++) {
@@ -141,6 +199,40 @@ function ApplicationTabGroup() { 'use strict';
             self.activeTab.tv.fireEvent('app:endReloading');
         }
     };
+    
+    /**
+     * Find the 2 previous earned presents + the next one
+     */ 
+    var _prevUser = null;
+    var _prevPoints = 0;
+    function updatePresents() {
+        var user = AppUser.getCurrentUser();
+        var points = user.getTotalPoints() || 0;
+        
+        // We store the current user to not compute it every time
+        if(_allPresents && (! _prevUser || _prevUser.m_url !== user.m_url || _prevPoints !== points)) {
+            var i;
+            _nextPresent = null;
+            _prevPresents = [];
+            for(i = 0; !_nextPresent && i < _allPresents.length; i ++) {
+                var present = _allPresents[i];
+                if(present.points <= points) {
+                    _prevPresents.push(present);
+                } else {
+                    _nextPresent = present;
+                }
+            }
+            _prevPoints = points;
+            _prevUser = user;
+        }
+    }
+    
+    function displayPresentsExample() {
+        updatePresents();
+        var SmallPresentWindow = require("/ui/common/SmallPresentWindow"),
+            swin = new SmallPresentWindow(_prevPresents, _nextPresent, self);
+        swin.open();
+    }
     
     self.createPointsButton = function() {
         // We change the titleControl of the current window
@@ -174,7 +266,8 @@ function ApplicationTabGroup() { 'use strict';
         var lblIn = Image.createStepInStar({
             right : 0,
             height : 13,
-            width : 13
+            width : 13,
+            image : "images/present.png"
         });
         enclosingView.add(lblIn);
         var lblPoints = Ti.UI.createLabel({
@@ -186,12 +279,20 @@ function ApplicationTabGroup() { 'use strict';
         });
         view.add(lblPoints);
         enclosingView.addEventListener('click', function(e) {
-            self.setActiveTab(1); 
+            displayPresentsExample(); 
         });
         enclosingView.setPoints = function(p, animated) {
             p = p || 0;
+            var bmin = 0;
+            if(_prevPresents.length > 0) {
+                bmin = _prevPresents[_prevPresents.length-1].points;
+            }
+            var bmax = 2000;
+            if(_nextPresent) {
+                bmax = _nextPresent.points;
+            }
             lblPoints.setText(p);
-            var w = Math.round(((p % 2000) + 1) / 2000 * viewWidth);
+            var w = Math.round((p - bmin) / (bmax - bmin) * viewWidth);
             if(animated) {
                 var a = Ti.UI.createAnimation({width : w, duration : 500});
                 backView.animate(a);
@@ -209,6 +310,7 @@ function ApplicationTabGroup() { 'use strict';
         win.addEventListener('blur', function(e) {
             Spinner.hide(win);
         });
+        win.barImage = '/images/topbar.png';
         win.barColor = 'black';
         win.setTitle(null);
         win.hiddenTitle = hiddenTitle || win.hiddenTitle;
@@ -229,12 +331,13 @@ function ApplicationTabGroup() { 'use strict';
     self.updateTitleWindow = function(win, animated) {
         if(win && win.btPoints) {
             var user = AppUser.getCurrentUser();
-            var points = user.getTotalPoints();
+            var points = user.getTotalPoints() || 0;
             win.btPoints.setPoints(points || 0, animated);
         }
     };
     
     self.updateTitle = function(win, animated) {
+        updatePresents();
         if(! win) {
             self.updateTitleWindow(winSearch, animated);
             self.updateTitleWindow(winAccount, animated);
@@ -250,6 +353,7 @@ function ApplicationTabGroup() { 'use strict';
     };
     
     self.fillPresents = function(allPresents) {
+        _allPresents = allPresents;
         if(allPresents) {
             winPresents.setPresents(allPresents);
         }
@@ -259,29 +363,12 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
     
-    self.getTwoMorePoints = function() {
-        // TODO : to implement
-        return null;
-    };
-    
-    self.addNewReward = function(rew, shop, func) {
+    self.addNewReward = function(rew, func) {
         // We display the screen but we need to compute the next actions
-        var nextActions = null;
-        if(shop && shop.getTwoFreeScans) {
-            // We have a shop so we search for free scans
-            nextActions = shop.getTwoFreeScans();
-        }
-        if(! nextActions) {
-            // No scans or no shops, we look for free shops
-            nextActions = user.getTwoFreeShops();
-        }
-        if(! nextActions) {
-            nextActions = self.getTwoMorePoints();
-        }
         displayNewPoints = true;
         messageLabel.text = null;
         var NewRewardWindow = require("ui/common/NewRewardWindow");
-        rewardWindow = new NewRewardWindow(self, rew, nextActions);
+        rewardWindow = new NewRewardWindow(self, rew);
         rewardWindow.addEventListener('close', function(e) {
             if(e.source.object) {
                 var newRew = e.source.object;
@@ -427,7 +514,7 @@ function ApplicationTabGroup() { 'use strict';
                     swin = new ShopDetailWindow(shopFound, self);
                 self.openWindow(null, swin, {animated:true});
 
-                self.addNewReward(rew, shopFound, function(reward) {
+                self.addNewReward(rew, function(reward) {
                     if(reward) {
                         allCodes.push(code);
                         var newShop = AppUser.getShop(obj_index);
@@ -539,6 +626,16 @@ function ApplicationTabGroup() { 'use strict';
         Ti.API.info("End updateAllRows : " + count2);
         Spinner.hide();
     };
+
+    // TODO : to verify!!!
+    /*        
+    overrideTabs(
+        self,
+        { backgroundColor: '#f00' },
+        { backgroundColor: '#d92276', color: '#000' },
+        { backgroundColor: '#333', color: '#888' }
+    );
+    */
     
 	return self;
 }

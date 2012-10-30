@@ -2,18 +2,18 @@
 //  NewRewardWindow.js
 //  StepInShopApp
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-02.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-02.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require("/etc/AppImage");
-var Spinner = require("/etc/Spinner");
+var Spinner = require("/etc/AppSpinner");
 var AppUser = require("/model/AppUser");
 var Reward = require("/model/Reward");
 
 // Parameters : args.title, args.details, args.nb_points
-function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
+function NewRewardWindow(tabGroup, reward) { 'use strict';
 
     var self = Ti.UI.createWindow({
         navBarHidden : true
@@ -36,16 +36,16 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     var blackView = Ti.UI.createView({
         backgroundColor : 'black',
         opacity : 0.5,
-        zIndex : -1,
+        zIndex : -2,
         width : '100%',
         height : '100%'
     });
     main.add(blackView);
     
     var view = Ti.UI.createScrollView({
-        backgroundImage : '/images/back-popup.png',
+        backgroundImage : '/images/popup-bck-pink.jpg',
         width : '95%',
-        height : 430 - 150,
+        height : 430 - 200,
         borderRadius : 5,
         borderColor : '#ba307c',
         borderWidth : 2,
@@ -53,14 +53,14 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     });
     
     var yeah = Ti.UI.createImageView({
-        image : '/images/felicitations-small.png',
+        image : '/images/yay.png',
         top : 10
     });
     view.add(yeah);
     
     var middleView = Ti.UI.createView({
-        height : 140,
-        top : 50 
+        height : 100,
+        top : 70 
     });
     
     var lblDescAction = Ti.UI.createLabel({
@@ -73,24 +73,28 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     var vPoints = Ti.UI.createLabel({
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
         font : {fontSize : 70, fontWeight : 'bold'},
+        bottom : 0,
         right : 120,
-        color : '#d92276',
-        shadowColor : 'white',
+        color : 'white',
+        shadowColor : '#d92276',
         shadowOffset : {x:3, y:3}
     });
     middleView.add(vPoints);
-    view.add(middleView);
-    var vIn = Image.createStepInStar({width : 60, height : 60, right : 50});
-    middleView.add(vIn);
-   
-    var button = Ti.UI.createButton({
-        image : '/images/close.png',
-        style:Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
-        top : 5,
-        right : 5 
-    });
-    view.add(button);
     
+    var lblSmall = Ti.UI.createLabel({
+        textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+        right : 72,
+        bottom : 12,
+        text : "steps",
+        font : {fontSize : 20, fontWeight : 'normal'},
+        color : 'white',
+        shadowColor : '#d92276',
+        shadowOffset : {x:3, y:3}
+    });
+    middleView.add(lblSmall);
+    view.add(middleView);
+    
+    /*    
     var continueButton = Ti.UI.createButtonBar({
         labels : ['Continuer à gagner des points'],
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
@@ -100,6 +104,7 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
         top : 220
     });
     view.add(continueButton);
+    */
     
     var lblLoginAction = Ti.UI.createLabel({
         text : 'Vous devez avoir un compte pour collecter vos points :',
@@ -178,21 +183,32 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
     loginView.top = 480;
     view.add(loginView);
 
-    button.addEventListener('click', function(e) {
-        if(user.isDummy()) {
-            self.close();
-        } else {
-            niceClose();
-        }
-    });
+    if(! user.isDummy()) {
+        view.addEventListener('click', niceClose);
+    }
     
     function manageLogin() {
         // We animate the window to display the loginView
         var a = Ti.UI.createAnimation({height : 430, top : 10});
-        continueButton.visible = false;
         view.animate(a);
-        middleView.animate({top:50});
+        // middleView.animate({top:70});
         loginView.animate({top:160});
+        
+        var btClose = Ti.UI.createButton({
+            image : '/images/close.png',
+            style:Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
+            top : 5,
+            right : 5 
+        });
+        view.add(btClose);
+        
+        btClose.addEventListener('click', function(e) {
+            if(user.isDummy()) {
+                self.close();
+            } else {
+                niceClose();
+            }
+        });
     }
 
     main.add(view);
@@ -217,22 +233,19 @@ function NewRewardWindow(tabGroup, reward, nextActions) { 'use strict';
             a2.transform = t2;
             a2.duration = 750;
             a2.addEventListener('complete', function(e) {
-                setTimeout(none, 750);
+                setTimeout((user.isDummy() ? manageLogin : none), 1750);
                 displayPoints(0, reward.getNbPoints(), 1500);
             });
             view.animate(a2);
         });
         view.animate(a1);
     });
-    continueButton.addEventListener('click', function(e) {
-        if(! user.isDummy()) {
-            niceClose();
-        } else {
-            manageLogin();
-        }
-    });
-    
+        
     Spinner.add(self);
+    
+    self.addEventListener('open', function(e) {
+        Ti.App.testflight.passCheckpoint("New reward : " + reward.inspect());
+    });
 
     return self;
 }

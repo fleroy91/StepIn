@@ -2,8 +2,8 @@
 //  ScanDetailWindow.js
 //  StepIn
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-18.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-18.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
@@ -17,19 +17,21 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
     
     var canScan = args.canScan;
     
-    var view = scan.createReadView(tabGroup);
-    view.top = 0;
+    var view = scan.createHeaderView();
     
     // We display the picture of the scan instead of the scan
     view.top = 0;
     var img = Ti.UI.createView({
-        top : view.height - 5
+        top : view.height - 7
     });
     self.add(img);
     self.add(view);
     Image.cacheImage(scan.getPhotoUrl(0), function(image) {
         img.setBackgroundImage(image); 
     });
+    
+    scan.addOverHeader(self);
+    
     var TiBar = require("tibar");
     function launchScan() {
         // Configuration
@@ -73,17 +75,23 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
         if(! Tools.isSimulator()) {
             var overlayView = Ti.UI.createView({
                 backgroundImage : "/images/scanner.png",
-                zIndex : 999
+                zIndex : 999,
+                width : Ti.Platform.displayCaps.platformWidth,
+                height : Ti.Platform.displayCaps.platformHeight
             });
             
-            var view2 = scan.createReadView(tabGroup);
-            view2.top = 0;
+            var viewH = scan.createHeaderView();
+            viewH.top = 0;            
+            overlayView.add(viewH);
 
-            overlayView.add(view2);
+            scan.addOverHeader(overlayView);
+            var image = overlayView.toImage(null, true);
+            
+            var overlayImgView = Ti.UI.createImageView({image : image, zIndex : 999});            
             
             TiBar.scan({
                 configure: config,
-                overlay : overlayView, 
+                overlay : overlayImgView, 
                 success:function(data){
                     if(data && data.barcode){
                         Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
@@ -106,20 +114,30 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
         }
     }
     
-    if(canScan) {
-        var btScan = Ti.UI.createButtonBar({
-            labels : ['Scanner le produit'],
-            style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-            backgroundColor : 'green',
-            height : 35,
-            width : '70%',
-            bottom : 10
-        });
-        btScan.addEventListener('click', function(e) {
+    var btScan = Ti.UI.createButton({
+        image : "/images/tag.png",
+        style:Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
+        backgroundColor : 'white',
+        borderColor : '#d92276',
+        borderWidth : 1,
+        borderRadius : 2,
+        height : 35,
+        width : 35,
+        bottom : 10,
+        left : 10,
+        zIndex : 10000
+    });
+    btScan.addEventListener('click', function(e) {
+        if(canScan) {
             launchScan();
-        });
-        self.add(btScan);
-        
+        } else {
+            // TODO : replace by a nice window
+            alert("Vous devez d'abord faire un Step-In dans la boutique pour pouvoir scanner des articles !");
+        }
+    });
+    self.add(btScan);
+    
+    if(canScan) {
         if(Tools.isSimulator()) {
             var bt = Ti.UI.createButtonBar({
                 labels : ["Simuler Scan OK"],
@@ -140,10 +158,13 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
             // We run it immediately
             self.addEventListener('open', launchScan);
         }
-
     }
 
     tabGroup.createTitle(self, "Scan");
+    
+    self.addEventListener('open', function(e) {
+        Ti.App.testflight.passCheckpoint("View detail of a scan : " + scan.inspect());
+    });
     
     return self;
 }

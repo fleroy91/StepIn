@@ -37,11 +37,11 @@ Titanium.Geolocation.accuracy = Titanium.Geolocation.ACCURACY_BEST;
 
 // Main settings
 Ti.App.Properties.setInt('MaxBookingTime', 15);
-var Spinner = require("etc/Spinner");
+var Spinner = require("etc/AppSpinner");
 var Geoloc = require("etc/Geoloc");
 
 Titanium.Facebook.appid = "228159347198277";
-Titanium.Facebook.permissions = ['publish_stream', 'read_stream'];
+Titanium.Facebook.permissions = ['publish_stream', 'read_stream','email'];
     
 // ------------------------------------------------------------------------
 // TestFlight
@@ -59,6 +59,7 @@ var Tools = require('/etc/Tools');
 // Init global variables
 Ti.App.currentUser = null;
 Ti.App.allRewards = null;
+Ti.App.allInvitations = null;
 Ti.App.allShops = null;
 Ti.App.FB_POINTS = 150;
 
@@ -129,14 +130,15 @@ function checkUser(e) {'use strict';
         // We need to create a dummy user BUT geolocalized
         // We will login later in the process 
         user = new AppUser();
-        user.geolocalize(function(newUser) {
+        user.geolocalize(function(e) {
             user.setCurrentUser();
             runApp();
         });        
     } else {
-        user.reload(function(user1) {
-            user1.geolocalize(function(user2) {
-                user2.setCurrentUser();
+        user.reload(function(e) {
+            var user1 = e || user;
+            user1.geolocalize(function(e) {
+                user1.setCurrentUser();
                 runApp();
             });
         });

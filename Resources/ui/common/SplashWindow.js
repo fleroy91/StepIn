@@ -8,7 +8,7 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-var Spinner = require("etc/Spinner");
+var Spinner = require("etc/AppSpinner");
 
 function SplashWindow() { 'use strict';
     var win = Ti.UI.createWindow({
@@ -33,7 +33,7 @@ function SplashWindow() { 'use strict';
     
     var btClose = Ti.UI.createButton({
         style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-        right : 120,
+        right : 140,
         bottom : 0,
         visible : false,
         image : "/images/bullet.png"

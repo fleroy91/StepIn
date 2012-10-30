@@ -2,62 +2,302 @@
 //  MorePointsWindow.js
 //  StepIn
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-09.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-09.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require("/etc/AppImage");
+var Tools = require("/etc/Tools");
 
-function MorePointsWindow(args) {'use strict';
-    var self = Ti.UI.createWindow(args);
-    self.backgroundColor = '#f0f0f0';
-    self.barColor = 'black';
+function MorePointsWindow(tabGroup, options) {'use strict';
 
-    var sheader = Ti.UI.createView({
-        height : 40,
-        top : 0,
-        backgroundColor : '#d92276'
+    var self = Ti.UI.createWindow({
+        barColor : 'black',
+        barImage : '/images/topbar.png'
     });
-    var lbl = Ti.UI.createLabel({
-        text : "Gagnez plus de points avec ces actions :",
-        top : 2,
-        left : 2,
-        color : 'white',
-        font : {fontSize : '15', fontWeight : 'normal'},
-        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
-        height : 40
-    });
-    sheader.add(lbl);
-    self.add(sheader);
+    var popup = (options && options.popup);
+    var pointsToInvite = 10;
+    var pointsIfInviteOk = 150;
+    
+    var AppUser = require("model/AppUser"),
+        user = AppUser.getCurrentUser();
+    
+    var t = null;
+    if(popup) {
+        t = Ti.UI.create2DMatrix({scale : 0});
+        options.transform = t;
+    } else {
+        self.setBackgroundColor('#f0f0f0');
+    }
 
-    var actions = [
-        {title : 'Partager sur FB', image : '/images/facebook.png', points : 150},
-        {title : 'Partager sur Twitter', image : '/images/twitter.png', points : 100},
-        {title : 'Inviter vos amis', image : '/images/people_family.png', points : 500},
-        {title : 'Réussir des missions', image : '/images/169-8ball.png', points : 250}
-    ];
+    var view = Ti.UI.createView(options);
 
-    function createRow(options) {
-        var row = Ti.UI.createTableViewRow({});
-        row.height = 50;
+    function displayNoteAppStore() {
+        var now = new Date().getTime();
+        var alertDialog = Titanium.UI.createAlertDialog({
+            title: 'NOTEZ NOUS',
+            message: "Vous aimez cette application.\nNotez là et gagnez 250 steps" ,
+            buttonNames: ['Ne plus me demander', 'Me le rappeler plus tard', 'Noter'],
+            cancel: 0
+        });
+        alertDialog.addEventListener('click', function(evt) {
+            switch (evt.index) {
+                case 2:
+                    Ti.App.Properties.setString('RemindToRate', Number.MAX_VALUE);
+                    // NOTE: replace this with your own iTunes link; also, this WON'T WORK IN THE SIMULATOR!
+                    if (Ti.Android) {
+                        Ti.Platform.openURL('URL TO YOUR APP IN THE GOOGLE MARKETPLACE');
+                    }
+                    else {
+                        Ti.Platform.openURL('URL TO YOUR APP IN THE ITUNES STORE');
+                    }
+                    // TODO : Give rewards when he come backs even if we don't know that it works
+                    break;
+                case 1:
+                    // "Remind Me Later"? Ok, we'll remind them tomorrow when they launch the app.
+                    Ti.App.Properties.setString('RemindToRate', now + (1000 * 60 * 60 * 24));
+                    break;
+                case 0:
+                    Ti.App.Properties.setString('RemindToRate', Number.MAX_VALUE);
+                    break;
+            }
+        });
+        alertDialog.show();
+    }
+    
+    var FB_Listener = null;
+    var niceClose;
+    
+    function comparePerson(a,b) {
+        var ret = Tools.strcmp(a.lastName, b.lastName);
+        if(ret === 0) {
+            ret = Tools.strcmp(a.firstName, b.firstName);
+        }
+        return ret;
+    } 
+    
+    function inviteAndGiveReward(list, action_kind, points) {
+        if(list && list.length > 0) {
+            var AppUser = require("model/AppUser"),
+                user = AppUser.getCurrentUser();
+            var Reward = require("model/Reward"),
+                Invitation = require("model/AppInvitation"),
+                rew = new Reward({action_kind : action_kind, nb_points : points});
+            rew.setUser(user);
+            
+            var i;
+            for(i = 0; i < list.length; i++) {
+                var person = list[i];
+                var inv = new Invitation({
+                    emails : Tools.getEmails(person),
+                    facebook_id : person.facebook_id,
+                    sent_at : new Date()
+                });
+                inv.setInviter(user);
+                inv.create(AppUser.addInvitation);
+            }
+            tabGroup.addNewReward(rew);
+        }
+    }
+    
+    function checkLogin(func) {
+        if(user.isDummy()) {
+            var lblLoginAction = Ti.UI.createLabel({
+                text : 'Vous devez avoir un compte pour collecter vos points :',
+                font : {fontSize : 19, fontWeight : 'bold'},
+                top : 0,
+                height : 50,
+                right : 15,
+                left : 15
+            });
+            
+            // We need to be logged
+            var LoginWindow = require("ui/common/LoginWindow"),
+                swin = new LoginWindow(tabGroup, lblLoginAction);
+            
+            swin.addEventListener('close', function(e) {
+                user = AppUser.getCurrentUser();
+                if(! user.isDummy()) {
+                    user.retrieveInvitations(func);
+                } else {
+                    alert("Action impossible si vous n'avez pas de compte !");
+                }
+            });
+            
+            self.containingTab.open(swin, {
+                animated : true
+            });
+        } else if(func) {
+            func();
+        }
+    }
+    
+    function runFBContactQuery(func) {
+        Ti.Facebook.requestWithGraphPath('me/friends', {fields:'id,name,last_name,gender,first_name,email,picture'}, 'GET', function(e) {
+            if(e.success && e.result) {
+                Ti.API.info("FB Result = " + e.result);
+                var FBResult = JSON.parse(e.result);
+                var people = FBResult.data;
+                
+                // We need to translate people in persons !
+                var i, persons = [];
+                for(i = 0; i < people.length; i++) {
+                    var person = Ti.Contacts.createPerson({
+                        firstName : people[i].first_name,
+                        lastName : people[i].last_name
+                    });
+                    if(people[i].email) {
+                        person.email = {work:[people[i].email]};
+                    }
+                    person.imageUrl = (people[i].picture && people[i].picture.data && people[i].picture.data.url);
+                    person.facebook_id = people[i].id;
+                    person.invitation = user.findInvitation(person);
+                    persons.push(person);
+                }
+                
+                // We need to sort them by last_name
+                persons.sort(comparePerson);
+                
+                var MultiSelectContactWindow = require("ui/common/MultiSelectContactWindow"),
+                    swin = new MultiSelectContactWindow(persons, pointsToInvite, pointsIfInviteOk, tabGroup);
+                swin.addEventListener('close', function(e) {
+                    if(e.source.list) {
+                        var selectedPeople = e.source.list;
+                        inviteAndGiveReward(selectedPeople, 'Facebook contacts invitation', (selectedPeople.length * pointsToInvite));
+                    }
+                });
+                niceClose(function() {
+                    self.containingTab.open(swin, {animated:true});
+                });
+            }
+        });
+    }
         
-        var img = Image.createImageView('read', options.image, null, {noEvent : true, borderWidth : 0, left : 2, top : 2, width : 40, height : 40});
+    function inviteFBFriends() {
+        if(Ti.Facebook.loggedIn) {
+            runFBContactQuery();
+        } else {
+            checkLogin(runFBContactQuery());
+        }    
+    }
+    
+    function sub_invitePhoneFriends() {
+        var performAddressBookFunction = function(){
+            var people = Ti.Contacts.getAllPeople();
+            var peopleWithEmails = [];
+            var i;
+            for(i = 0;i < people.length; i++) {
+                var person = people[i];
+                if(Tools.hasEmail(person)) {
+                    person.invitation = user.findInvitation(person);
+                    peopleWithEmails.push(person);
+                }
+            }
+            // We need to sort them by last_name
+            peopleWithEmails.sort(comparePerson);
+            
+            var MultiSelectContactWindow = require("ui/common/MultiSelectContactWindow"),
+                swin = new MultiSelectContactWindow(peopleWithEmails, pointsToInvite, pointsIfInviteOk, tabGroup);
+            swin.addEventListener('close', function(e) {
+                if(e.source.list) {
+                    var selectedPeople = e.source.list;
+                    inviteAndGiveReward(selectedPeople, 'Phone contacts invitation', (selectedPeople.length * pointsToInvite));
+                }
+            });
+            niceClose(function() {
+                self.containingTab.open(swin, {animated:true});
+            });
+        };
+        var addressBookDisallowed = function(){
+            // TODO : I don't know what to do if the user refuse to access the phone address book !
+        };
+        if (Ti.Contacts.contactsAuthorization === Ti.Contacts.AUTHORIZATION_AUTHORIZED){
+            performAddressBookFunction();
+        } else if (Ti.Contacts.contactsAuthorization === Ti.Contacts.AUTHORIZATION_UNKNOWN){
+            Ti.Contacts.requestAuthorization(function(e){
+                if (e.success) {
+                    performAddressBookFunction();
+                } else {
+                    addressBookDisallowed();
+                }
+            });
+        } else {
+            addressBookDisallowed();
+        }
+    }
+    
+    function invitePhoneFriends() {
+        checkLogin(sub_invitePhoneFriends);
+    }
+    function shareTwitter() {
+        alert("Not Implemented !");
+    }
+    function followTwitter() {
+        alert("Not Implemented !");
+    }
+    function likeFacebook() {
+        alert("Not Implemented !");
+    }
+
+    // FIXME : check if actions are already done by the user !!!! (check rewards)
+    var actions = [
+        {title : 'Invitez vos amis Facebook', detail : "+10 steps par invitation\n+150 steps par invitation acceptée", image : '/images/FB.png', points : 150, action : inviteFBFriends},
+        {title : 'Invitez vos contacts', detail : "+10 steps par invitation\n+150 steps par invitation acceptée", image : '/images/apple.png', points : 150, action : invitePhoneFriends},
+        {title : 'Partagez sur Twitter', detail : "+150 steps pour le premier tweet posté avec la mention #Step-In", image : '/images/twitter.png', points : 150, action : shareTwitter},
+        {title : 'Likez sur Facebook', detail : "+150 steps pour un like Facebook sur Step-In", image : '/images/like.png', points : 150, action : likeFacebook},
+        {title : 'Suivez-nous sur Twitter', detail : "+150 steps si vous suivez Step-In sur Twitter", image : '/images/follow.png', points : 150, action : followTwitter},
+        {title : "Notez nous sur l'App Store", detail : "+250 steps si vous nous notez sur l'AppStore", image : '/images/rate.png', points : 250, action : displayNoteAppStore}
+    ];
+    
+    function createRow(options) {
+        var row = Ti.UI.createTableViewRow({
+            className : 'MorePoints',
+            backgroundColor : '#f0f0f0',
+            action : options.action
+        });
+        row.height = 90;
+        
+        var img = Ti.UI.createImageView({
+            borderWidth : 0,
+            top : 15, 
+            left : 5, 
+            width : 60, 
+            height : 60,
+            image : options.image
+        });
         row.add(img);
         
-        var lbl = Ti.UI.createLabel({
-            left : 48,
-            top : 2,
+        var lblTitle = Ti.UI.createLabel({
+            left : 75,
+            top : 15,
             font : {fontSize : 14},
-            color : '#4d4d4d',
+            color : '#333333',
             text : options.title,
             width : 220
         });
-        row.add(lbl);
+        row.add(lblTitle);
+        var lblDetails = Ti.UI.createLabel({
+            left : 75,
+            top : 32,
+            font : {fontSize : 10},
+            color : '#989898',
+            text : options.detail,
+            width : 220
+        });
+        row.add(lblDetails);
         
-        var pt = Image.createPointView(options.points, 40, 80);
-        pt.right = 2;
+        var pt = Image.createPointView(options.points, 40, 80, null, { bottom : 10, right : 20});
         row.add(pt);
+        
+        var btAction = Ti.UI.createImageView({
+            image : '/images/bullet.png',
+            width : 25,
+            height : 25,
+            right : 5
+        });
+        row.add(btAction);
+
         return row;
     }
     
@@ -68,11 +308,73 @@ function MorePointsWindow(args) {'use strict';
     }
 
     var tv = Ti.UI.createTableView({
-       data : data,
-       top : 40
+       data : data
     });
-    self.add(tv);
+    view.add(tv);
     
+    niceClose = function(func) {
+        if(popup) {
+            var t = Ti.UI.create2DMatrix({scale:0});
+            var a = Ti.UI.createAnimation({transform : t, duration : 500});
+            a.addEventListener('complete', function(e) {
+                self.close();
+                if(func) {
+                    func();
+                }
+            });
+            view.animate(a);
+        } else {
+            tabGroup.setActiveTab(2);
+            if(func) {
+                func();
+            }
+        }
+    };
+    
+    tv.addEventListener('click', function(e) {
+        if(e.rowData && e.rowData.action) {
+            e.rowData.action();
+        }
+    });
+    
+    if(popup) {
+        var opacView = Ti.UI.createView({
+            backgroundColor : 'black',
+            opacity : 0.2,
+            borderRadius : 2,
+            borderWidth : 0,
+            top : 0,
+            right : 0,
+            height : 35,
+            width : 35,
+            zIndex : 100
+        });
+        // view.add(opacView);
+        
+        var btClose = Ti.UI.createButton({
+            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+            top : 2,
+            right : 2,
+            width : 30,
+            height : 30,
+            zIndex : 200,
+            image : "/images/close.png"
+        });
+        // view.add(btClose);
+        
+        btClose.addEventListener('click', function(e) { niceClose();} );
+        
+        var t2 = Ti.UI.create2DMatrix({scale : 1});
+        var a = Ti.UI.createAnimation({ transform : t2, duration : 500});
+        a.addEventListener('complete', function() {
+            tabGroup.setActiveTab(2);
+            self.close({animated:false});             
+        });
+        self.addEventListener('open', function() {
+            view.animate(a);
+        });
+    }
+    self.add(view);
     return self;
 }
 

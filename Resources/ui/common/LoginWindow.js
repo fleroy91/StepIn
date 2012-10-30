@@ -8,45 +8,23 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-function LoginWindow(args) {'use strict';
-
-    var modal = (args && args.modal);
+function LoginWindow(tabGroup, headerView) {'use strict';
 
     var win = Ti.UI.createWindow({
         backgroundColor : '#f0f0f0',
+        barImage : '/images/topbar.png',
         barColor : 'black',
-        navBarHidden : modal,
-        modal : modal,
-        modalTransition : (modal ? Ti.UI.iPhone.MODAL_TRANSITION_STYLE_CROSS_DISSOLVE : null),
-        modalStyle : (modal ? Ti.UI.iPhone.MODAL_PRESENTATION_FORMSHEET : null)
+        navBarHidden : false
     });
 
-    var tabGroup = args.tabGroup;
-    
     var sc = Ti.UI.createScrollView({});
     
     function onClose() {
         win.close();
     }
     
-    var sheader = Ti.UI.createView({
-        height : 40,
-        top : 0,
-        backgroundColor : '#d92276'
-    });
-    var lbl = Ti.UI.createLabel({
-        text : "Connectez-vous avec",
-        top : 2,
-        left : 2,
-        color : 'white',
-        font : {fontSize : '15', fontWeight : 'normal'},
-        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
-        height : 40
-    });
-    sheader.add(lbl);
-    
     var LoginView = require("/ui/common/LoginView"),
-        loginView = new LoginView(tabGroup, sheader, onClose);
+        loginView = new LoginView(tabGroup, headerView, onClose);
     sc.add(loginView);
     
     win.add(sc);

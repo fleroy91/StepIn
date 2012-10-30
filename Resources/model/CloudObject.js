@@ -10,7 +10,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var DataManager = require('services/DataManager'),
     _dm = new DataManager();
-    
+var Tools = require("/etc/Tools");
 var Image = require("/etc/AppImage");
 
 function CloudObject(json) {'use strict';
@@ -159,6 +159,20 @@ function CloudObject(json) {'use strict';
             str = JSON.stringify(this);
         }
         return str;
+    };
+    
+    this.inspect = function() {
+        this.m_type = this.getCloudType();
+        var key, res = {};
+        for(key in this) {
+            if(this.hasOwnProperty(key)) {
+                var bAdd = false;
+                if(Tools.startsWith(key, "m_")) { bAdd = true; }
+                else if(typeof this[key] !== "object") {  bAdd = true;}                
+                if(bAdd) { res[key] = this[key]; }
+            }
+        } 
+        return JSON.stringify(res);
     };
 
     this.create = function(func, extra) {

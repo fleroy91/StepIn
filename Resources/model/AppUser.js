@@ -10,9 +10,10 @@
 
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
-var Spinner = require("etc/Spinner");
+var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var Reward = require('model/Reward');
+var Invitation = require('model/AppInvitation');
             
 function AppUser(json) {'use strict';
     CloudObject.call(this);
@@ -95,17 +96,26 @@ function AppUser(json) {'use strict';
         return (! this.m_url);
     };
     
+    this.findInvitation = function(person) {
+        var i;
+        var invit = null;
+        for(i = 0; !invit && Ti.App.allInvitations && i < Ti.App.allInvitations.length; i++) {
+            var inv = Ti.App.allInvitations[i];
+            var j, inter = false, emails = Tools.getEmails(person);
+            for(j = 0; !inter && j < emails.length; j ++) {
+                inter = (inv.emails.indexOf(emails[j]) >= 0);
+            }
+            if(inv.facebook_id === person.facebook_id || inter) {
+                invit = inv;
+            }
+        }
+        return invit;
+    };
+    
     this.getRewards = function() {
         return Ti.App.allRewards;
     };
     
-    this.addReward = function(rew) {
-        if(! Ti.App.allRewards) {
-            Ti.App.allRewards = [];
-        }
-        Ti.App.allRewards.push(rew);
-    };
-
     this.retrievePresents = function(func) {
         var Present = require('model/Present'),
             pres = new Present();
@@ -119,6 +129,33 @@ function AppUser(json) {'use strict';
             }
             func(data);
         });
+    };
+
+    this.retrieveInvitations = function(func) {
+        if(! this.isDummy()) {
+            var invit = new Invitation();
+            this.getList(invit, Tools.Hash2Qparams({
+                    'inviter.url' : this.getUrl(),
+                    per_page : 1000}), 
+                function(result) {
+                    var i, data = null;
+                    if(result) {
+                        data = [];
+                        for(i = 0 ; i < result.length; i++) {
+                            data.push(new Invitation(result[i]));    
+                        }
+                    }
+                    Ti.App.allInvitations = data;
+                    if(func) {
+                        func(Ti.App.allInvitations);
+                    }
+                });
+        } else {
+            Ti.App.allInvitations = [];
+            if(func) {
+                func(Ti.App.allInvitations);
+            }
+        }
     };
     
     this.retrieveRewards = function(func) {
@@ -151,6 +188,13 @@ function AppUser(json) {'use strict';
                 func(Ti.App.allRewards);
             }
         }
+    };
+    
+    this.retrieveInvitationsAndRewards = function(func) {
+        var self = this;
+        self.retrieveInvitations(function() {
+            self.retrieveRewards(func);
+        });
     };
     
     function getShops(self, tags, onNewShop, finalFunc) {
@@ -196,7 +240,7 @@ function AppUser(json) {'use strict';
         this.geolocalize(function(self) {
             self.setCurrentUser();
             if(! Ti.App.allRewards) {
-                self.retrieveRewards(function(allRewards) {
+                self.retrieveInvitationsAndRewards(function(allRewards) {
                     if(allRewards) {
                         getShops(self, tags, onNewShop, finalFunc);
                     } else {
@@ -213,7 +257,7 @@ function AppUser(json) {'use strict';
     this.checkAll = function(func) {
         Spinner.show();
         // We need to retrieve Rewards and then go through all shops and compute their rewards availability
-        this.retrieveRewards(function(allRewards) {
+        this.retrieveInvitationsAndRewards(function(allRewards) {
             var i;
             for(i = 0; i < Ti.App.allShops.length; i ++) {
                 var shop = Ti.App.allShops[i];
@@ -248,33 +292,39 @@ function AppUser(json) {'use strict';
             });
     };
     
+    this.deleteAllInvitations = function(func) {
+        Spinner.show();
+        var invit = new Invitation();
+        var self = this;
+        this.getList(invit, Tools.Hash2Qparams({
+                'inviter.url' : this.getUrl(),
+                'per_page' : 1000}), 
+            function(result) {
+                var i;
+                if(result && result.length > 0) {
+                    for(i = 0 ; i < result.length; i++) {
+                        var inv = new Invitation(result[i]);
+                        inv.remove();
+                    }
+                }
+                if(func) {
+                    func(self);
+                }
+                Spinner.hide();
+            });
+    };
+
     this.updateReward = function(reward) {
         var shop = AppUser.getShop(reward.shop.index);
         if(! shop) {
             shop = AppUser.findShop(reward.shop.url);
         }
         if(reward.getActionKind() === Reward.ACTION_KIND_STEPIN) {
-            reward.setNbPoints((shop.getStepinPoints() || 0) + (reward.bonusFB || 0));
+            reward.setNbPoints((shop.getStepInPoints() || 0) + (reward.bonusFB || 0));
         } else if(reward.getActionKind() === Reward.ACTION_KIND_SCAN) {
             reward.setNbPoints((shop.getScanPoints(reward.code) || 0) + (reward.bonusFB || 0));
         }
         return reward;
-    };
-    
-    this.getTwoFreeShops = function() {
-        var ret = null,nb = 0;
-        if(Ti.App.allShops) {
-            var i;
-            for(i = 0; nb < 2 && i < Ti.App.allShops.length; i ++) {
-                var shop = Ti.App.allShops[i];
-                if(! ret) { ret = []; }
-                if(! shop.checkin) {
-                    ret.push(shop);
-                    nb ++;
-                }
-            }
-        }
-        return ret;
     };
     
     this.retrieveUser = function(args, func) {
@@ -288,6 +338,10 @@ function AppUser(json) {'use strict';
             func(result);
             Spinner.hide(); 
         });
+    };
+    
+    this.retrieveFBUser = function(func) {
+        this.retrieveUser({fb_token : Titanium.Facebook.getAccessToken()}, func);
     };
     
     this.reload = function(func) {
@@ -305,7 +359,7 @@ function AppUser(json) {'use strict';
     
     this.setCurrentUser = function() {
         if(! this.isDummy() && (! Ti.App.currentUser || this.m_url !== Ti.App.currentUser.m_url)) {
-            Ti.App.testflight.passCheckpoint("Set new user");
+            Ti.App.testflight.passCheckpoint("Set new user : " + this.getJSON());
             Ti.App.testflight.addCustomEnvironmentInformation({
                 username : this.firstname,
                 email : this.email,
@@ -317,6 +371,7 @@ function AppUser(json) {'use strict';
         // If the new current user is not the same as the previous one, we need to reset the rewards
         if(Ti.App.currentUser && ! this.isDummy() && Ti.App.currentUser.m_url !== this.m_url) {
             Ti.App.allRewards = null;
+            Ti.App.allInvitations = null;
         }
         Ti.App.currentUser = this;
     };
@@ -328,7 +383,7 @@ function AppUser(json) {'use strict';
         return this.email;
     };
     this.getTotalPoints = function() {
-        return this.total_points;
+        return this.total_points || 0;
     };
     this.setTotalPoints = function(points) {
         this.total_points = points;
@@ -443,6 +498,20 @@ AppUser.addReward = function(rew) { 'use strict';
     data.push(rew);
     Ti.App.allRewards = data;
     return rew;
+};
+/**
+ * Add an invitation in the global invitations array
+ * 
+ * @param {invitation} invit : the invitation to add
+ * @returns {invitation} : the invitation updated with the index (1-N) field (his place in the array)
+ */
+AppUser.addInvitation = function(invit) { 'use strict';
+    Ti.API.info("Ajout d'une invitation : " + invit.inspect());
+    invit.index = Ti.App.allInvitations.length + 1;
+    var data = Ti.App.allInvitations;  
+    data.push(invit);
+    Ti.App.allInvitations = data;
+    return invit;
 };
 /**
  * Update the shop in the global shops array

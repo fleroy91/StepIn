@@ -10,12 +10,13 @@
 var Image = require("/etc/AppImage");
 var Tools = require("/etc/Tools");
 var AppUser = require("/model/AppUser");
-var Spinner = require("/etc/Spinner");
+var Spinner = require("/etc/AppSpinner");
 
 function AccountWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
 	    title : 'Mon compte', 
 	    backgroundColor : '#f0f0f0',
+	    barImage : '/images/topbar.png',
 	    barColor : 'black'
     });
     var tabGroup = args.tabGroup;
@@ -23,24 +24,7 @@ function AccountWindow(args) {'use strict';
     Spinner.add(self);
     
     var user = AppUser.getCurrentUser();
-	
-    var sheader = Ti.UI.createView({
-        height : 40,
-        top : 0,
-        backgroundColor : '#d92276'
-    });
-    var lbl = Ti.UI.createLabel({
-        text : "Configurez votre compte :",
-        top : 2,
-        left : 2,
-        color : 'white',
-        font : {fontSize : '15', fontWeight : 'normal'},
-        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
-        height : 40
-    });
-    sheader.add(lbl);
-    self.add(sheader);
-    
+	    
     var header = Ti.UI.createView({ height : 65});   
 	var img = Ti.UI.createImageView({
 	    top:15, 
@@ -64,10 +48,11 @@ function AccountWindow(args) {'use strict';
 	
 	var data = [];
 	var sProfil = Ti.UI.createTableViewSection({});
+	var updateWindow;
 	
     var r10 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('profil_text', 'Mon profil'), hasChild : true });
-	var r12 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('payments_text', 'Factures'), hasChild : true });
-	var r13 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('share_fb_text', 'Partager'), hasChild : true });
+	// var r12 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('payments_text', 'Factures'), hasChild : true });
+	// var r13 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'}, title : Ti.Locale.getString('share_fb_text', 'Partager'), hasChild : true });
     sProfil.add(r10);
 	// sProfil.add(r12);
 	// sProfil.add(r13);
@@ -94,7 +79,7 @@ function AccountWindow(args) {'use strict';
 
     function doLogin() {
         var LoginWindow = require("/ui/common/LoginWindow"), 
-            win = new LoginWindow({ tabGroup : tabGroup });
+            win = new LoginWindow(tabGroup);
 
         win.addEventListener('close', function(e) { 
             setNewUser(e.object, displayAccount); 
@@ -115,8 +100,8 @@ function AccountWindow(args) {'use strict';
     });
 
 	function notImplemented() { alert("Not implemented !");}
-	r12.addEventListener('click', notImplemented);
-    r13.addEventListener('click', notImplemented);
+	// r12.addEventListener('click', notImplemented);
+    // r13.addEventListener('click', notImplemented);
     
 	var sInfo = Ti.UI.createTableViewSection({});
 	var r21 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Comment ça marche', hasChild : true });
@@ -195,12 +180,11 @@ function AccountWindow(args) {'use strict';
 		footerView : fv,
 		headerView : header,
 		backgroundColor : '#f0f0f0',
-		top : 40,
 		style:Titanium.UI.iPhone.TableViewStyle.GROUPED
 	});
 	self.add(tv);
 	
-	function updateWindow(e, user) {
+	updateWindow = function(e, user) {
 	    if(user) {
             tabGroup.closeAllWindows();
 	    } else {
@@ -220,7 +204,8 @@ function AccountWindow(args) {'use strict';
            r41.setTitle('Déconnexion');
         }
         tabGroup.updateTitle(self);
-	}
+	};
+	
     r41.addEventListener('click', function(e) {
         user = AppUser.getCurrentUser();
            

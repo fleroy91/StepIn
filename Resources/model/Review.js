@@ -2,8 +2,8 @@
 //  Review.js
 //  StepInShopApp
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-01.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-01.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */

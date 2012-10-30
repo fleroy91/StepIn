@@ -2,8 +2,8 @@
 //  ScanListWindow.js
 //  StepIn
 //  
-//  Created by Fr√©d√©ric Leroy on 2012-10-18.
-//  Copyright 2012 Fr√©d√©ric Leroy. All rights reserved.
+//  Created by Frederic Leroy on 2012-10-18.
+//  Copyright 2012 Frederic Leroy. All rights reserved.
 // 
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
@@ -11,45 +11,32 @@ var Image = require('/etc/AppImage');
 
 function ScanListWindow(shop, tabGroup) { 'use strict';
     var self = Ti.UI.createWindow({
-        barColor : 'black'
+        barImage : '/images/topbar.png',
+        barColor : 'black',
+        backgroundColor : '#f0f0f0'
     });
     
-    var sheader = Ti.UI.createView({
-        height : 40,
-        top : 0,
-        backgroundColor : '#d92276'
-    });
-    var lbl = Ti.UI.createLabel({
-        text : "Scannez ces articles :",
-        top : 2,
-        left : 2,
-        color : 'white',
-        font : {fontSize : '15', fontWeight : 'normal'},
-        textAlign : Titanium.UI.TEXT_ALIGNMENT_LEFT,
-        height : 40
-    });
-    sheader.add(lbl);
-    self.add(sheader);
-
-    var tv = Ti.UI.createTableView({
-        scrollable : true,
-        allowsSelection : false,
-        top : 40,
-        separatorStyle : Titanium.UI.iPhone.TableViewSeparatorStyle.NONE
-    });
+    var header = shop.createHeader(false);
+    self.add(header);    
+    
+    shop.addOverHeader(self, tabGroup, false);
     
     function createScanView(scan) {
         var v = Ti.UI.createButton({
             style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-            width : '50%',
-            height : 170,
-            borderRadius : 0,
-            borderWidth : 1,
-            borderColor : '#e0e0e0'
+            width : 142,
+            height : 170
         });
         
-        var img = Image.createImageView('read', scan.getPhotoUrl(0), null, { borderWidth : 0,height : 100, width : 100});
-        img.top = 2;
+        var img = Ti.UI.createImageView({
+            borderWidth : 0,
+            height : 100, 
+            width : 100,
+            top : 2
+        });
+        Image.cacheImage(scan.getPhotoUrl(0), function(image) {
+            img.setImage(image); 
+        });
         v.add(img);
         
         var lbl1 = Ti.UI.createLabel({
@@ -63,6 +50,8 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         var lbl2 = Ti.UI.createLabel({
             text : scan.desc,
             top : lbl1.top + lbl1.height,
+            left : 2, right : 2,
+            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER, 
             height : 25,
             color : 'gray',
             font : {fontSize : 9, fontWeight : 'normal'}
@@ -74,20 +63,6 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         vPoints.width = Ti.UI.FILL;
         vPoints.right = 40;
         v.add(vPoints);
-        /*
-        var bt = Ti.UI.createButtonBar({
-            labels : [scan.points],
-            top : lbl2.top+lbl2.height+5,
-            backgroundColor:'#d92276',
-            backgroundImage : '/images/stepin-star.png',
-            style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-            height:30,
-            object : scan,
-            width : '80%'
-        });
-        v.add(bt);
-        v.bt = bt;
-        */
         v.addEventListener('click', function(e) {
             var ScanDetailWindow = require("/ui/common/ScanDetailWindow"),
                 swin = new ScanDetailWindow(scan, tabGroup, {canScan : shop.checkin && ! scan.scanned});
@@ -112,36 +87,13 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         return v;
     }
     
-    function createRow(scans, index1, index2) {
-        var row = Ti.UI.createTableViewRow({
-            className : 'scanRow',
-            backgroundColor : 'white'
-        });
-        
-        var p1 = scans[index1];
-        var v1 = createScanView(p1);
-        v1.left = 0;
-        row.add(v1);
-        row.bt1 = v1.bt;
-        row.p1 = p1;
-        
-        if(index2 < scans.length) {
-            var p2 = scans[index2];
-            var v2 = createScanView(p2);
-            v2.right = 0;
-            row.add(v2);
-            row.p2 = p2;
-            row.bt2 = v2.bt;
-        }
-        return row;
-    }
     var i, data = [], scans = shop.scans;
-    for(i = 0; i < scans.length; i+=2) {
-        data.push(createRow(scans, i, i+1));
+    for(i = 0; i < scans.length; i++) {
+        data.push(createScanView(scans[i]));
     }
-    tv.setData(data);
-    
-    self.add(tv);
+    var BigScrollView = require("ui/common/BigScrollView"),
+        bsv = new BigScrollView({data : data, top : header.height - 10}, 142, 170);
+    self.add(bsv);
    
     tabGroup.createTitle(self, "Scans");
    

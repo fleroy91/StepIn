@@ -11,7 +11,7 @@
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("/etc/Geoloc");
 var Tools = require("/etc/Tools");
-var Spinner = require("/etc/Spinner");
+var Spinner = require("/etc/AppSpinner");
 var Image = require("/etc/AppImage");
 var Scan = require("/model/Scan");
 var AppUser = require("/model/AppUser");
@@ -71,7 +71,7 @@ function Shop(json) {'use strict';
         AppUser.updateShop(this);  
     };
     
-    this.getStepinPoints = function() {
+    this.getStepInPoints = function() {
         return this.stepinPoints;
     };
     
@@ -312,12 +312,22 @@ function Shop(json) {'use strict';
     this.createAnnotation = function(tabGroup) {
         var shoploc = this.location;
         var self = this;
-        var shopImg = Image.createImageView('read', this.getPhotoUrl(0), null, { height : 30, width : 30});
+        var shopImg = Ti.UI.createImageView({
+            height : 30, 
+            width : 30
+        });
+        Image.cacheImage(this.getPhotoUrl(0), function(image) {
+            shopImg.setImage(Image.squareImage(image, 30));
+        });
+        
+        var imgNormal = Image.createStepInStarPoints('/images/annotation-stepin.png', this.allPoints, false);
+        var imgOver = Image.createStepInStarPoints('/images/annotation-stepin-over.png', this.allPoints, true);
         
         var annotation = Titanium.Map.createAnnotation({
             latitude:shoploc.lat,
             longitude:shoploc.lng,
-            image : '/images/pointer-regular.png',
+            image : imgNormal, // '/images/annotation-stepin.png',
+            imgNormal : imgNormal,
             leftView : shopImg,
             rightButton : (tabGroup ? '/images/bullet.png' : null),
             title : this.getName(),
@@ -328,10 +338,10 @@ function Shop(json) {'use strict';
         annotation.addEventListener('click', function(e) {
             if(e.annotation && e.clicksource === 'pin') {
                 if(e.map.selectedAnnotation && e.map.selectedAnnotation !== e.annotation) {
-                    e.map.selectedAnnotation.setImage('/images/pointer-regular.png');
+                    e.map.selectedAnnotation.setImage(e.map.selectedAnnotation.imgNormal); //'/images/annotation-stepin.png');
                 }
                 e.map.selectedAnnotation = e.annotation;
-                e.annotation.setImage('/images/pointer-over.png');
+                e.annotation.setImage(imgOver); // '/images/annotation-stepin-over.png');
             }
             if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
                 var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
@@ -342,18 +352,112 @@ function Shop(json) {'use strict';
         return annotation;
     };
     
-    this.getTwoFreeScans = function() {
-        var j, ret = null, nb = 0;
-        var scans = this.scans;
-        for(j = 0; scans && nb < 4 && j < scans.length; j++) {
-            var s = scans[j];
-            if(! s.scanned) {
-                if(! ret) { ret = []; }
-                ret.push(s);
-                nb ++;
-            }
+    this.createHeader = function(isBig) {
+        var internBorder = 2;
+        var shop = this;
+        
+        var ntop = (isBig ? 80 : 1);
+            
+        // We create a new header view
+        var header = Ti.UI.createView({
+            height : (isBig ? 135+63+10 : 65),
+            top : 0
+        });
+        if(isBig) {
+            Image.cacheImage(shop.getPhotoUrl(0), function(image) {
+                header.setBackgroundImage(image);
+            });
+        } else {
+            header.setBackgroundColor('#d92276');
         }
-        return ret;
+            
+        // we create a view for shop details in the header
+        var shopdetails = Ti.UI.createView({
+            top : ntop + 17,
+            height : 36,
+            backgroundColor : 'black',
+            opacity : 0.6,
+            zIndex : 0
+        });
+        header.add(shopdetails);
+            
+        var labelName = Ti.UI.createLabel({
+            font : {fontSize: 14, fontWeight : 'bold'},
+            left : 73,
+            top : shopdetails.top + internBorder,
+            color:'white',
+            zIndex : 1,
+            text : shop.getName(),
+            height : 13
+        });
+        header.add(labelName);
+    
+        // line 2
+        var labelDetails = Ti.UI.createLabel({
+            color : 'white',
+            left : 73,
+            top : shopdetails.top + 20,
+            zIndex : 1,
+            font : { fontSize : 12, fontWeight : 'normal'},
+            text : shop.getDetails()
+        }); 
+        header.add(labelDetails);
+    
+        
+        return header;
+    };
+    
+    this.addOverHeader = function(view, tabGroup, isBig) {
+        var internBorder = 2;
+        var shop = this;
+        
+        var ntop = (isBig ? 80 : 1);
+        
+        var btShowMap = Ti.UI.createImageView({
+            image : '/images/bullet.png',
+            width : 25, 
+            height: 25,
+            top : ntop + 23,
+            zIndex : 1,
+            right : 5
+        });
+        view.add(btShowMap);
+        
+        var mapview = Ti.UI.createImageView({
+            borderRadius : 1,
+            borderWidth : 2,
+            borderColor : 'white',
+            zIndex : 100,
+            height : 60,
+            width : 60,
+            bottom : 2,
+            top : ntop,
+            left : 9,
+            shadow:{
+                shadowColor:'gray',
+                shadowRadius:2,
+                shadowOpacity:0.7,
+                shadowOffset:{x:3, y:3}
+            }
+        });
+        if(! isBig) {
+            Image.cacheImage(shop.getPhotoUrl(0), function(image) {
+                mapview.setImage(Image.squareImage(image, 60));
+            });
+        } else {
+            mapview.setImage("/images/smallmap.png");
+        }
+
+        view.add(mapview);
+            
+        function showMap() {
+            var MapDetailWindow = require('/ui/common/MapDetailWindow'),
+                swin = new MapDetailWindow(shop);
+            tabGroup.activeTab.open(swin, {animated:true});
+        }
+            
+        btShowMap.addEventListener('click', showMap);
+        mapview.addEventListener('click', showMap);
     };
     
     this.createTableRow = function() {
@@ -377,13 +481,14 @@ function Shop(json) {'use strict';
             borderWith : 0,
             borderRadius : 0,
             shadow:{
+                shadowColor:'gray',
                 shadowRadius:2,
                 shadowOpacity:0.3,
                 shadowOffset:{x:2, y:2}
             }
         });
         Image.cacheImage(this.getPhotoUrl(0), function(image) {
-            img.setImage(Image.cropImage(image, 60,60));
+            img.setImage(Image.squareImage(image, 60));
         }); 
         row.add(img);
         
@@ -397,7 +502,7 @@ function Shop(json) {'use strict';
     
         var vPoints = Image.createIconsPointView(allPoints, (stepinPoints > 0), (scanPoints > 0),
         {
-            right : btAction.right + btAction.width + internBorder,
+            right : 20,
             height : 60
         });
         row.add(vPoints);

@@ -1,5 +1,5 @@
 /*global Ti: true, Titanium : true */
-/*jslint nomen: true, evil: false, vars: true */
+/*jslint nomen: true, evil: false, vars: true, plusplus : true */
 function Tools() { 'use strict';
     return this;
 }
@@ -11,6 +11,35 @@ Tools.startsWith = function(str, prefix) { 'use strict';
     return (str.indexOf(prefix, 0) === 0);
 };
 
+Tools.getEmails = function(person, nb) { 'use strict';
+    var key;
+    var emails = [];
+    nb = nb || 100;
+    for(key in person.email) {
+        if(person.email.hasOwnProperty(key)) {
+            var i, arr = person.email[key];
+            for(i = 0; nb >=0 && i < arr.length; i++) {
+                emails.push(arr[i]);
+                nb --;
+            }
+        }
+    }
+    return emails;
+};
+Tools.hasEmail = function(person) { 'use strict';
+    var key;
+    var found = false;
+    for(key in person.email) {
+        if(person.email.hasOwnProperty(key)) {
+            var i, arr = person.email[key];
+            for(i = 0; !found && i < arr.length; i++) {
+                found = true;
+            }
+        }
+    }
+    return found;
+};
+
 Tools.getImageBlob = function(imgView) { 'use strict';
     var blob = imgView.toBlob();
     var image = imgView.getImage();
@@ -19,6 +48,12 @@ Tools.getImageBlob = function(imgView) { 'use strict';
         blob = null;
     }
     return blob;
+};
+
+Tools.strcmp = function(a, b) { 'use strict';
+    if (a.toString() < b.toString()) { return -1; }
+    if (a.toString() > b.toString()) { return 1; }
+    return 0;
 };
 
 Tools.isSimulator = function() { 'use strict';
@@ -52,6 +87,20 @@ Tools.Hash2Qparams = function(args) { 'use strict';
         }
     }
     return qparams;
+};
+
+function twoDigits(x) { 'use strict';
+    var ret = x.toString();
+    if(x < 10) {
+        ret = "0" + ret;
+    }
+    return ret;
+}
+
+Tools.formatDate = function(date) { 'use strict';
+    var str = twoDigits(date.getDate()) + "/" + twoDigits(date.getMonth() + 1) + "/" + date.getFullYear() + 
+        " à " + twoDigits(date.getHours()) + ":" + twoDigits(date.getMinutes());
+    return str;
 };
 
 module.exports = Tools;
