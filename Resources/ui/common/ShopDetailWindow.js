@@ -32,7 +32,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         backgroundColor : '#f0f0f0'
     });
     
-    function createRow(image, title, points, withAction) {
+    function createRow(image, title, detail, points, withAction) {
         var row = Ti.UI.createTableViewRow({
             height : 70,
             className : 'shopDetailRow',
@@ -40,15 +40,24 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         });
         
         var lbl = Ti.UI.createLabel({
-            verticalAlign : Ti.UI.TEXT_VERTICAL_ALIGNMENT_CENTER, 
             font : {fontSize : 20},
             color : '#4d4d4d',
             text : title,
             width : 190 - 40,
-            height : row.height
+            left : 70,
+            top : 23
         });
         row.add(lbl);
         
+        var lblDetail = Ti.UI.createLabel({
+            font : {fontSize : 11, fontWeight : 'normal'},
+            color : 'lightgray',
+            top : 50,
+            text : detail,
+            left : 70
+        });
+        row.add(lblDetail);
+
         var btAction = Ti.UI.createImageView({
             image : '/images/bullet.png',
             width : 30,
@@ -61,6 +70,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     
         var pt = Image.createPointView(points, 40, 120, null, {
             right : btAction.right + btAction.width + 4,
+            bottom : 17,
             shadowOffset : {x:1, y:1}, 
             shadowColor : 'white'
         });
@@ -69,11 +79,11 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         return row;
     }
     
-    var rowStepIn = createRow('/images/steps.png', "Step-In", shop.getPoints(Reward.ACTION_KIND_STEPIN), false);
+    var rowStepIn = createRow('/images/steps.png', "Step-In", "Entrez dans le magasin et gagnez des steps", shop.getPoints(Reward.ACTION_KIND_STEPIN), false);
     if(shop.checkin) {
         rowStepIn.backgroundColor = '#eadae3';
     }
-    var rowScans = createRow('/images/tag.png', shop.scans.length + " Scan", shop.allPossiblePoints - shop.getPoints(Reward.ACTION_KIND_STEPIN), true);
+    var rowScans = createRow('/images/tag.png', shop.scans.length + " Article" + (shop.scans.length > 1 ? "s" : ""), "Scannez ces articles pour gagner plus de steps", shop.allPossiblePoints - shop.getPoints(Reward.ACTION_KIND_STEPIN), true);
     
     var rowAdvert = Ti.UI.createTableViewRow({
         height : 90

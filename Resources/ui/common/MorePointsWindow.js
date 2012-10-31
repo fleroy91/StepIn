@@ -134,7 +134,8 @@ function MorePointsWindow(tabGroup, options) {'use strict';
     }
     
     function runFBContactQuery(func) {
-        Ti.Facebook.requestWithGraphPath('me/friends', {fields:'id,name,last_name,gender,first_name,email,picture'}, 'GET', function(e) {
+        Ti.API.info("FB token = " + Ti.Facebook.getAccessToken());
+        Ti.Facebook.requestWithGraphPath('me/friends', {fields:'id,name,last_name,gender,first_name,picture'}, 'GET', function(e) {
             if(e.success && e.result) {
                 Ti.API.info("FB Result = " + e.result);
                 var FBResult = JSON.parse(e.result);
@@ -170,15 +171,27 @@ function MorePointsWindow(tabGroup, options) {'use strict';
                 niceClose(function() {
                     self.containingTab.open(swin, {animated:true});
                 });
+            } else {
+                alert("Connexion à Facebook impossible. Reessayez plus tard !");
             }
         });
     }
+    
+    FB_Listener = function(e) {
+        Ti.Facebook.removeEventListener('login', FB_Listener);
+        if(e.success) {
+            runFBContactQuery();
+        } else {
+            alert("Connexion à Facebook impossible. Reessayez plus tard !");
+        }  
+    };
         
     function inviteFBFriends() {
         if(Ti.Facebook.loggedIn) {
             runFBContactQuery();
         } else {
-            checkLogin(runFBContactQuery());
+            Ti.Facebook.addEventListener('login', FB_Listener);
+            Ti.Facebook.authorize();
         }    
     }
     

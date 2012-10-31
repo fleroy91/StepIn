@@ -524,32 +524,27 @@ function Shop(json) {'use strict';
         }
         
         // Then we add 2 views : for step and for scan
-        var stepInView = createButton(' +' + this.getPoints(Reward.ACTION_KIND_STEPIN) + ' steps', '/images/steps-small.png', 99);
-        if(self.checkin) {
-            stepInView.backgroundColor = '#eadae3';
-        }
-        internView.add(stepInView);
-        
-        stepInView.addEventListener('click', function(e) {
-            if(! self.checkin) {
-                alert("Entrez dans le magasin et gardez votre téléphone en main.\nVous gagnerez automatiquement des steps !");
-            } else {
-                stepInView.backgroundColor = '#eadae3';
-                alert("Vous avez déjà fait un Step-In aujourd'hui dans ce magasin ! Ré-essayez demain :-)");
-            }
-        });
-        
-        var scanView = createButton(' ' + this.scans.length + ' Articles', '/images/tag-small.png', 104);
-        scanView.left = null;        
+        var scanView = createButton(' ' + this.scans.length + ' Articles', '/images/tag-small.png', 90);
         internView.add(scanView);
-        
+
         scanView.addEventListener('click', function(e) {
             var ScanListWindow = require("/ui/common/ScanListWindow"),
                 swin = new ScanListWindow(self, tabGroup);
             tabGroup.openWindow(null, swin, {animated  :true});
         });
 
-        var middleView = createButton(' Partager', '/images/checked-small.png', 99);
+        var stepInView = createButton(' +' + this.allPossiblePoints + ' steps', '/images/steps-small.png', 122);
+        stepInView.left = null;        
+        internView.add(stepInView);
+        
+        stepInView.addEventListener('click', function(e) {
+            var ShopDetailWindow = require("ui/common/ShopDetailWindow"),
+                swin = new ShopDetailWindow(self, tabGroup);
+            
+            tabGroup.openWindow(null, swin, {animated:true});
+        });
+        
+        var middleView = createButton(' Partager', '/images/checked-small.png', 90);
         middleView.left = null;
         middleView.right = 0;
         internView.add(middleView);

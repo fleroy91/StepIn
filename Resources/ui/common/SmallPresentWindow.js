@@ -9,6 +9,7 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var AppUser = require("/model/AppUser");
 var Image = require("/etc/AppImage");
+require("ti.viewshadow");
 
 function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
     var t = Titanium.UI.create2DMatrix({ scale : 0 });
@@ -39,7 +40,7 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
         right : 5, bottom : 5,
         backgroundColor : 'white',
         shadow : {
-                shadowOffset : {x:1,y:1},
+                shadowOffset : {x:2,y:2},
                 shadowRadius : 2
             }
     });

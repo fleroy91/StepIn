@@ -174,6 +174,9 @@ function TabViewWindow(args) {
     tv.addEventListener('dragEnd', function(e) {
         labelDistance.visible = false;
     });
+    tv.addEventListener('scrollEnd', function(e) {
+        labelDistance.visible = false;
+    });
 
     self.add(listView);
     
