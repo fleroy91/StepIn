@@ -123,22 +123,52 @@ function TabViewWindow(args) {
         }
     });
     
-    /*
-	tv.addEventListener('click', function(e)
-	{
-	    if (e.rowData && e.rowData.object_index)
-		{
-            var row_index = e.index;
-            var obj_index = e.rowData.object_index;
-            var obj = AppUser.getShop(obj_index);
-			var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
-                swin = new ShopDetailWindow(obj, tabGroup);
-            
-			tabGroup.openWindow(self.containingTab,swin,{animated:true});
-		}
-	});
-	*/
-	
+    var labelDistance = Ti.UI.createLabel({
+        backgroundImage : '/images/bck-pink-60p.png',
+        color : 'white',
+        width : 48,
+        textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
+        font : { fontSize : 10, fontWeight : 'normal'},
+        visible : false,
+        right : 10,
+        opacity : 0.8
+    });
+    self.add(labelDistance);
+    
+    var tvHeight = null;
+    tv.addEventListener('scroll', function(e) {
+        var offset = e.contentOffset.y;
+        // We need to find the row associated to this offset
+        if(offset >= 0) {
+            var section = tv.getData();
+            if(section && section.length > 0) {
+                var rows = section[0].getRows();
+                var i, found = false, ntop = 0;
+                for(i = 0; ! found && rows && i < rows.length; i++) {
+                    var row = rows[i];
+                    if(ntop <= offset && ntop + row.height >= offset) {
+                        found = true;
+                        if(! tvHeight) {
+                            // We don't stop if we haven't computed the total height
+                            found = false;
+                        }
+                        labelDistance.setText(row.distance);
+                    }
+                    ntop += row.height;
+                }
+                if(! tvHeight) {
+                    tvHeight = ntop;
+                }
+            }
+            labelDistance.top = (offset / tvHeight * 366) + 37;
+            labelDistance.visible = true;
+        }
+    });
+    
+    tv.addEventListener('dragEnd', function(e) {
+        labelDistance.visible = false;
+    });
+
     self.add(listView);
     
     self.tv = tv;

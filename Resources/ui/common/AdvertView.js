@@ -9,29 +9,18 @@
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 function AdvertView(imgs, options) { 'use strict';
 
-    options.showPagingControl = false;
-    options.scrollingEnabled = false;
-    options.clipViews = false;
+    var self = Ti.UI.createImageView(options);
 
-    var self = Ti.UI.createScrollableView(options);
+    var nbImgs = imgs.length; 
+    var page = Math.max(0, Math.min(nbImgs - 1, Math.ceil(Math.random() * nbImgs)));
+    self.setImage(imgs[page]);
 
-    var nbImgs = imgs.length, i, views = [];
-    for(i = 0; i < nbImgs; i ++) {
-        var img = Ti.UI.createImageView({
-            image : imgs[i]
-        });
-        views.push(img);
-    }
-    var page = Math.min(0, Math.max(nbImgs - 1, Math.ceil(Math.random() * nbImgs)));
-    self.setViews(views);
-    self.setCurrentPage(page);
-        
     self.moveNext = function() {
         page ++;
-        if(page >= self.views.length) {
+        if(page >= nbImgs) {
             page = 0;
         }
-        self.scrollToView(page);
+        self.setImage(imgs[page]);
     };
     
     return self;

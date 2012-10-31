@@ -14,7 +14,7 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
     var t = Titanium.UI.create2DMatrix({ scale : 0 });
     
     var buttonHeight = 25;
-    var height = Math.min(2, prevPresents.length) * 40 + 60 + buttonHeight;
+    var height = Math.min(2, prevPresents.length) * 40 + 60 + buttonHeight + 10;
     
     var self = Ti.UI.createWindow({
         width : '100%',
@@ -22,16 +22,28 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
     });
 
     var view = Ti.UI.createView({
-        borderRadius : 4,
+        borderRadius : 1,
         borderColor : "#d92276",
-        borderWidth : 2,
+        borderWidth : 1,
         transform : t,
         top : 45,
         right : 5,
-        width : 250,
+        backgroundColor : '#f0f0f0',
+        width : 260,
         height : height,
         anchorPoint:{x:1,y:0}
     });
+    
+    var internView = Ti.UI.createView({
+        top : 5, left : 5,
+        right : 5, bottom : 5,
+        backgroundColor : 'white',
+        shadow : {
+                shadowOffset : {x:1,y:1},
+                shadowRadius : 2
+            }
+    });
+    view.add(internView);
     
     var user = AppUser.getCurrentUser();
     var points = user.getTotalPoints() || 0;
@@ -104,21 +116,10 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
     
     var tv = Ti.UI.createTableView({
         data : data,
-        backgroundColor : '#f0f0f0',
         top : 0,
         height : height - buttonHeight
     });
-    view.add(tv);
-    
-    /*
-    var opacView = Ti.UI.createView({
-        opacity : 0.5,
-        height : 40,
-        bottom : 0,
-        backgroundColor : 'black'
-    });
-    view.add(opacView);
-    */
+    internView.add(tv);
     
     var bt = Ti.UI.createButtonBar({
         style : Ti.UI.iPhone.SystemButtonStyle.BAR,
@@ -129,7 +130,7 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
         bottom : 0,
         zIndex : 10
     });
-    view.add(bt);
+    internView.add(bt);
     
     function niceClose(func) {
         var t3 = Ti.UI.create2DMatrix({scale : 0});

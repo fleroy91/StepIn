@@ -277,12 +277,12 @@ function Shop(json) {'use strict';
     // --------------------------------------------------------
     // For display in table view !
     // --------------------------------------------------------
-    this.setDistance = function(label, dist) {
-        if(dist && label) {
+    this.setDistance = function(row, dist) {
+        if(dist && row) {
             if(dist > 1000) {
-                label.setText("A " + Math.round(dist / 10) / 100 + " km.");
+                row.distance = "à " + Math.round(dist / 10) / 100 + " km.";
             } else {
-                label.setText("A " +dist + " m.");
+                row.distance = "à " +dist + " m.";
             }
         }
     };
@@ -414,17 +414,19 @@ function Shop(json) {'use strict';
         
         var ntop = (isBig ? 80 : 1);
         
-        var btShowMap = Ti.UI.createImageView({
+        var btShowMap = Ti.UI.createButton({
+            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
             image : '/images/bullet.png',
             width : 25, 
             height: 25,
             top : ntop + 23,
-            zIndex : 1,
+            zIndex : 100,
             right : 5
         });
         view.add(btShowMap);
         
-        var mapview = Ti.UI.createImageView({
+        var mapview = Ti.UI.createButton({
+            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
             borderRadius : 1,
             borderWidth : 2,
             borderColor : 'white',
@@ -435,10 +437,9 @@ function Shop(json) {'use strict';
             top : ntop,
             left : 9,
             shadow:{
-                shadowColor:'gray',
                 shadowRadius:2,
                 shadowOpacity:0.7,
-                shadowOffset:{x:3, y:3}
+                shadowOffset:{x:2, y:2}
             }
         });
         if(! isBig) {
@@ -472,7 +473,8 @@ function Shop(json) {'use strict';
             backgroundColor : '#f0f0f0',
             height : ntop + buttonHeight + advertHeight + 15 + 5,
             className : 'shopRow',
-            object_index : this.index
+            object_index : this.index,
+            selectedBackgroundColor :'#f0f0f0' 
         });
         var container = Ti.UI.createView({
             top : 5,
@@ -522,8 +524,8 @@ function Shop(json) {'use strict';
         }
         
         // Then we add 2 views : for step and for scan
-        var stepInView = createButton(' +' + this.getStepInPoints() + ' steps', '/images/steps-small.png', 99);
-        if(this.checkin) {
+        var stepInView = createButton(' +' + this.getPoints(Reward.ACTION_KIND_STEPIN) + ' steps', '/images/steps-small.png', 99);
+        if(self.checkin) {
             stepInView.backgroundColor = '#eadae3';
         }
         internView.add(stepInView);
@@ -532,6 +534,7 @@ function Shop(json) {'use strict';
             if(! self.checkin) {
                 alert("Entrez dans le magasin et gardez votre téléphone en main.\nVous gagnerez automatiquement des steps !");
             } else {
+                stepInView.backgroundColor = '#eadae3';
                 alert("Vous avez déjà fait un Step-In aujourd'hui dans ce magasin ! Ré-essayez demain :-)");
             }
         });
@@ -565,20 +568,21 @@ function Shop(json) {'use strict';
         row.moveNext = function() {
             advertView.moveNext();
         };
+        
+        this.updateRow(row);
+        
         return row;
     };
     
     this.updateRow = function(row) {
         // We run a distance computation
-        if(row.labelDistance) {
-            if(! this.hasOwnProperty('distance')) {
-                var self = this;
-                this.computeDistance(function(dist) {
-                    self.setDistance(row.labelDistance, dist);
-                });            
-            } else {
-                this.setDistance(row.labelDistance, this.distance);
-            }
+        if(! this.hasOwnProperty('distance')) {
+            var self = this;
+            this.computeDistance(function(dist) {
+                self.setDistance(row, dist);
+            });            
+        } else {
+            this.setDistance(row, this.distance);
         }
         return row;
     };

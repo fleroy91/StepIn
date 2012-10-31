@@ -128,7 +128,7 @@ DataManager.prototype.getList = function(obj, qparams, func) {'use strict';
         function(ret) {
             Ti.API.info('GET List answer : ' + JSON.stringify(ret));
             if(func) {
-                func(ret.array.resources);
+                func(ret && ret.array && ret.array.resources);
             } 
         }
     );

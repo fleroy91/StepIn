@@ -89,7 +89,8 @@ function Scan(json) {'use strict';
     };
     
     this.addOverHeader = function(view) {
-        var img = Ti.UI.createImageView({
+        var img = Ti.UI.createButton({
+            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
             borderRadius : 1,
             borderWidth : 2,
             borderColor : 'darkgray',
@@ -99,10 +100,9 @@ function Scan(json) {'use strict';
             top : 1,
             left : 9,
             shadow:{
-                shadowColor:'gray',
                 shadowRadius:2,
-                shadowOpacity:0.8,
-                shadowOffset:{x:3, y:3}
+                shadowOpacity:0.7,
+                shadowOffset:{x:2, y:2}
             }
         });
         view.add(img);
