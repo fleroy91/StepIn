@@ -193,7 +193,7 @@ function ApplicationTabGroup() { 'use strict';
         return ret;
     }
     self.addNewObject = function(obj) {
-        var row = obj.createTableRow();
+        var row = obj.createTableRow(self);
         self.tvSearch.appendRow(row, {animated: true});
         if(self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
@@ -496,7 +496,7 @@ function ApplicationTabGroup() { 'use strict';
             if(shopFound) {
                 Ti.API.info("Shop found for code : " + code + " :" + shopFound.getJSON());
                 // We create a reward
-                var row = shopFound.createTableRow();
+                var row = shopFound.createTableRow(self);
                 self.tvSearch.updateRow(row_index, row);
                 
                 var Reward = require("model/Reward"), 
@@ -519,7 +519,7 @@ function ApplicationTabGroup() { 'use strict';
                         allCodes.push(code);
                         var newShop = AppUser.getShop(obj_index);
                         newShop.checkin = true;
-                        var row = newShop.createTableRow();
+                        var row = newShop.createTableRow(self);
                         self.tvSearch.updateRow(row_index, row);
                         newShop.saveAll();
                         swin.setObject(newShop);
@@ -613,7 +613,7 @@ function ApplicationTabGroup() { 'use strict';
                     if(rows[i].object_index) {
                         var s = AppUser.getShop(rows[i].object_index);
                         if(s.changed) {
-                            var row = s.createTableRow();
+                            var row = s.createTableRow(self);
                             self.tvSearch.updateRow(i, row);
                             s.changed = false;
                             AppUser.updateShop(s);
@@ -637,6 +637,18 @@ function ApplicationTabGroup() { 'use strict';
     );
     */
     
+    function moveNext() {   
+        var section = self.tvSearch.getData(); 
+        if(section && section.length > 0) {
+            var rows = section[0].getRows();
+            var i;
+            for(i = 0; rows && i < rows.length; i++) {
+                rows[i].moveNext();
+            }
+        }
+    }
+    setInterval(moveNext, 3000);
+
 	return self;
 }
 

@@ -68,6 +68,9 @@ function TabViewWindow(args) {
 	
 	var tv = TV.create({ 
 	}, refresh);
+	tv.separatorStyle = Ti.UI.iPhone.TableViewSeparatorStyle.NONE;
+	tv.allowsSelection = false;
+	
 	listView.add(tv);
 	self.add(listView);
     
@@ -120,6 +123,7 @@ function TabViewWindow(args) {
         }
     });
     
+    /*
 	tv.addEventListener('click', function(e)
 	{
 	    if (e.rowData && e.rowData.object_index)
@@ -133,6 +137,7 @@ function TabViewWindow(args) {
 			tabGroup.openWindow(self.containingTab,swin,{animated:true});
 		}
 	});
+	*/
 	
     self.add(listView);
     

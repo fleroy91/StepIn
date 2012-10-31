@@ -16,6 +16,7 @@ var Image = require("/etc/AppImage");
 var Scan = require("/model/Scan");
 var AppUser = require("/model/AppUser");
 var Reward = require("/model/Reward");
+require("ti.viewshadow");
 
 var _currentShop = null;
 // var _currentObject = null;
@@ -460,79 +461,110 @@ function Shop(json) {'use strict';
         mapview.addEventListener('click', showMap);
     };
     
-    this.createTableRow = function() {
-        var internBorder = 2;
-        var internHeight = 75;
-        var labelHeight = Math.round((internHeight - 2 * internBorder) / 3);
-        var allPoints = this.allPossiblePoints;
-        var stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN);
-        var scanPoints = allPoints - stepinPoints;
-         
-        var row = Ti.UI.createTableViewRow({
-            className : 'shopRow',
-            height : internHeight + 2 * internBorder,
-            backgroundColor : (this.checkin ? '#eadae3' : '#f0f0f0')
-        });
+    this.createTableRow = function(tabGroup) {
+        var self = this;
+        var ntop = 133;
+        var nleft = 0;
+        var buttonHeight = 35;
+        var advertHeight = 45;
         
-        var img = Ti.UI.createImageView({
+        var row = Ti.UI.createTableViewRow({
+            backgroundColor : '#f0f0f0',
+            height : ntop + buttonHeight + advertHeight + 15 + 5,
+            className : 'shopRow',
+            object_index : this.index
+        });
+        var container = Ti.UI.createView({
+            top : 5,
             left : 5,
-            height : 60,
-            width : 60,
-            borderWith : 0,
-            borderRadius : 0,
-            shadow:{
-                shadowColor:'gray',
-                shadowRadius:2,
-                shadowOpacity:0.3,
-                shadowOffset:{x:2, y:2}
+            right : 5,
+            bottom : 5,
+            backgroundColor : 'white',
+            borderRadius:2,
+            borderColor : '#bdbfc3',
+            shadow : {
+                shadowOffset : {x:1,y:1},
+                shadowRadius : 2
+            } 
+        });
+        row.add(container);
+        
+        var internView = Ti.UI.createView({
+            top : 5,
+            left : 5,
+            right : 5,
+            bottom : 5
+        });
+        container.add(internView);
+        
+        var view = this.createHeader(true);
+        internView.add(view);
+        
+        this.addOverHeader(internView, tabGroup, true);
+        
+        function createButton(title, image, width) {
+            var ret = Ti.UI.createButton({
+                style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+                image : image,
+                title : title,
+                font:{fontSize : 12, fontWeight : 'normal'},
+                color : '#d92276',
+                backgroundImage : '/images/bck-gradient-button.png',
+                borderRadius : 0,
+                borderColor : '#bdbfc3',
+                width : width,
+                height : buttonHeight,
+                top : ntop,
+                left : nleft
+            });
+            nleft += width - 1;
+            return ret;
+        }
+        
+        // Then we add 2 views : for step and for scan
+        var stepInView = createButton(' +' + this.getStepInPoints() + ' steps', '/images/steps-small.png', 99);
+        if(this.checkin) {
+            stepInView.backgroundColor = '#eadae3';
+        }
+        internView.add(stepInView);
+        
+        stepInView.addEventListener('click', function(e) {
+            if(! self.checkin) {
+                alert("Entrez dans le magasin et gardez votre téléphone en main.\nVous gagnerez automatiquement des steps !");
+            } else {
+                alert("Vous avez déjà fait un Step-In aujourd'hui dans ce magasin ! Ré-essayez demain :-)");
             }
         });
-        Image.cacheImage(this.getPhotoUrl(0), function(image) {
-            img.setImage(Image.squareImage(image, 60));
-        }); 
-        row.add(img);
         
-        var btAction = Ti.UI.createImageView({
-            image : (allPoints > 0 ? '/images/bullet.png' : '/images/checked.png'),
-            width : 25,
-            height : 25,
-            right : 5
+        var scanView = createButton(' ' + this.scans.length + ' Articles', '/images/tag-small.png', 104);
+        scanView.left = null;        
+        internView.add(scanView);
+        
+        scanView.addEventListener('click', function(e) {
+            var ScanListWindow = require("/ui/common/ScanListWindow"),
+                swin = new ScanListWindow(self, tabGroup);
+            tabGroup.openWindow(null, swin, {animated  :true});
         });
-        row.add(btAction);
-    
-        var vPoints = Image.createIconsPointView(allPoints, (stepinPoints > 0), (scanPoints > 0),
-        {
-            right : 20,
-            height : 60
-        });
-        row.add(vPoints);
 
-        var labelName = Ti.UI.createLabel({
-            font : {fontSize: 14, fontWeight : 'bold'},
-            color:'#323232',
-            text : this.getName(),
-            left : 70,
-            top : 23,
-            width : 140, 
-            height : labelHeight
-        });
-        row.add(labelName);
+        var middleView = createButton(' Partager', '/images/checked-small.png', 99);
+        middleView.left = null;
+        middleView.right = 0;
+        internView.add(middleView);
         
-        var labelDistance = Ti.UI.createLabel({
-            font : {fontSize: 12},
-            color : '#646464', 
-            text : null,
-            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
-            left : labelName.left,
-            top : 40,
-            width : labelName.width,
-            height : labelHeight
+        ntop += buttonHeight;
+        
+        // then we add the advert
+        var AdvertView = require("ui/common/AdvertView"),
+            advertView = new AdvertView(['/images/advert1.png', '/images/advert2.png', '/images/advert3.png'], {
+                height : advertHeight,
+                bottom : 0,
+                backgroundColor : 'white'
         });
-        row.add(labelDistance);
-        row.labelDistance = labelDistance;
-        this.updateRow(row);
-                
-        row.object_index = this.index;
+        internView.add(advertView);
+        
+        row.moveNext = function() {
+            advertView.moveNext();
+        };
         return row;
     };
     

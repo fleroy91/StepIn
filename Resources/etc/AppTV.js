@@ -79,6 +79,7 @@ TV.create = function(options, onReload) { 'use strict';
     
     var tableView = Ti.UI.createTableView(options);
     tableView.headerPullView = tableHeader;
+    tableView.manageScroll = true;
     
     var pulling = false;
     var reloading = false;
@@ -108,7 +109,7 @@ TV.create = function(options, onReload) { 'use strict';
     var offset = 0;
     tableView.addEventListener('scroll',function(e)
     {
-        if(! reloading) {
+        if(e.source.manageScroll && ! reloading) {
             var t;
             offset = e.contentOffset.y;
             if (offset <= -65.0 && !pulling)
@@ -131,7 +132,7 @@ TV.create = function(options, onReload) { 'use strict';
     
     tableView.addEventListener('dragEnd',function(e)
     {
-        if (pulling && !reloading && offset <= -65.0)
+        if (e.source.manageScroll && pulling && !reloading && offset <= -65.0)
         {
             reloading = true;
             pulling = false;
