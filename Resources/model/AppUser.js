@@ -130,6 +130,27 @@ function AppUser(json) {'use strict';
             func(data);
         });
     };
+    
+    this.getShopsLocation = function() {
+        var i;
+        var ret = { lat : 48.33, lng : 2.22};
+        var l = 0, L = 0, nb = 0;
+        for(i = 0; i < Ti.App.allShops.length; i++) {
+            var shop = Ti.App.allShops[i];
+            var shopLoc = shop.location;
+            if(shopLoc) {
+                nb ++;
+                l+= shopLoc.lat;
+                L+= shopLoc.lng;
+            }
+        }
+        if(nb > 0) {
+            // then we compute the average
+            ret.lat = l / nb;
+            ret.lng = L / nb;
+        }
+        return ret;
+    };
 
     this.retrieveInvitations = function(func) {
         if(! this.isDummy()) {

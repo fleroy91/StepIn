@@ -48,7 +48,7 @@ function TabViewWindow(args) {
     function createMapView() {
         if(! mapView) {
             var user = AppUser.getCurrentUser(); 
-            var userloc = user.location;
+            var userloc = user.getShopsLocation();
             mapView = Ti.Map.createView({
                 mapType : Titanium.Map.STANDARD_TYPE,
                 animate : true,
@@ -75,12 +75,13 @@ function TabViewWindow(args) {
 	self.add(listView);
     
     var mapViewOk = false;
+    var updateMapViewComplete;
+    
     function updateMapView() {
         if(mapView) {
             mapViewOk = true;
             Ti.API.info("In update Map View !!!");
             mapView.removeAllAnnotations();
-            var anns = [];
             var section = tv.getData();
             if(section && section.length > 0) {
                 var rows = section[0].getRows();
@@ -90,13 +91,18 @@ function TabViewWindow(args) {
                         var obj_index = rows[i].object_index;
                         var obj = AppUser.getShop(obj_index);
                         var ann = obj.createAnnotation(tabGroup);
-                        anns.push(ann);
+                        mapView.addAnnotation(ann);
                     }
                 }
             }
-            mapView.addAnnotations(anns);
         }
     }
+    
+    updateMapViewComplete = function (e) {
+        Ti.API.info("In mapview complete");
+        mapView.removeEventListener('complete', updateMapViewComplete);
+        updateMapView(e);
+    };
 
     btChangeView.addEventListener('click', function(e) {
         if(! mapView) {
@@ -108,11 +114,12 @@ function TabViewWindow(args) {
             if(viewList) {
                 listView.hide();
                 mapView.setUserLocation(true);
-                mapView.show();
-                mapView.addEventListener('complete', updateMapView);
                 if(mapViewOk) {
-                    updateMapView();                    
+                    updateMapView();
+                } else {
+                    mapView.addEventListener('complete', updateMapViewComplete);
                 }
+                mapView.show();
             } else {
                 mapView.hide();
                 mapView.setUserLocation(false);
@@ -135,7 +142,8 @@ function TabViewWindow(args) {
     });
     self.add(labelDistance);
     
-    var tvHeight = null;
+    var rowHeight = null;
+    var curRow = null;
     tv.addEventListener('scroll', function(e) {
         var offset = e.contentOffset.y;
         // We need to find the row associated to this offset
@@ -143,25 +151,23 @@ function TabViewWindow(args) {
             var section = tv.getData();
             if(section && section.length > 0) {
                 var rows = section[0].getRows();
-                var i, found = false, ntop = 0;
-                for(i = 0; ! found && rows && i < rows.length; i++) {
-                    var row = rows[i];
-                    if(ntop <= offset && ntop + row.height >= offset) {
-                        found = true;
-                        if(! tvHeight) {
-                            // We don't stop if we haven't computed the total height
-                            found = false;
-                        }
-                        labelDistance.setText(row.distance);
+                if(rows && rows.length > 0) {
+                    if(! rowHeight) {
+                        // We get the first row height
+                        rowHeight = rows[0].height;
                     }
-                    ntop += row.height;
-                }
-                if(! tvHeight) {
-                    tvHeight = ntop;
+                    if(rowHeight) {
+                        var cur = Math.ceil(offset / rowHeight);
+                        if(cur !== curRow) {
+                            curRow = cur;
+                            labelDistance.setText(rows[cur].distance);
+                        }
+                    } 
+                    var tvHeight = rows.length * rowHeight;
+                    labelDistance.top = (offset / tvHeight * 366) + 37;
+                    labelDistance.visible = true;
                 }
             }
-            labelDistance.top = (offset / tvHeight * 366) + 37;
-            labelDistance.visible = true;
         }
     });
     

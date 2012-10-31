@@ -78,7 +78,7 @@ function MultiSelectContactWindow(people, pointsToInvite, pointsIfInviteOk, tabG
         return row;
     }
         
-    var i, data = [], index = [], previousLetter, previousIndex;
+    var i, data = [], index = [], previousLetter = String.fromCharCode("A".charCodeAt(0) - 1), previousIndex;
     var l;
     for(i = 0; i < people.length; i++) {
         var person = people[i];

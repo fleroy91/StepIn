@@ -419,7 +419,7 @@ function Shop(json) {'use strict';
             image : '/images/bullet.png',
             width : 25, 
             height: 25,
-            top : ntop + 23,
+            top : ntop + 21,
             zIndex : 100,
             right : 5
         });
