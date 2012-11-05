@@ -1,0 +1,3 @@
+Release Notes de la version :  0.6.3
+- Mise au point du design
+
