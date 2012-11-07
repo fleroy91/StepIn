@@ -471,7 +471,7 @@ function Shop(json) {'use strict';
         
         var row = Ti.UI.createTableViewRow({
             backgroundColor : '#f0f0f0',
-            height : ntop + buttonHeight + advertHeight + 15 + 5,
+            height : ntop + buttonHeight + 0 * advertHeight + 15 + 5,
             className : 'shopRow',
             object_index : this.index,
             selectedBackgroundColor :'#f0f0f0' 
@@ -558,7 +558,7 @@ function Shop(json) {'use strict';
                 bottom : 0,
                 backgroundColor : 'white'
         });
-        internView.add(advertView);
+        // internView.add(advertView);
         
         row.moveNext = function() {
             advertView.moveNext();
