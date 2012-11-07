@@ -22,9 +22,9 @@ function TabViewWindow(args) {
     var tabGroup = args.tabGroup;
     var self = Ti.UI.createWindow({
         navBarHidden : false,
-        backgroundColor : '#f0f0f0',
+        backgroundColor : '#ffffff',
         barImage : '/images/topbar-stepin.png',
-        barColor : 'black'
+        barColor : 'white'
     });
     
     var viewList = true;
@@ -41,7 +41,17 @@ function TabViewWindow(args) {
         tabGroup.getAllObjects();
 	}
 	
+	var advertHeight = 45;
+    var AdvertView = require("ui/common/AdvertView"),
+        advertView = new AdvertView(['/images/advert2.png', '/images/advert3.png'], {
+            height : advertHeight,
+            top : 0,
+            backgroundColor : 'white'
+    });
+	
 	var listView = Ti.UI.createView({ top : 0});
+    listView.add(advertView);
+    self.advertView = advertView;
 
     var mapView = null;
     
@@ -66,7 +76,7 @@ function TabViewWindow(args) {
         }
     }
 	
-	var tv = TV.create({ 
+	var tv = TV.create({ top : advertHeight
 	}, refresh);
 	tv.separatorStyle = Ti.UI.iPhone.TableViewSeparatorStyle.NONE;
 	tv.allowsSelection = false;
@@ -164,7 +174,7 @@ function TabViewWindow(args) {
                         }
                     } 
                     var tvHeight = rows.length * rowHeight;
-                    labelDistance.top = (offset / tvHeight * 366) + 37;
+                    labelDistance.top = (offset / tvHeight * 366) + 37 + advertHeight;
                     labelDistance.visible = true;
                 }
             }

@@ -369,7 +369,7 @@ function Shop(json) {'use strict';
                 header.setBackgroundImage(image);
             });
         } else {
-            header.setBackgroundColor('#d92276');
+            header.setBackgroundColor(Ti.App.PinkColor);
         }
             
         // we create a view for shop details in the header
@@ -408,7 +408,7 @@ function Shop(json) {'use strict';
         return header;
     };
     
-    this.addOverHeader = function(view, tabGroup, isBig) {
+    this.addOverHeader = function(view, tabGroup, isBig, gotoShop) {
         var internBorder = 2;
         var shop = this;
         
@@ -431,11 +431,10 @@ function Shop(json) {'use strict';
             borderWidth : 2,
             borderColor : 'white',
             zIndex : 100,
-            height : 60,
-            width : 60,
-            bottom : 2,
-            top : ntop,
-            left : 9,
+            height : 55,
+            width : 55,
+            top : ntop + 2,
+            left : 8,
             shadow:{
                 shadowRadius:2,
                 shadowOpacity:0.7,
@@ -458,7 +457,12 @@ function Shop(json) {'use strict';
             tabGroup.activeTab.open(swin, {animated:true});
         }
             
-        btShowMap.addEventListener('click', showMap);
+        if(gotoShop) {
+            btShowMap.addEventListener('click', gotoShop);
+        } else {
+            btShowMap.addEventListener('click', showMap);
+            
+        }
         mapview.addEventListener('click', showMap);
     };
     
@@ -466,12 +470,13 @@ function Shop(json) {'use strict';
         var self = this;
         var ntop = 133;
         var nleft = 0;
-        var buttonHeight = 35;
+        var buttonHeight = 30;
         var advertHeight = 45;
+        var socialHeight = 40;
         
         var row = Ti.UI.createTableViewRow({
-            backgroundColor : '#f0f0f0',
-            height : ntop + buttonHeight + 0 * advertHeight + 15 + 5,
+            backgroundColor : '#ffffff',
+            height : ntop + buttonHeight + socialHeight + 15 + 5,
             className : 'shopRow',
             object_index : this.index,
             selectedBackgroundColor :'#f0f0f0' 
@@ -501,8 +506,57 @@ function Shop(json) {'use strict';
         
         var view = this.createHeader(true);
         internView.add(view);
+
+        function gotoShop() {
+            var ShopDetailWindow = require("ui/common/ShopDetailWindow"),
+                swin = new ShopDetailWindow(self, tabGroup);
+            
+            tabGroup.openWindow(null, swin, {animated:true});
+        }
         
-        this.addOverHeader(internView, tabGroup, true);
+        view.addEventListener('click', gotoShop);
+        
+        this.addOverHeader(internView, tabGroup, true, gotoShop);
+        
+        var socialView = Ti.UI.createView({
+            top : ntop,
+            height : socialHeight,
+            backgroundColor : 'white',
+            borderRadius : 0,
+            borderColor : '#bdbfc3'
+        });
+        
+        var lblSocial = Ti.UI.createLabel({
+            font : {fontSize : 12},
+            color : Ti.App.PinkColor,
+            text : "+5250 steps gagnés cette semaine",
+            width : 200,
+            left : 2
+        });
+        socialView.add(lblSocial);
+        
+        var nright = 2;
+        function addPic(image) {
+            var pic = Ti.UI.createImageView({
+                image : image,
+                width : 30,
+                height : 30,
+                right : nright,
+                shadow : {
+                    shadowOffset : {x:1,y:1},
+                    shadowRadius : 2
+                }
+            });
+            socialView.add(pic);
+            nright += 32;
+        }
+        addPic('/images/pic_fred.jpg');
+        addPic('/images/pic_olivier.jpg');
+        addPic('/images/pic_daniel.jpg');
+        
+        internView.add(socialView);
+        
+        ntop += socialHeight;
         
         function createButton(title, image, width) {
             var ret = Ti.UI.createButton({
@@ -510,7 +564,7 @@ function Shop(json) {'use strict';
                 image : image,
                 title : title,
                 font:{fontSize : 12, fontWeight : 'normal'},
-                color : '#d92276',
+                color : Ti.App.PinkColor,
                 backgroundImage : '/images/bck-gradient-button.png',
                 borderRadius : 0,
                 borderColor : '#bdbfc3',
@@ -526,7 +580,7 @@ function Shop(json) {'use strict';
         // Then we add 2 views : for step and for scan
         var scanView = createButton(' ' + this.scans.length + ' Articles', '/images/tag-small.png', 90);
         internView.add(scanView);
-
+        
         scanView.addEventListener('click', function(e) {
             var ScanListWindow = require("/ui/common/ScanListWindow"),
                 swin = new ScanListWindow(self, tabGroup);
@@ -537,12 +591,7 @@ function Shop(json) {'use strict';
         stepInView.left = null;        
         internView.add(stepInView);
         
-        stepInView.addEventListener('click', function(e) {
-            var ShopDetailWindow = require("ui/common/ShopDetailWindow"),
-                swin = new ShopDetailWindow(self, tabGroup);
-            
-            tabGroup.openWindow(null, swin, {animated:true});
-        });
+        stepInView.addEventListener('click', gotoShop);
         
         var middleView = createButton(' Partager', '/images/checked-small.png', 90);
         middleView.left = null;

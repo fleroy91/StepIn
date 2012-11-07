@@ -12,7 +12,7 @@ var Image = require("/etc/AppImage");
 
 function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
     var self = Ti.UI.createWindow({
-        backgroundColor : '#d92276'
+        backgroundColor : Ti.App.PinkColor
     });
     
     var canScan = args.canScan;
@@ -118,7 +118,7 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
         image : "/images/tag.png",
         style:Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
         backgroundColor : 'white',
-        borderColor : '#d92276',
+        borderColor : Ti.App.PinkColor,
         borderWidth : 1,
         borderRadius : 2,
         height : 35,

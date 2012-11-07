@@ -29,7 +29,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         allowsSelection : true,
         scrollable : false,
         style : Titanium.UI.iPhone.TableViewStyle.PLAIN,
-        backgroundColor : '#f0f0f0'
+        backgroundColor : 'white'
     });
     
     function createRow(image, title, detail, points, withAction) {

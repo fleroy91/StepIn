@@ -140,7 +140,7 @@ function MultiSelectContactWindow(people, pointsToInvite, pointsIfInviteOk, tabG
     
     var btOk = Ti.UI.createButtonBar({
         labels : ["Inviter"],
-        backgroundColor : '#d92276',
+        backgroundColor : Ti.App.PinkColor,
         color : 'white',
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
         height : 30

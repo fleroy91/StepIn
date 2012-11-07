@@ -14,7 +14,7 @@ var Spinner = require("/etc/AppSpinner");
 
 function AccountWindow(args) {'use strict';
 	var self = Ti.UI.createWindow({ 
-	    backgroundColor : '#f0f0f0',
+	    backgroundColor : 'white',
 	    barImage : '/images/topbar-stepin.png',
 	    barColor : 'black'
     });
@@ -178,7 +178,7 @@ function AccountWindow(args) {'use strict';
 	    data : data,
 		footerView : fv,
 		headerView : header,
-		backgroundColor : '#f0f0f0',
+		backgroundColor : 'white',
 		style:Titanium.UI.iPhone.TableViewStyle.GROUPED
 	});
 	self.add(tv);

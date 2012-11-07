@@ -530,7 +530,7 @@ Image.createPointView_v1 = function(points, height, width, disabled, options) { 
     var pv = Ti.UI.createView({
         height : height
     });
-    var color = (disabled ? '#b9b9b9' :  '#d92276'); 
+    var color = (disabled ? '#b9b9b9' :  Ti.App.PinkColor); 
     var lblOptions = {
         text : '+' + points,
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
@@ -559,7 +559,7 @@ Image.createPointView_v2 = function(points, height, width, disabled, options) { 
     var pv = Ti.UI.createView(options);
     pv.height = height;
     pv.width = width;
-    var color = (disabled ? '#b9b9b9' :  '#d92276');
+    var color = (disabled ? '#b9b9b9' :  Ti.App.PinkColor);
 
     var lblOptions = {
         text : (disabled ? '✔ ' : '+') + points,
@@ -598,7 +598,7 @@ Image.createIconsPointView_v1 = function(points, stepin, scanin, options) { 'use
     var size = Math.round(options.height/ 2); 
     options.width = 90;
     var pv = Ti.UI.createView(options);
-    var color = '#d92276';
+    var color = Ti.App.PinkColor;
     
     var lblOptions = {
         text : '+' + points,
@@ -647,7 +647,7 @@ Image.createIconsPointView_v2 = function(points, stepin, scanin, options) { 'use
     var size = Math.round(options.height); 
     options.width = 90;
     var pv = Ti.UI.createView(options);
-    var color = '#d92276';
+    var color = Ti.App.PinkColor;
     
     var lblOptions = {
         text : '+' + points,

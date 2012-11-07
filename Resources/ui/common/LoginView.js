@@ -39,7 +39,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
         borderRadius : 10,
         borderWidth : 2,
         borderColor : 'white',
-        backgroundColor : '#d92276',
+        backgroundColor : Ti.App.PinkColor,
         color: 'white',
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
         font : {fontSize : 12, fontWeight : 'bold'},
@@ -129,7 +129,7 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
     var btConnect = Ti.UI.createButtonBar({
         labels : ['Valider'],
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        backgroundColor : '#d92276',
+        backgroundColor : Ti.App.PinkColor,
         height : 40,
         width : '90%',
         top : ntop

@@ -23,7 +23,7 @@ Spinner.show = function(win) { 'use strict';
             zIndex : 1000,
             style : Titanium.UI.iPhone.ActivityIndicatorStyle.BIG,
             font : {fontFamily:'Helvetica Neue', fontSize:15,fontWeight:'bold'},
-            indicatorColor : '#d92276'
+            indicatorColor : Ti.App.PinkColor
         });
         win.add(spinner);
         win.spinner = spinner;

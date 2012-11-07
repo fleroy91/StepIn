@@ -7,6 +7,8 @@
 // 
 /*global Ti: true, Titanium : true, TV : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
+require("ti.viewshadow");
+
 /** 
  * Big scroll views of boxes with shadow
  * 
@@ -16,9 +18,10 @@
  */
 function BigScrollView(options, subviewWidth, subviewHeight) { 'use strict';
     options.scrollType = 'vertical';
+    options.backgroundColor = 'white';
     
     subviewWidth = subviewWidth || 142;
-    subviewHeight = subviewHeight || 140;
+    subviewHeight = subviewHeight || options.data[0].height;
     
     var containerWidth = (160 / 142) * subviewWidth;
     var containerHeight = (156 / 140) * subviewHeight;
@@ -34,16 +37,29 @@ function BigScrollView(options, subviewWidth, subviewHeight) { 'use strict';
         var container = Ti.UI.createView({
             width : containerWidth,
             height : containerHeight,
-            backgroundImage : '/images/bck-shadow.png',
+            // backgroundImage : '/images/bck-shadow.png',
+            // backgroundColor : 'white',
             top : ntop,
             left : nleft
         });
         
-        subview.width = subviewWidth;
-        subview.height = subviewHeight;
-        subview.right = subview.bottom = null;
         subview.top = (156 - 140) / 2 - 1; 
         subview.left = 10;
+        var shadowView = Ti.UI.createView({
+            width : subview.width,
+            height : subview.height,
+            shadow :{
+                shadowRadius:2,
+                shadowOpacity:0.7,
+                shadowOffset:{x:2, y:2}
+            },
+            top : subview.top,
+            left : subview.left,
+            zIndex : -1
+        });
+        subview.right = subview.bottom = null;
+        subview.backgroundColor = 'white';
+        container.add(shadowView);
         container.add(subview);
         view.add(container);
         

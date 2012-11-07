@@ -16,13 +16,13 @@ TV.create = function(options, onReload) { 'use strict';
     }
 
     var border = Ti.UI.createView({
-        backgroundColor:"#576c89",
+        backgroundColor:"#f0f0f0",
         height:2,
         bottom:0
     });
     
     var tableHeader = Ti.UI.createView({
-        backgroundColor:"#f0f0f0",
+        backgroundColor:'#f0f0f0',
         width:320,
         height:60
     });

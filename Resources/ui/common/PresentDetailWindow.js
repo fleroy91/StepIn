@@ -29,7 +29,7 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
         top : y,
         width : '90%',
         height : '90%',
-        backgroundColor : '#f0f0f0',
+        backgroundColor : 'white',
         anchorPoint:{x:0.5,y:0.5}
     });
     
@@ -81,17 +81,17 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
     });
     view.add(lblConditions);
     
-    var lblPoints = Ti.UI.createLabel({
+    var lblPoints = Image.createPointView(pointsRequired, 40, 120, null, {
         bottom : 60,
-        color : '#d92276',
+        color : Ti.App.PinkColor,
         font : {fontSize : 14},
         height : 18
-    });
+    }); 
     view.add(lblPoints);
     
     var bt = Ti.UI.createButtonBar({
         bottom : 10,
-        backgroundColor:'#d92276',
+        backgroundColor:Ti.App.PinkColor,
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
         height:25,
         width : '70%'
@@ -141,12 +141,12 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
     view.update = function(totalPoints) {
         if(pointsRequired <= totalPoints || (totalPoints - pointsRequired) >= 1000) {
             convert = true;
-            lblPoints.setText(pointsRequired + ' steps');
+            // lblPoints.setText(pointsRequired + ' steps');
             bt.setLabels([{title:'Echanger ce cadeau'}]);
-            bt.setBackgroundColor('#d92276');
+            bt.setBackgroundColor(Ti.App.PinkColor);
         } else {
             convert = false;
-            lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
+            // lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
             bt.setLabels([{title:'Gagner plus de points'}]);
             bt.setBackgroundColor('#dedede');
         }
@@ -155,6 +155,8 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
     view.update(user.getTotalPoints());
     
     var btClose = Ti.UI.createButton({
+        style : Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
+        borderWidth : 0,
         image : '/images/close.png',
         top : 5,
         right : 5

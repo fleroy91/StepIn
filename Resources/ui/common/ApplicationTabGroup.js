@@ -250,7 +250,7 @@ function ApplicationTabGroup() { 'use strict';
             height : 16,
             width : viewWidth,
             borderRadius : 4,
-            borderColor : '#d92276',
+            borderColor : Ti.App.PinkColor,
             borderWidth : 1
         });
         enclosingView.add(view);
@@ -258,7 +258,7 @@ function ApplicationTabGroup() { 'use strict';
             width : w,
             left:0,
             height : view.height,
-            backgroundColor : '#d92276',
+            backgroundColor : Ti.App.PinkColor,
             borderRadius : view.borderRadius,
             borderWidth : 0
         });
@@ -632,20 +632,13 @@ function ApplicationTabGroup() { 'use strict';
     overrideTabs(
         self,
         { backgroundColor: '#f00' },
-        { backgroundColor: '#d92276', color: '#000' },
+        { backgroundColor: Ti.App.PinkColor, color: '#000' },
         { backgroundColor: '#333', color: '#888' }
     );
     */
     
-    function moveNext() {   
-        var section = self.tvSearch.getData(); 
-        if(section && section.length > 0) {
-            var rows = section[0].getRows();
-            var i;
-            for(i = 0; rows && i < rows.length; i++) {
-                rows[i].moveNext();
-            }
-        }
+    function moveNext() {
+        winSearch.advertView.moveNext();   
     }
     setInterval(moveNext, 3000);
 

@@ -305,7 +305,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
             color : 'white',
             bottom : 3,
             height : 22,
-            backgroundColor : '#d92276'
+            backgroundColor : Ti.App.PinkColor
         });
         row.add(bt);
         

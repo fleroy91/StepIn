@@ -76,7 +76,7 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
         bottom : 0,
         right : 120,
         color : 'white',
-        shadowColor : '#d92276',
+        shadowColor : Ti.App.PinkColor,
         shadowOffset : {x:3, y:3}
     });
     middleView.add(vPoints);
@@ -88,7 +88,7 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
         text : "steps",
         font : {fontSize : 20, fontWeight : 'normal'},
         color : 'white',
-        shadowColor : '#d92276',
+        shadowColor : Ti.App.PinkColor,
         shadowOffset : {x:3, y:3}
     });
     middleView.add(lblSmall);
@@ -98,7 +98,7 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
     var continueButton = Ti.UI.createButtonBar({
         labels : ['Continuer à gagner des points'],
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        backgroundColor : '#d92276',
+        backgroundColor : Ti.App.PinkColor,
         height : 40,
         width : '90%',
         top : 220

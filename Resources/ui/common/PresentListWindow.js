@@ -15,7 +15,7 @@ function PresentListWindow(tabGroup, options) {'use strict';
         
 	var self = Ti.UI.createWindow({ 
 	    title : 'Les cadeaux !', 
-	    backgroundColor : '#f0f0f0',
+	    backgroundColor : '#ffffff',
         barImage : '/images/topbar-stepin.png',
         barColor : 'black'
     });
@@ -42,8 +42,7 @@ function PresentListWindow(tabGroup, options) {'use strict';
 
         var view = Ti.UI.createView({
             width : 142,
-            height : 140,
-            backgroundColor : 'white'
+            height : 125
         });
         
         var lblTitle = Ti.UI.createLabel({
@@ -65,23 +64,24 @@ function PresentListWindow(tabGroup, options) {'use strict';
             img.setImage(image); 
         });
         
-        var lblPoints = Ti.UI.createLabel({
+        var lblPoints = Image.createPointView(pointsRequired, 30, Ti.UI.FILL, null, {
             top : 90,
-            color : '#d92276',
+            color : Ti.App.PinkColor,
             font : {fontSize : 10},
-            height : 18
+            height : 30,
+            right : 20
         });
         view.add(lblPoints);
         
         var bt = Ti.UI.createButtonBar({
             bottom : 2,
-            backgroundColor:'#d92276',
+            backgroundColor:Ti.App.PinkColor,
             style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
             height:25,
             present : present,
             width : 135
         });
-        view.add(bt);
+        // view.add(bt);
         
         bt.addEventListener('click', function(e) {
             if(convert) {
@@ -121,12 +121,12 @@ function PresentListWindow(tabGroup, options) {'use strict';
         view.update = function(totalPoints) {
             if(pointsRequired <= totalPoints || (totalPoints - pointsRequired) >= 1000) {
                 convert = true;
-                lblPoints.setText(pointsRequired + ' steps');
+                // lblPoints.setText(pointsRequired + ' steps');
                 bt.setLabels([{title:'Echanger ce cadeau'}]);
-                bt.setBackgroundColor('#d92276');
+                bt.setBackgroundColor(Ti.App.PinkColor);
             } else {
                 convert = false;
-                lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
+                // lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
                 bt.setLabels([{title:'Gagner plus de points'}]);
                 bt.setBackgroundColor('#d9b9c8');
             }
