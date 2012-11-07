@@ -29,6 +29,6 @@ echo We compress the dSym files
 zip -r build/iphone/build/Debug-iphoneos/StepIn.app.dSYM.zip build/iphone/build/Debug-iphoneos/StepIn.app.dSYM
 
 echo We send it to TestFlight
-curl -# http://testflightapp.com/api/builds.json -F file=@build/iphone/build/Debug-iphoneos/StepIn.ipa -F dsym=@build/iphone/build/Debug-iphoneos/StepIn.app.dSYM.zip -F api_token=$apiToken -F team_token=$teamToken -F notes=@./Release-Notes.$version.txt -F notify=True -F distribution_lists='Devs' -o /tmp/curl.txt
+curl -# http://testflightapp.com/api/builds.json -F file=@build/iphone/build/Debug-iphoneos/StepIn.ipa -F dsym=@build/iphone/build/Debug-iphoneos/StepIn.app.dSYM.zip -F api_token=$apiToken -F team_token=$teamToken -F notes=@./Release-Notes.$version.txt -F notify=True -F distribution_lists='Devs,Testers' -o /tmp/curl.txt
 
 

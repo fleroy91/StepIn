@@ -1,0 +1,5 @@
+Release Notes de la version :  0.6.4
+- Mise en blanc de la version
+- Revue de la liste des magasins
+- Modification de la liste des cadeaux (il faut d'abord cliquer pour convertir)
+
