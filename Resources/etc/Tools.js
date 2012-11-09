@@ -89,6 +89,22 @@ Tools.Hash2Qparams = function(args) { 'use strict';
     return qparams;
 };
 
+Tools.randomSelect = function(arr, size) { 'use strict';
+    var l = arr.length;
+    var ret = [];
+    
+    var nb = Math.min(l, size);
+    var i;
+    for(i = 0; i < nb;i ++) {
+        var rnd;
+        do {
+             rnd = Math.floor(Math.random() * l);
+        } while (ret.indexOf(rnd) !== -1);
+        ret.push(rnd);
+    }
+    return ret;
+};
+
 function twoDigits(x) { 'use strict';
     var ret = x.toString();
     if(x < 10) {

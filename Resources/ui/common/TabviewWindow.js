@@ -158,6 +158,7 @@ function TabViewWindow(args) {
         var offset = e.contentOffset.y;
         // We need to find the row associated to this offset
         if(offset >= 0) {
+            // Ti.API.info("Offset = " + offset);
             var section = tv.getData();
             if(section && section.length > 0) {
                 var rows = section[0].getRows();
@@ -167,14 +168,15 @@ function TabViewWindow(args) {
                         rowHeight = rows[0].height;
                     }
                     if(rowHeight) {
-                        var cur = Math.ceil(offset / rowHeight);
+                        var cur = Math.floor(offset / rowHeight);
                         if(cur !== curRow) {
                             curRow = cur;
                             labelDistance.setText(rows[cur].distance);
                         }
                     } 
                     var tvHeight = rows.length * rowHeight;
-                    labelDistance.top = (offset / tvHeight * 366) + 37 + advertHeight;
+                    labelDistance.top = advertHeight + (offset / tvHeight * (366 - advertHeight)) + 28;
+                    // Ti.API.info("Top = " + labelDistance.top);
                     labelDistance.visible = true;
                 }
             }

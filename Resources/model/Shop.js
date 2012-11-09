@@ -1,4 +1,3 @@
-// 
 //  Shop.js
 //  StepInShopApp
 //  
@@ -203,6 +202,63 @@ function Shop(json) {'use strict';
         this.scans = data;
         this.saveAll();
     };
+    var socialRewards = null;
+    
+    this.computeSocialInfos = function(socialView) {
+        var socialUsers = [];
+        var socialPoints = 0;
+        var socialHeight = socialView.height;
+        
+        var nright = 2;
+        function addPic(image) {
+            var pic = Ti.UI.createImageView({
+                image : image || '/images/111-user.png',
+                width : socialHeight - 10,
+                height : socialHeight - 10,
+                right : nright,
+                shadow : {
+                    shadowOffset : {x:1,y:1},
+                    shadowRadius : 2
+                }
+            });
+            socialView.add(pic);
+            nright += (socialHeight - 10) + 2;
+        }
+
+        var i;
+        for(i = 0; socialRewards && i < socialRewards.length; i ++) {
+            var rew = socialRewards[i];
+            socialPoints += rew.nb_points;
+            var userUrl = rew.user.url;
+            if(socialUsers.indexOf(userUrl) === -1) {
+                socialUsers.push(userUrl);
+            }
+        }
+        
+        if(socialUsers.length > 1) {
+            socialView.lblSocial.setText(socialUsers.length + " visites récentes");
+        } else if(socialUsers.length === 1) {
+            socialView.lblSocial.setText("1 visite récente");
+        }
+
+        function loadUserPic(self, userUrl) {
+            self.retrieveUrl(userUrl, 'AppUser', function(u) {
+                Image.cacheImage(u.getPhotoUrl(0), function(image) {
+                    addPic(image);
+                });
+            });
+        }
+        
+        // We select 3 random pics
+        var indexes = Tools.randomSelect(socialUsers, 3);
+        var j;
+        for(j = 0 ; indexes && j < indexes.length; j ++) {
+            loadUserPic(this, socialUsers[indexes[j]]);
+        }
+        
+        return (socialPoints > 0);
+    };
+        
     this.computeAvailablePoints = function(rewards) {
         // We have to check for :
         // - Checkin
@@ -217,7 +273,7 @@ function Shop(json) {'use strict';
         this.allPossiblePoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.enableAllScans();
-        var i, nb_checkins = 0;
+        var nb_checkins = 0, i;
         for(i = 0; i < rewards.length; i++) {
             var rew = rewards[i];
             var now = new Date();
@@ -249,9 +305,11 @@ function Shop(json) {'use strict';
     this.retrieveScansAndComputeAvailablePoints = function(func, rewards, finalFunc) {
         Spinner.show();
         var Scan = require("/model/Scan"),
-            scan = new Scan();
+            scan = new Scan(),
+            Reward = require("/model/Reward"),
+            rew = new Reward();
         var self = this;
-        this.getList(scan, Tools.Hash2Qparams({ "shop.url" : this.getUrl() }), function(scans) {
+        self.getList(scan, Tools.Hash2Qparams({ "shop.url" : self.getUrl() }), function(scans) {
             var i, data = [];
             for(i = 0; i < scans.length; i++) {
                 var s = new Scan(scans[i]);
@@ -260,14 +318,23 @@ function Shop(json) {'use strict';
             }
             self.scans = data;
             
-            self.computeAvailablePoints(rewards);
-            if(func) {
-                func(self);
-            }
-            if(finalFunc) {
-                finalFunc();
-            }
-            Spinner.hide();
+            var now = new Date();
+            var dateOffset = (24*60*60*1000) * 7; // 7 days
+            now.setTime(now.getTime() - dateOffset);         
+            
+            self.getList(rew, Tools.Hash2Qparams({ "shop.url" : self.getUrl(), "when!gte" : now.toISOString()}), 
+                function(rews) {
+                    socialRewards = rews;
+                    
+                    self.computeAvailablePoints(rewards);
+                    if(func) {
+                        func(self);
+                    }
+                    if(finalFunc) {
+                        finalFunc();
+                    }
+                    Spinner.hide();
+                });
         });
     };
     
@@ -470,13 +537,13 @@ function Shop(json) {'use strict';
         var self = this;
         var ntop = 133;
         var nleft = 0;
-        var buttonHeight = 30;
+        var buttonHeight = 35;
         var advertHeight = 45;
-        var socialHeight = 40;
+        var socialHeight = 45;
         
         var row = Ti.UI.createTableViewRow({
             backgroundColor : '#ffffff',
-            height : ntop + buttonHeight + socialHeight + 15 + 5,
+            height : ntop + buttonHeight + 15 + 5,
             className : 'shopRow',
             object_index : this.index,
             selectedBackgroundColor :'#f0f0f0' 
@@ -523,47 +590,31 @@ function Shop(json) {'use strict';
             height : socialHeight,
             backgroundColor : 'white',
             borderRadius : 0,
-            borderColor : '#bdbfc3'
+            borderColor : '#bdbfc3',
+            borderWidth : 1
         });
         
         var lblSocial = Ti.UI.createLabel({
-            font : {fontSize : 12},
+            font : {fontSize : 11},
             color : Ti.App.PinkColor,
-            text : "+5250 steps gagnés cette semaine",
             width : 200,
             left : 2
         });
         socialView.add(lblSocial);
+        socialView.lblSocial = lblSocial;
         
-        var nright = 2;
-        function addPic(image) {
-            var pic = Ti.UI.createImageView({
-                image : image,
-                width : 30,
-                height : 30,
-                right : nright,
-                shadow : {
-                    shadowOffset : {x:1,y:1},
-                    shadowRadius : 2
-                }
-            });
-            socialView.add(pic);
-            nright += 32;
+        if(this.computeSocialInfos(socialView)) {
+            internView.add(socialView);
+            ntop += socialHeight - 1;
+            row.height += socialHeight;
         }
-        addPic('/images/pic_fred.jpg');
-        addPic('/images/pic_olivier.jpg');
-        addPic('/images/pic_daniel.jpg');
-        
-        internView.add(socialView);
-        
-        ntop += socialHeight;
         
         function createButton(title, image, width) {
             var ret = Ti.UI.createButton({
                 style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
                 image : image,
                 title : title,
-                font:{fontSize : 12, fontWeight : 'normal'},
+                font:{fontSize : 18, fontWeight : 'bold'},
                 color : Ti.App.PinkColor,
                 backgroundImage : '/images/bck-gradient-button.png',
                 borderRadius : 0,
@@ -579,7 +630,7 @@ function Shop(json) {'use strict';
         
         // Then we add 2 views : for step and for scan
         var scanView = createButton(' ' + this.scans.length + ' Articles', '/images/tag-small.png', 90);
-        internView.add(scanView);
+        // internView.add(scanView);
         
         scanView.addEventListener('click', function(e) {
             var ScanListWindow = require("/ui/common/ScanListWindow"),
@@ -587,8 +638,10 @@ function Shop(json) {'use strict';
             tabGroup.openWindow(null, swin, {animated  :true});
         });
 
-        var stepInView = createButton(' +' + this.allPossiblePoints + ' steps', '/images/steps-small.png', 122);
-        stepInView.left = null;        
+        var stepInView = createButton(' +' + this.allPossiblePoints + ' steps',
+            (this.scans.length > 0 ? '/images/steps-tag-small.png' : '/images/steps-small.png'), '100%');
+        stepInView.left = null;
+        stepInView.right = null;        
         internView.add(stepInView);
         
         stepInView.addEventListener('click', gotoShop);
@@ -596,7 +649,7 @@ function Shop(json) {'use strict';
         var middleView = createButton(' Partager', '/images/checked-small.png', 90);
         middleView.left = null;
         middleView.right = 0;
-        internView.add(middleView);
+        // internView.add(middleView);
         
         ntop += buttonHeight;
         

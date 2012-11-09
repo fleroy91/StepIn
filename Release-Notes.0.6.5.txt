@@ -1,0 +1,3 @@
+Release Notes de la version :  0.6.5
+- La barre des visites récentes est maintenant dynamique sur la liste des magasins
+- Un seul bouton comptabilisant le nombre de steps global à gagner

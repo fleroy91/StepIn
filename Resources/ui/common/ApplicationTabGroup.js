@@ -238,11 +238,11 @@ function ApplicationTabGroup() { 'use strict';
         // We change the titleControl of the current window
         var points = user.getTotalPoints() || 0;
         var maxWidth = 80;
-        var viewWidth = maxWidth - 14;
+        var viewWidth = maxWidth - 21;
         var w = Math.round(((points % 2000) + 1) / 2000 * viewWidth);
         var enclosingView = Ti.UI.createView({
             right : 10,
-            height : 20,
+            height : 30,
             width : maxWidth
         });
         var view = Ti.UI.createView({
@@ -265,8 +265,9 @@ function ApplicationTabGroup() { 'use strict';
         view.add(backView);
         var lblIn = Image.createStepInStar({
             right : 0,
-            height : 13,
-            width : 13,
+            height : 25,
+            width : 20,
+            bottom : 4,
             image : "images/present.png"
         });
         enclosingView.add(lblIn);
@@ -275,7 +276,7 @@ function ApplicationTabGroup() { 'use strict';
             textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
             right : 4,
             font:{fontSize : 12, fontWeight : 'bold'},
-            color : 'white'
+            color : 'gray'
         });
         view.add(lblPoints);
         enclosingView.addEventListener('click', function(e) {

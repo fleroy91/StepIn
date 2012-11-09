@@ -123,6 +123,17 @@ DataManager.prototype.getObject = function(obj, qparams, func) {'use strict';
     );
 };
 
+DataManager.prototype.getUrl = function(url, qparams, func) {'use strict';
+    this.doCall("GET", url, qparams, null,
+        function(ret) {
+            Ti.API.info('GET answer : ' + JSON.stringify(ret));
+            if(func) {
+                func(ret.entry);
+            } 
+        }
+    );
+};
+
 DataManager.prototype.getList = function(obj, qparams, func) {'use strict';
     this.doCall("GET", obj.getEntriesUrl(), qparams, null,
         function(ret) {

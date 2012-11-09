@@ -105,18 +105,28 @@ function CloudObject(json) {'use strict';
     
     this.retrieveObject = function(id, mclass, func, extra) {
         var Obj = require('model/' + mclass);
-        if(this[id] && this[id] instanceof Obj) {
+        if(id && this[id] && this[id] instanceof Obj) {
             func(this[id], extra);
         } else {
-            var object = new Obj(this[id]);
+            var object = new Obj(id && this[id]);
             
             _dm.getObject(object, null, function(result) {
                 var newobj = new Obj(result);
-                this[id] = newobj ;            
+                if(id) {
+                    this[id] = newobj ;
+                }            
                 func(newobj, extra);
             });
         }
     };
+    
+    this.retrieveUrl = function(url, mclass, func, extra) {
+        var Obj = require('model/' + mclass);
+        _dm.getUrl(url, null, function(result) {
+            var newobj = new Obj(result);
+            func(newobj, extra);
+        });
+    };    
     
     this.getUrl = function() {
         var result = (this.m_url || this.url);
