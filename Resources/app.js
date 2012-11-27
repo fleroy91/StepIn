@@ -81,8 +81,8 @@ if(debug) {
     ApplicationTabGroup = require('ui/common/ApplicationTabGroup');
 }
 
-// Management of the Sonic Service !
-Ti.App.Properties.setBool('isSonicRunning', false);
+// Management of the Ultradata Service !
+Ti.App.Properties.setBool('isUDRunning', false);
 
 var SplashWindow = require("ui/common/SplashWindow");
 var main = new SplashWindow();

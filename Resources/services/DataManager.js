@@ -61,22 +61,26 @@ function DataManager() {'use strict';
                      if(silent) {
                          Ti.API.info("--> HTTP return code : " + client.status + '-' + client.statusText);
                      } else { 
-                         alert('Impossible to connect to network' + client.status + '-' + client.statusText);
+                         Ti.API.info('Impossible to connect to network' + client.status + '-' + client.statusText);
                      }
                      func(null);
                  }
              }
          },
-         timeout : 8000  // in milliseconds
+         timeout : 20000  // in milliseconds
         });
         // Prepare the connection.
         client.open(method, url);
         client.setRequestHeader("Content-Type","application/json");
         // Send the request.
-        if(body) {
-            client.send(body);         
-        } else {
-            client.send();
+        try {
+            if(body) {
+                client.send(body);         
+            } else {
+                client.send();
+            }
+        } catch(err) {
+            Ti.API.info("Error in Datamager : send => " + err);
         }
     };
 

@@ -470,11 +470,13 @@ function ApplicationTabGroup() { 'use strict';
         }
     };
 
+    var in_manage_code = false; 
     var allCodes = [];
     self.didHearCode = function(code) {
         if(allCodes.indexOf(code) >= 0) {
             Ti.API.info("Code already heard so ignored : " + code);
-        } else {
+        } else if(! in_manage_code){
+            in_manage_code = true;
             // The shop must be in the tvSearch
             var section = self.tvSearch.getData(); 
             var shopFound = null, row_index, obj_index;
@@ -525,8 +527,11 @@ function ApplicationTabGroup() { 'use strict';
                         newShop.saveAll();
                         swin.setObject(newShop);
                     }
+                    in_manage_code = false;
                 });
-            }
+            } else {
+                in_manage_code = false;
+            } 
         } 
     };
     
@@ -534,40 +539,43 @@ function ApplicationTabGroup() { 'use strict';
     self.addEventListener('open', self.getAllObjects);
     
     // To hear the sound
-    var SonicModule = require('com.sonic');
-    function sonicOn() {
-        if(! Ti.App.Properties.getBool('isSonicRunning', false)) {
-            // alert("On lance Sonic");
-            if(! Tools.isSimulator()) {
-                Ti.App.Properties.setBool('isSonicRunning', true);
-                Ti.API.info("==> Lancement de Sonic");
-                SonicModule.StartSonic({
-                    onHear : function(e) {
-                        // alert("Hear from Sonic : " + e);
-                        Ti.API.info("Hear from Sonic : " + e.code);
-                        self.didHearCode(e.code);
-                    },
-                    onError : function(e) {
-                        Ti.API.info("Error : " + e.code);
-                        // alert("Erreur : On a entendu le son" + e.toString() +"\nMais rien ne correspond !");
-                    }
-                });
-            }
+    var UDModule = require('com.ultradata');
+    function StartUD() {
+        if(! Tools.isSimulator()) {
+            UDModule.StartUD({
+                onHear : function(e) {
+                    // alert("Hear from UD : " + e);
+                    Ti.API.info("Hear from UD : " + e.code);
+                    self.didHearCode(e.code);
+                }
+            });
+            Ti.App.Properties.setBool('isUDRunning', true);
+            Ti.API.info("==> Lancement de UD");
         }
     }
-    function sonicOff() {
-        if(Ti.App.Properties.setBool('isSonicRunning', false)) {
-            SonicModule.StopSonic();
-            Ti.API.info("==> Arrêt de Sonic");
-            Ti.App.Properties.setBool('isSonicRunning', false);
+    function ResumeUD() {
+        if(! Ti.App.Properties.getBool('isUDRunning')) {
+            UDModule.ResumeUD();
+            Ti.App.Properties.setBool('isUDRunning', true);
+            Ti.API.info("==> Resume de UD");
+        }
+    }
+    function PauseUD() {
+        if(Ti.App.Properties.getBool('isUDRunning')) {
+            UDModule.PauseUD();
+            Ti.API.info("==> Pause de UD");
+            Ti.App.Properties.setBool('isUDRunning', false);
         }
     }
     
-    self.addEventListener('open', sonicOn);
-    Ti.App.addEventListener("resumed", sonicOn);
-    Ti.App.addEventListener("paused", sonicOff);
+    self.addEventListener('open', StartUD);
+    Ti.App.addEventListener("resumed", ResumeUD);
+    Ti.App.addEventListener("paused", PauseUD);
     // Should never happen
-    self.addEventListener('close', sonicOff);
+    self.addEventListener('close', function(e) {
+        Ti.API.info("****** ERROR : Should never happen !!! *********");
+        PauseUD();
+    });
    
     self.closeWindow = function(win) {
         var pos = _allWindows.indexOf(win);
@@ -641,7 +649,18 @@ function ApplicationTabGroup() { 'use strict';
     function moveNext() {
         winSearch.advertView.moveNext();   
     }
+    
+    function checkCode() {
+        if(Ti.App.Properties.getBool('isUDRunning')) {
+            var code = UDModule.getUDCode();
+            if(code) {
+                self.didHearCode(code);
+            }
+        }
+    }
     setInterval(moveNext, 3000);
+    
+    setInterval(checkCode, 1000);
 
 	return self;
 }

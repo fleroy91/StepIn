@@ -240,13 +240,13 @@ function SuperAdminWindow(args) {'use strict';
     }
     
     var data = [
-        { title : "Sonic is running", hasCheck :Ti.App.Properties.getBool('isSonicRunning', false)},
-        { title : "Start Sonic", hasChild :false, action : function(e) { ApplicationTabGroup.startSonic(); } },
-        { title : "Stop Sonic", hasChild :false, action : function(e) { ApplicationTabGroup.stopSonic(); } },
-        { title : "Simulate Step-In Shop 6227", hasChild :false, action : function(e) { simulateStepIn(6227); } },
-        { title : "Simulate Step-In Shop 6228", hasChild :false, action : function(e) { simulateStepIn(6228); } },
-        { title : "Simulate Step-In Shop 6229", hasChild :false, action : function(e) { simulateStepIn(6229); } },
-        { title : "Simulate Step-In Shop 6230", hasChild :false, action : function(e) { simulateStepIn(6230); } },
+        { title : "Ultradata is running", hasCheck :Ti.App.Properties.getBool('isUDRunning')},
+//        { title : "Start Ultradata", hasChild :false, action : function(e) { ApplicationTabGroup.startUD(); } },
+//        { title : "Stop Ultradata", hasChild :false, action : function(e) { ApplicationTabGroup.stopUD(); } },
+        { title : "Simulate Step-In Shop 1", hasChild :false, action : function(e) { simulateStepIn(1); } },
+        { title : "Simulate Step-In Shop 2", hasChild :false, action : function(e) { simulateStepIn(2); } },
+        { title : "Simulate Step-In Shop 3", hasChild :false, action : function(e) { simulateStepIn(3); } },
+        { title : "Simulate Step-In Shop 4", hasChild :false, action : function(e) { simulateStepIn(4); } },
         { title : "Clear all user rewards", hasChild :false, action : clearAllRewards },
         { title : "Clear all user invitations", hasChild :false, action : clearAllInvitations },
         { title : "Reset first launch", hasChild :false, action : resetFirstLaunch },

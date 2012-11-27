@@ -225,7 +225,7 @@ function AppUser(json) {'use strict';
         qparams['location!near']  = '((' + userloc.lat +',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
         qparams.per_page = 20;
         // We only get the shops with beancode
-        qparams["beancode!gt"] = 6000;
+        qparams["beancode!gt"] = 0;
         
         if(tags && tags.length > 0) {
             var i;
@@ -262,12 +262,7 @@ function AppUser(json) {'use strict';
             self.setCurrentUser();
             if(! Ti.App.allRewards) {
                 self.retrieveInvitationsAndRewards(function(allRewards) {
-                    if(allRewards) {
-                        getShops(self, tags, onNewShop, finalFunc);
-                    } else {
-                        Spinner.hide();
-                        alert("Houston we have a problem !!!"); 
-                    } 
+                    getShops(self, tags, onNewShop, finalFunc);
                 });              
             } else {
                 getShops(self, tags, onNewShop, finalFunc);
