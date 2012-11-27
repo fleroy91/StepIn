@@ -540,7 +540,7 @@ function ApplicationTabGroup() { 'use strict';
     
     // To hear the sound
     var UDModule = require('com.ultradata');
-    function StartUD() {
+    function myStartUD() {
         if(! Tools.isSimulator()) {
             UDModule.StartUD({
                 onHear : function(e) {
@@ -553,14 +553,14 @@ function ApplicationTabGroup() { 'use strict';
             Ti.API.info("==> Lancement de UD");
         }
     }
-    function ResumeUD() {
+    function myResumeUD() {
         if(! Ti.App.Properties.getBool('isUDRunning')) {
             UDModule.ResumeUD();
             Ti.App.Properties.setBool('isUDRunning', true);
             Ti.API.info("==> Resume de UD");
         }
     }
-    function PauseUD() {
+    function myPauseUD() {
         if(Ti.App.Properties.getBool('isUDRunning')) {
             UDModule.PauseUD();
             Ti.API.info("==> Pause de UD");
@@ -568,13 +568,13 @@ function ApplicationTabGroup() { 'use strict';
         }
     }
     
-    self.addEventListener('open', StartUD);
-    Ti.App.addEventListener("resumed", ResumeUD);
-    Ti.App.addEventListener("paused", PauseUD);
+    self.addEventListener('open', myStartUD);
+    Ti.App.addEventListener("resumed", myResumeUD);
+    Ti.App.addEventListener("paused", myPauseUD);
     // Should never happen
     self.addEventListener('close', function(e) {
         Ti.API.info("****** ERROR : Should never happen !!! *********");
-        PauseUD();
+        myPauseUD();
     });
    
     self.closeWindow = function(win) {
@@ -636,16 +636,6 @@ function ApplicationTabGroup() { 'use strict';
         Spinner.hide();
     };
 
-    // TODO : to verify!!!
-    /*        
-    overrideTabs(
-        self,
-        { backgroundColor: '#f00' },
-        { backgroundColor: Ti.App.PinkColor, color: '#000' },
-        { backgroundColor: '#333', color: '#888' }
-    );
-    */
-    
     function moveNext() {
         winSearch.advertView.moveNext();   
     }
