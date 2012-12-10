@@ -27,7 +27,6 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         zIndex : 0,
         height : Ti.UI.FILL,
         allowsSelection : true,
-        scrollable : false,
         style : Titanium.UI.iPhone.TableViewStyle.PLAIN,
         backgroundColor : 'white'
     });
@@ -35,8 +34,11 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     function createRow(image, title, detail, points, withAction) {
         var row = Ti.UI.createTableViewRow({
             height : 70,
-            className : 'shopDetailRow',
-            leftImage : image
+            className : 'shopDetailRow'
+        });
+        
+        Image.cacheImage(image, function(img) {
+             row.setLeftImage(img);
         });
         
         var lbl = Ti.UI.createLabel({
@@ -83,45 +85,20 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     if(shop.checkin) {
         rowStepIn.backgroundColor = '#eadae3';
     }
-    var rowScans = createRow('/images/tag.png', shop.scans.length + " Article" + (shop.scans.length > 1 ? "s" : ""), "Scannez ces articles pour gagner plus de steps", shop.allPossiblePoints - shop.getPoints(Reward.ACTION_KIND_STEPIN), true);
     
-    var rowAdvert = Ti.UI.createTableViewRow({
-        height : 90
-    });
+    var data = [rowStepIn], i;
+    var catalogs = shop.catalogs;
+    for(i = 0; i < catalogs.length; i ++) {
+        var catalog = catalogs[i];
+        var rowScans = createRow(catalog.getPhotoUrl(0), catalog.kind, "Parcourez ce catalogue pour gagner plus de steps", shop.catalogPoints, true);
+        if(catalog.viewed) {
+            rowScans.backgroundColor = '#eadae3';
+        }
+        rowScans.catalogIndex = i;
+        data.push(rowScans);
+    }
     
-    var img1 = Ti.UI.createView({
-        width : 300
-    });
-    img1.add(Ti.UI.createImageView({
-        left : 10, right : 10, width : 250,
-        image : '/images/advert.png'
-    }));
-    var img2 = Ti.UI.createView({
-        width : 300
-    });
-    img2.add(Ti.UI.createImageView({
-        left : 10, right : 10,width : 250,
-        image : '/images/advert.png'
-    }));
-    var img3 = Ti.UI.createView({
-        width : 300
-    });
-    img3.add(Ti.UI.createImageView({
-        left : 10, right : 10,width : 250,
-        image : '/images/advert.png'
-    }));
-    
-    var advert = Ti.UI.createScrollableView({
-        height : rowAdvert.height,
-        showPagingControl : false,
-        clipViews : false,
-        width : '80%',
-        views : [img1, img2, img3]
-    });
-    
-    rowAdvert.add(advert);
-    
-    tv.setData([rowStepIn, rowScans, rowAdvert]);
+    tv.setData(data);
     
     tv.addEventListener('click', function(e) {
         if(e.index === 0) {
@@ -130,9 +107,19 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
             } else {
                 alert("Vous avez déjà fait un Step-In aujourd'hui dans ce magasin ! Ré-essayez demain :-)");
             }
-        } else if(e.index === 1) {
+        } else if(e.index >= 1) {
+            var index = e.rowData.catalogIndex;
+            var catalog = catalogs[index];
+            var rowScan = data[e.index];
             var ScanListWindow = require("/ui/common/ScanListWindow"),
-                swin = new ScanListWindow(shop, tabGroup);
+                swin = new ScanListWindow(shop, tabGroup, catalog);
+                
+            swin.addEventListener('close', function() {
+                if(swin.rewarded) {
+                    shop.catalogs[index].viewed = true;
+                    rowScan.backgroundColor = '#eadae3';
+                }
+            });
             tabGroup.openWindow(null, swin, {animated  :true});
         }
         tv.deselectRow(e.index);

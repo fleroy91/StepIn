@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <string name="mystock_tab_title">A coté</string>
-    <string name="account_tab_title">Compte</string>
-    
-    <string name="filter_button">Filtrer</string>
+   <string name="filter_button">Filtrer</string>
     
     <string name="list_button">Vue par liste</string>
     <string name="map_button">Vue sur carte</string>

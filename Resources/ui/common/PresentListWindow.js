@@ -42,93 +42,64 @@ function PresentListWindow(tabGroup, options) {'use strict';
 
         var view = Ti.UI.createView({
             width : 142,
-            height : 125
+            height : 140
         });
         
         var lblTitle = Ti.UI.createLabel({
             text : present.title,
             top : 3,
-            height : 15,
+            height : 30,
             color : 'black',
-            font : {fontSize : 11, fontWeight : 'bold'}
+            font : {fontSize : 14, fontWeight : 'bold'}
         });
         view.add(lblTitle);
         
         var img = Ti.UI.createImageView({
-            top : 20, 
-            height : 75,
-            width : 75
+            top : 30, 
+            height : 110,
+            width : 110
         });
         view.add(img);
         Image.cacheImage(present.getPhotoUrl(0), function(image) {
             img.setImage(image); 
         });
         
-        var lblPoints = Image.createPointView(pointsRequired, 30, Ti.UI.FILL, null, {
-            top : 90,
-            color : Ti.App.PinkColor,
-            font : {fontSize : 10},
-            height : 30,
-            right : 20
+        var imgCorner = Ti.UI.createImageView({
+            height : view.height,
+            width : view.width,
+            bottom : 0,
+            right : 0,
+            image : "/images/corner-pink.png",
+            zIndex : 1
         });
+        view.add(imgCorner);
+        
+        var lblPoints = Image.createPointView(pointsRequired, 18, 70, null, {
+            color : 'white',
+            ratio : 0.7,
+            height : 18
+        });
+        lblPoints.right = 1;
+        lblPoints.bottom = 2;
+        lblPoints.zIndex = 10;
         view.add(lblPoints);
         
-        var bt = Ti.UI.createButtonBar({
-            bottom : 2,
-            backgroundColor:Ti.App.PinkColor,
-            style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-            height:25,
-            present : present,
-            width : 135
-        });
-        // view.add(bt);
-        
-        bt.addEventListener('click', function(e) {
-            if(convert) {
-                var dlg = Ti.UI.createAlertDialog({
-                    title : "Conversion",
-                    message : "Voulez-vous convertir vos points en ce cadeau ?",
-                    buttonNames : ['Confirmer', 'Annuler'] 
-                });
-                dlg.addEventListener('click', function(e) {
-                    if (e.index === 0) {
-                        // We just create a new reward with negative points
-                        var Reward = require("/model/Reward"),
-                            rew = new Reward();
-                        rew.setUser(user);
-                        rew.setNbPoints(-1 * present.points);
-                        user.setTotalPoints(user.getTotalPoints() - present.points);
-                        rew.setActionKind(present.title);
-                        rew.create( function(e) {
-                            alert("Votre bon cadeau vous sera envoyé par email dans quelques instants !");
-                            self.close();
-                        });
-                    }
-                });
-                dlg.show();
-            } else {
-                displayMorePoints();
-            }
-        });
-        
-        img.addEventListener('click', function(e) {
+        function openPresent(e) {
             // We need to open a bigger detailed window
             var PresentDetailWindow = require("ui/common/PresentDetailWindow"),
                 swin = new PresentDetailWindow(present, e.x, e.y, tabGroup, displayMorePoints);
             swin.open();
-        });
+        }
+        
+        view.addEventListener('click', openPresent);
         
         view.update = function(totalPoints) {
             if(pointsRequired <= totalPoints || (totalPoints - pointsRequired) >= 1000) {
                 convert = true;
-                // lblPoints.setText(pointsRequired + ' steps');
-                bt.setLabels([{title:'Echanger ce cadeau'}]);
-                bt.setBackgroundColor(Ti.App.PinkColor);
+                lblPoints.setColor('white');
             } else {
                 convert = false;
-                // lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
-                bt.setLabels([{title:'Gagner plus de points'}]);
-                bt.setBackgroundColor('#d9b9c8');
+                lblPoints.setColor('#d9b9c8');
             }
         };
         

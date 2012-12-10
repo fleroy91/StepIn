@@ -118,10 +118,21 @@ function Scan(json) {'use strict';
             shadowColor : 'gray',
             shadowOffset : {x:1,y:1}            
         });
-        view.add(vPoints);
+        // view.add(vPoints);
     };
 
     this.newObjectScanned = function(code, tabGroup, func) {
+        
+        function _addNewRew(self) {
+            return function(newRew) {
+                if(newRew) {
+                    if(func) {
+                        func(self);
+                    }
+                }
+            };
+        }
+        
         if(code && this.code.toString() === code.toString()) {
             this.scanned = true;
             // We have found it
@@ -130,14 +141,7 @@ function Scan(json) {'use strict';
             rew.setActionKind(Reward.ACTION_KIND_SCAN);
             rew.setShop(this.shop);
             rew.setUser(AppUser.getCurrentUser());
-            var self = this;
-            tabGroup.addNewReward(rew, this.shop, function(newRew) {
-                if(newRew) {
-                    if(func) {
-                        func(self);
-                    }
-                }
-            });
+            tabGroup.addNewReward(rew, _addNewRew(this));
         } else {
             alert("Désolé mais l'article scanné ne correspond pas à un article de cette boutique !");
         }

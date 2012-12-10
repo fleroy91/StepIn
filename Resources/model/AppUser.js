@@ -13,6 +13,7 @@ var Geoloc = require("etc/Geoloc");
 var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var Reward = require('model/Reward');
+var Bookmark = require('model/Bookmark');
 var Invitation = require('model/AppInvitation');
             
 function AppUser(json) {'use strict';
@@ -116,19 +117,69 @@ function AppUser(json) {'use strict';
         return Ti.App.allRewards;
     };
     
+    this.getBookmarks = function() {
+        return Ti.App.allBookmarks;
+    };
+    
+    this.saveBookmarks = function(toAdd, toDelete) {
+        var bookmarks = Ti.App.allBookmarks;
+        var i;
+        // We delete first
+        for(i = 0; i < toDelete.length; i++) {
+            // We need to find it
+            var scan = toDelete[i];
+            var found = false, j;
+            for(j = 0; ! found && j < bookmarks.length; i++) {
+                var b = bookmarks[j];
+                if(b.scan.url === scan.getUrl()) {
+                    b.remove();
+                    b.inactive = true;
+                    found = true;
+                }
+            }
+        }
+        var data = [];
+        for(i = 0; bookmarks && i < bookmarks.length; i ++) {
+            if(! bookmarks[i].inactive) {
+                data.push(bookmarks[i]);
+            }
+        }
+        Ti.App.allBookmarks = data;
+        
+        // Then we add        
+        function addBookmark(newBook) {
+            if(newBook) {
+                var data = Ti.App.allBookmarks;
+                if(! data) {
+                    data = [];
+                }
+                data.push(newBook);
+                Ti.App.allBookmarks = data;
+            }
+        }
+        for(i = 0; i < toAdd.length; i++) {
+            var book = new Bookmark();
+            book.setUser(this);
+            book.setScan(toAdd[i]);
+            book.setShop(toAdd[i].shop);
+            book.create(addBookmark);
+        }
+    };
+    
     this.retrievePresents = function(func) {
         var Present = require('model/Present'),
             pres = new Present();
-        this.getList(pres, Tools.Hash2Qparams({sort : 'points', order : 'asc'}), function(result) {
-            var i, data = null;
-            if(result && result.length > 0) {
-                data = [];
-                for(i = 0 ; i < result.length; i++) {
-                    data.push(new Present(result[i]));    
+        this.getList(pres, Tools.Hash2Qparams({sort : 'points', order : 'asc'}),
+                function(result) {
+                var i, data = null;
+                if(result && result.length > 0) {
+                    data = [];
+                    for(i = 0 ; i < result.length; i++) {
+                        data.push(new Present(result[i]));    
+                    }
                 }
-            }
-            func(data);
-        });
+                func(data);
+            });
     };
     
     this.getShopsLocation = function() {
@@ -178,33 +229,62 @@ function AppUser(json) {'use strict';
             }
         }
     };
+    this.retrieveBookmarks = function(func) {
+        var book = new Bookmark();
+        Ti.App.allBookmarks = [];
+        
+        function _addBook(self) {
+            return function(resultBook) {
+                var data = null, i;
+                if(resultBook) {
+                    data = [];
+                    for(i = 0 ; i < resultBook.length; i++) {
+                        var b = new Bookmark(resultBook[i]);
+                        data.push(b);    
+                    }
+                }
+                Ti.App.allBookmarks = data;
+                if(func) {
+                    func(Ti.App.allRewards);
+                }
+            };
+        }
+        // Get back the bookmarks immediately after
+        this.getList(book, Tools.Hash2Qparams({'user.url' : this.getUrl() }),
+            _addBook(this));
+    };
     
     this.retrieveRewards = function(func) {
+        function _addRewards(self) {
+            return function(result) {
+                var i, data = null;
+                if(result) {
+                    data = [];
+                    for(i = 0 ; i < result.length; i++) {
+                        data.push(new Reward(result[i]));    
+                    }
+                }
+                Ti.App.allRewards = data;
+                self.retrieveBookmarks(func);
+            }; 
+        }
+
         if(! this.isDummy()) {
             var rew = new Reward();
             var now = new Date();
             var dateOffset = (24*60*60*1000) * 7; // 7 days
             now.setTime(now.getTime() - dateOffset);
+            var myUrl = this.getUrl();
+            
             this.getList(rew, Tools.Hash2Qparams({
-                    'user.url' : this.getUrl(),
+                    'user.url' : myUrl,
                     'when!gte' : now.toISOString(), 
                     sort : 'when', 
-                    order : 'desc'}), 
-                function(result) {
-                    var i, data = null;
-                    if(result) {
-                        data = [];
-                        for(i = 0 ; i < result.length; i++) {
-                            data.push(new Reward(result[i]));    
-                        }
-                    }
-                    Ti.App.allRewards = data;
-                    if(func) {
-                        func(Ti.App.allRewards);
-                    }
-                });
+                    order : 'desc'}),
+                    _addRewards(this)); 
         } else {
             Ti.App.allRewards = [];
+            Ti.App.allBookmarks = null;
             if(func) {
                 func(Ti.App.allRewards);
             }
@@ -212,13 +292,23 @@ function AppUser(json) {'use strict';
     };
     
     this.retrieveInvitationsAndRewards = function(func) {
-        var self = this;
-        self.retrieveInvitations(function() {
-            self.retrieveRewards(func);
-        });
+        function _retrieveRewards(self) {
+            return function() {
+                self.retrieveRewards(func);
+            };
+        }
+        this.retrieveInvitations(_retrieveRewards(this));
     };
     
+    var fOnNewShop = null;
+    function addNewShop(shop) {
+        var nshop = AppUser.addShop(shop);
+        fOnNewShop(nshop);
+    }
+    
     function getShops(self, tags, onNewShop, finalFunc) {
+        fOnNewShop = onNewShop;
+        
         var rayon = 1000; // ie. km (very large !!!)
         var userloc = self.location;
         var qparams = {};
@@ -237,11 +327,6 @@ function AppUser(json) {'use strict';
             }
         }
         
-        function addNewShop(shop) {
-            shop = AppUser.addShop(shop);
-            onNewShop(shop);
-        }
-        
         var Shop = require('model/Shop'),
             shop = new Shop();
         self.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
@@ -250,7 +335,7 @@ function AppUser(json) {'use strict';
             if(result && result.length > 0) {
                 for(i = 0 ; i < result.length; i++) {
                     var s = new Shop(result[i]);
-                    s.retrieveScansAndComputeAvailablePoints(addNewShop, Ti.App.allRewards, (i === result.length -1 ? finalFunc : null));
+                    s.retrieveCatalogs(addNewShop, Ti.App.allRewards, (i === result.length -1 ? finalFunc : null));
                 }
             }
         });
@@ -289,11 +374,8 @@ function AppUser(json) {'use strict';
     this.deleteAllRewards = function(func) {
         Spinner.show();
         var rew = new Reward();
-        var self = this;
-        this.getList(rew, Tools.Hash2Qparams({
-                'user.url' : this.getUrl(),
-                'per_page' : 1000}), 
-            function(result) {
+        function _deleteAllRewards(self) {
+            return function(result) {
                 var i;
                 if(result && result.length > 0) {
                     for(i = 0 ; i < result.length; i++) {
@@ -305,17 +387,20 @@ function AppUser(json) {'use strict';
                     func(self);
                 }
                 Spinner.hide();
-            });
+            };        
+        }
+        
+        this.getList(rew, Tools.Hash2Qparams({
+                'user.url' : this.getUrl(),
+                'per_page' : 1000}),
+            _deleteAllRewards(this)); 
     };
     
     this.deleteAllInvitations = function(func) {
         Spinner.show();
         var invit = new Invitation();
-        var self = this;
-        this.getList(invit, Tools.Hash2Qparams({
-                'inviter.url' : this.getUrl(),
-                'per_page' : 1000}), 
-            function(result) {
+        function _deleteAllInvitations(self) {
+            return function(result) {
                 var i;
                 if(result && result.length > 0) {
                     for(i = 0 ; i < result.length; i++) {
@@ -327,7 +412,13 @@ function AppUser(json) {'use strict';
                     func(self);
                 }
                 Spinner.hide();
-            });
+            };
+        }
+        
+        this.getList(invit, Tools.Hash2Qparams({
+                'inviter.url' : this.getUrl(),
+                'per_page' : 1000}),
+            _deleteAllInvitations(this)); 
     };
 
     this.updateReward = function(reward) {
@@ -387,6 +478,7 @@ function AppUser(json) {'use strict';
         // If the new current user is not the same as the previous one, we need to reset the rewards
         if(Ti.App.currentUser && ! this.isDummy() && Ti.App.currentUser.m_url !== this.m_url) {
             Ti.App.allRewards = null;
+            Ti.App.allBookmarks = null;
             Ti.App.allInvitations = null;
         }
         Ti.App.currentUser = this;
@@ -419,11 +511,14 @@ function AppUser(json) {'use strict';
     }
     
     this.geolocalize = function(func) {
-        if(Geoloc.isLocationServicesEnabled()) {
-            var self = this;
-            Titanium.Geolocation.getCurrentPosition(function(e) { 
+        function _geolocalize(self) {
+            return function(e) { 
                 getGeocoded(e, func, self); 
-            });
+            };
+        }
+        
+        if(Geoloc.isLocationServicesEnabled()) {
+            Titanium.Geolocation.getCurrentPosition(_geolocalize(this));
         }
     };
 
@@ -474,6 +569,14 @@ AppUser.getShop = function(index) { 'use strict';
     return Ti.App.allShops[index - 1];
 };
 /**
+ * Get the shop list
+ * 
+ * @returns {Shops} : the array of objects 
+ */
+AppUser.getAllShops = function() { 'use strict';
+    return Ti.App.allShops;
+};
+/**
  * Find a shop in the global array by using the m_url field
  * 
  * @param {String} url : m_url of the shop
@@ -498,6 +601,7 @@ AppUser.addShop = function(shop) { 'use strict';
     var data = Ti.App.allShops;
     shop.index = data.length + 1;
     data.push(shop);
+    Ti.API.info("Adding a shop : " + JSON.stringify(shop));
     Ti.App.allShops = data;
     return shop;       
 };
@@ -515,6 +619,7 @@ AppUser.addReward = function(rew) { 'use strict';
     Ti.App.allRewards = data;
     return rew;
 };
+
 /**
  * Add an invitation in the global invitations array
  * 

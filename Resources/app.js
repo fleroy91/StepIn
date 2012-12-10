@@ -59,6 +59,7 @@ var Tools = require('/etc/Tools');
 // Init global variables
 Ti.App.currentUser = null;
 Ti.App.allRewards = null;
+Ti.App.allBookmarks = null;
 Ti.App.allInvitations = null;
 Ti.App.allShops = null;
 Ti.App.FB_POINTS = 150;

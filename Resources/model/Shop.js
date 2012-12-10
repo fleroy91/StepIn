@@ -15,6 +15,7 @@ var Image = require("/etc/AppImage");
 var Scan = require("/model/Scan");
 var AppUser = require("/model/AppUser");
 var Reward = require("/model/Reward");
+var Catalog = require("/model/Catalog");
 require("ti.viewshadow");
 
 var _currentShop = null;
@@ -73,6 +74,9 @@ function Shop(json) {'use strict';
     
     this.getStepInPoints = function() {
         return this.stepinPoints;
+    };
+    this.getCatalogPoints = function() {
+        return this.catalogPoints;
     };
     
     this.getScanPoints = function(code) {
@@ -202,6 +206,17 @@ function Shop(json) {'use strict';
         this.scans = data;
         this.saveAll();
     };
+    this.findScan = function(url) {
+        var i;
+        var ret = null;
+        for(i = 0; !ret && i < this.scans.length; i++) {
+            if(this.scans[i].getUrl() === url) {
+                ret = this.scans[i];
+            }
+        }  
+        return ret;
+    };
+    
     var socialRewards = null;
     
     this.computeSocialInfos = function(socialView) {
@@ -266,12 +281,15 @@ function Shop(json) {'use strict';
         
         // TODO : we don't need the rewards to do that
         this.prev_checkin = this.checkin;
+        this.prev_catalogViewed = this.catalogViewed;
         this.prev_points = this.allPossiblePoints;
         
         this.checkin = false;
+        this.catalogViewed = false;
         this.allPoints = 0;
         this.allPossiblePoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
+        this.catalogPoints = this.getPoints(Reward.ACTION_KIND_CATALOG) || 0;
         this.enableAllScans();
         var nb_checkins = 0, i;
         for(i = 0; i < rewards.length; i++) {
@@ -287,6 +305,18 @@ function Shop(json) {'use strict';
                         this.checkin = true;
                         this.stepinPoints = 0;
                     }     
+                } else if(rew.getActionKind() === Reward.ACTION_KIND_CATALOG) {
+                    if(elapsedTime <= 24 * 60 * 7) {
+                        // We need to find the catalog
+                        var j;
+                        for(j = 0; j < this.catalogs.length; j ++) {
+                            var catalog = this.catalogs[j];
+                            if(catalog.getUrl() === rew.catalog) {
+                                catalog.viewed = true;
+                                this.catalogViewed = true;                        
+                            }
+                        }
+                    }
                 } else if(rew.getActionKind() === Reward.ACTION_KIND_SCAN) {
                     if(elapsedTime <= 24 * 60) {
                         this.disableScan(rew);                        
@@ -297,46 +327,109 @@ function Shop(json) {'use strict';
         if(! this.checkin && nb_checkins > 0) {
             this.stepinPoints = Math.round(this.getPoints(Reward.ACTION_KIND_STEPIN) / (nb_checkins * nb_checkins));
         }
-        this.allPoints += this.stepinPoints;
-        this.changed = (this.prev_checkin !== this.checkin || this.prev_points !== this.allPossiblePoints);
+        this.allPoints += this.stepinPoints + this.catalogPoints;
+        this.changed = (this.prev_checkin !== this.checkin || this.prev_catalogViewed !== this.catalogViewed || this.prev_points !== this.allPossiblePoints);
         AppUser.updateShop(this);
     };
-    
-    this.retrieveScansAndComputeAvailablePoints = function(func, rewards, finalFunc) {
-        Spinner.show();
-        var Scan = require("/model/Scan"),
-            scan = new Scan(),
-            Reward = require("/model/Reward"),
-            rew = new Reward();
-        var self = this;
-        self.getList(scan, Tools.Hash2Qparams({ "shop.url" : self.getUrl() }), function(scans) {
-            var i, data = [];
-            for(i = 0; i < scans.length; i++) {
-                var s = new Scan(scans[i]);
-                s.index = i + 1;
-                data.push(s);
-            }
-            self.scans = data;
-            
-            var now = new Date();
-            var dateOffset = (24*60*60*1000) * 7; // 7 days
-            now.setTime(now.getTime() - dateOffset);         
-            
-            self.getList(rew, Tools.Hash2Qparams({ "shop.url" : self.getUrl(), "when!gte" : now.toISOString()}), 
-                function(rews) {
-                    socialRewards = rews;
-                    
-                    self.computeAvailablePoints(rewards);
-                    if(func) {
-                        func(self);
-                    }
-                    if(finalFunc) {
-                        finalFunc();
-                    }
-                    Spinner.hide();
-                });
-        });
+    this.getSocialRewards = function(func, rewards, finalFunc) {
+        var rew = new Reward();
+        var now = new Date();
+        var dateOffset = (24*60*60*1000) * 7; // 7 days
+        now.setTime(now.getTime() - dateOffset);
+        
+        function addSocialRewards(self) {
+            return function(rews) {
+                socialRewards = rews;
+                
+                self.computeAvailablePoints(rewards);
+                if(func) {
+                    func(self);
+                }
+                if(finalFunc) {
+                    finalFunc();
+                }
+                Spinner.hide();
+            };
+        }
+        
+        Ti.API.info("Get Social Rewards of " + this.name);
+        this.getList(rew, Tools.Hash2Qparams({ "shop.url" : this.getUrl(), "when!gte" : now.toISOString()}), 
+            addSocialRewards(this)
+        );
     };
+    
+    this.retrieveScansOfCatalog = function(cindex, func, rewards, finalFunc) {
+        var scan = new Scan();
+        
+        function _addNewScans(self) {
+            return function(scans) {
+                var i, data = [];
+                for(i = 0; scans && i < scans.length; i++) {
+                    var s = new Scan(scans[i]);
+                    s.shopUrl = self.getUrl();
+                    s.index = self.scans.length + 1;
+                    self.scans.push(s);
+                }
+                self.retrieveScansOfCatalog(cindex + 1, func, rewards, finalFunc);
+            }; 
+        }
+        
+        if(cindex < this.catalogs.length) {
+            var catalog = this.catalogs[cindex];
+            Ti.API.info("Retrieve Scans of Catalog " + cindex + " of " + this.name);
+            this.getList(scan, Tools.Hash2Qparams({ "catalog.url" : catalog.getUrl() }), _addNewScans(this));
+        } else {
+            this.getSocialRewards(func, rewards, finalFunc);         
+        }
+    };
+    
+    this.retrieveScans = function(func, rewards, finalFunc) {
+        Spinner.show();
+        var scan = new Scan();
+        
+        function _addNewScans(self) {
+            return function(scans) {
+                var i, data = [];
+                for(i = 0; scans && i < scans.length; i++) {
+                    var s = new Scan(scans[i]);
+                    s.shopUrl = self.getUrl();
+                    s.index = i + 1;
+                    data.push(s);
+                }
+                self.scans = data;
+            
+                self.getSocialRewards(func, rewards, finalFunc);         
+            };
+        }
+        
+        if(this.catalogs && this.catalogs.length > 0) {
+            this.scans = [];
+            this.retrieveScansOfCatalog(0, func, rewards, finalFunc);
+        } else {
+            this.getList(scan, Tools.Hash2Qparams({ "shop.url" : this.getUrl() }), _addNewScans(this));
+        }
+    };
+    
+    this.retrieveCatalog = function(cindex, func, rewards, finalFunc) {
+        function addNewCatalog(self) {
+            return function(catalog) {
+                self.catalogs[cindex] = catalog;
+                self.retrieveCatalog(cindex + 1, func, rewards, finalFunc);
+            };
+        }
+        
+        if(cindex < this.catalogs.length) {
+            var cat = this.catalogs[cindex];
+            Ti.API.info("Retrieve catalog " + cindex + " of " + this.name + ":" + cat.url);
+            this.retrieveUrl(cat.url, 'Catalog', addNewCatalog(this));
+        } else {
+            this.retrieveScans(func, rewards, finalFunc);
+        }
+    };
+    
+    this.retrieveCatalogs = function(func, rewards, finalFunc) {
+        this.retrieveCatalog(0, func, rewards, finalFunc);
+    };  
     
     this.doActionsAfterCrud = function(tabGroup) {
         tabGroup.updateObject(this);
@@ -358,7 +451,6 @@ function Shop(json) {'use strict';
         var user = AppUser.getCurrentUser();
         if(this.location) {
             var shoploc = this.location;
-            var self = this;
             var userloc = user.location;
             if(! user.location) {
                 user.geolocalize(function(newuser) {
@@ -379,7 +471,6 @@ function Shop(json) {'use strict';
     };
     this.createAnnotation = function(tabGroup) {
         var shoploc = this.location;
-        var self = this;
         var shopImg = Ti.UI.createImageView({
             height : 30, 
             width : 30
@@ -403,33 +494,41 @@ function Shop(json) {'use strict';
             animate:true,
             shop:this
         });
-        annotation.addEventListener('click', function(e) {
-            if(e.annotation && e.clicksource === 'pin') {
-                if(e.map.selectedAnnotation && e.map.selectedAnnotation !== e.annotation) {
-                    e.map.selectedAnnotation.setImage(e.map.selectedAnnotation.imgNormal); //'/images/annotation-stepin.png');
+        
+        function manageAnnotation(self) {
+            return function(e) {
+                if(e.annotation && e.clicksource === 'pin') {
+                    if(e.map.selectedAnnotation && e.map.selectedAnnotation !== e.annotation) {
+                        e.map.selectedAnnotation.setImage(e.map.selectedAnnotation.imgNormal); //'/images/annotation-stepin.png');
+                    }
+                    e.map.selectedAnnotation = e.annotation;
+                    e.annotation.setImage(imgOver); // '/images/annotation-stepin-over.png');
                 }
-                e.map.selectedAnnotation = e.annotation;
-                e.annotation.setImage(imgOver); // '/images/annotation-stepin-over.png');
-            }
-            if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
-                var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
-                    win = new ShopDetailWindow(self, tabGroup);
-                tabGroup.openWindow(null,win,{animated:true});
-            }
-        });
+                if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
+                    var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
+                        win = new ShopDetailWindow(self, tabGroup);
+                    tabGroup.openWindow(null,win,{animated:true});
+                }
+            };
+        }
+        
+        annotation.addEventListener('click', manageAnnotation(this));
         return annotation;
     };
     
-    this.createHeader = function(isBig) {
+    this.createHeader = function(isBig, callback) {
         var internBorder = 2;
         var shop = this;
         
         var ntop = (isBig ? 80 : 1);
             
         // We create a new header view
-        var header = Ti.UI.createView({
+        var header = Ti.UI.createButton({
             height : (isBig ? 135+63+10 : 65),
-            top : 0
+            top : 0,
+            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+            borderRadius : 0,
+            borderWidth : 0
         });
         if(isBig) {
             Image.cacheImage(shop.getPhotoUrl(0), function(image) {
@@ -437,6 +536,10 @@ function Shop(json) {'use strict';
             });
         } else {
             header.setBackgroundColor(Ti.App.PinkColor);
+        }
+        
+        if(callback) {
+            header.addEventListener('click', callback);
         }
             
         // we create a view for shop details in the header
@@ -534,7 +637,6 @@ function Shop(json) {'use strict';
     };
     
     this.createTableRow = function(tabGroup) {
-        var self = this;
         var ntop = 133;
         var nleft = 0;
         var buttonHeight = 35;
@@ -548,18 +650,27 @@ function Shop(json) {'use strict';
             object_index : this.index,
             selectedBackgroundColor :'#f0f0f0' 
         });
-        var container = Ti.UI.createView({
+        
+        var containerShadow = Ti.UI.createView({
             top : 5,
             left : 5,
             right : 5,
             bottom : 5,
-            backgroundColor : 'white',
-            borderRadius:2,
+            borderRadius:3,
             borderColor : '#bdbfc3',
+            backgroundColor : 'white',
             shadow : {
-                shadowOffset : {x:1,y:1},
+                shadowOffset : {x:2,y:2},
                 shadowRadius : 2
             } 
+        });
+        row.add(containerShadow);
+        
+        var container = Ti.UI.createView({
+            top : 5,
+            left : 5,
+            right : 5,
+            bottom : 5
         });
         row.add(container);
         
@@ -571,19 +682,19 @@ function Shop(json) {'use strict';
         });
         container.add(internView);
         
-        var view = this.createHeader(true);
-        internView.add(view);
-
-        function gotoShop() {
-            var ShopDetailWindow = require("ui/common/ShopDetailWindow"),
-                swin = new ShopDetailWindow(self, tabGroup);
-            
-            tabGroup.openWindow(null, swin, {animated:true});
+        function gotoShop(self) {
+            return function() {
+                var ShopDetailWindow = require("ui/common/ShopDetailWindow"),
+                    swin = new ShopDetailWindow(self, tabGroup);
+                
+                tabGroup.openWindow(null, swin, {animated:true});
+            };
         }
         
-        view.addEventListener('click', gotoShop);
-        
-        this.addOverHeader(internView, tabGroup, true, gotoShop);
+        var view = this.createHeader(true, gotoShop(this));
+        internView.add(view);
+
+        this.addOverHeader(internView, tabGroup, true, gotoShop(this));
         
         var socialView = Ti.UI.createView({
             top : ntop,
@@ -629,42 +740,15 @@ function Shop(json) {'use strict';
         }
         
         // Then we add 2 views : for step and for scan
-        var scanView = createButton(' ' + this.scans.length + ' Articles', '/images/tag-small.png', 90);
-        // internView.add(scanView);
-        
-        scanView.addEventListener('click', function(e) {
-            var ScanListWindow = require("/ui/common/ScanListWindow"),
-                swin = new ScanListWindow(self, tabGroup);
-            tabGroup.openWindow(null, swin, {animated  :true});
-        });
-
-        var stepInView = createButton(' +' + this.allPossiblePoints + ' steps',
-            (this.scans.length > 0 ? '/images/steps-tag-small.png' : '/images/steps-small.png'), '100%');
+        var nbCatalogs = (this.catalogs && this.catalogs.length) || 0;
+        var stepInView = createButton(' ' + this.allPossiblePoints + ' steps'+ (nbCatalogs > 0 ? ' (+' + this.catalogPoints * nbCatalogs + ')' : '') ,
+            '/images/steps-small.png', '100%');
         stepInView.left = null;
         stepInView.right = null;        
         internView.add(stepInView);
         
-        stepInView.addEventListener('click', gotoShop);
-        
-        var middleView = createButton(' Partager', '/images/checked-small.png', 90);
-        middleView.left = null;
-        middleView.right = 0;
-        // internView.add(middleView);
-        
+        stepInView.addEventListener('click', gotoShop(this));
         ntop += buttonHeight;
-        
-        // then we add the advert
-        var AdvertView = require("ui/common/AdvertView"),
-            advertView = new AdvertView(['/images/advert1.png', '/images/advert2.png', '/images/advert3.png'], {
-                height : advertHeight,
-                bottom : 0,
-                backgroundColor : 'white'
-        });
-        // internView.add(advertView);
-        
-        row.moveNext = function() {
-            advertView.moveNext();
-        };
         
         this.updateRow(row);
         
@@ -673,18 +757,21 @@ function Shop(json) {'use strict';
     
     this.updateRow = function(row) {
         // We run a distance computation
+        function manageDist(self) {
+            return function(dist) {
+               self.setDistance(row, dist);
+            };
+        }
+        
         if(! this.hasOwnProperty('distance')) {
-            var self = this;
-            this.computeDistance(function(dist) {
-                self.setDistance(row, dist);
-            });            
+            this.computeDistance(manageDist(this));            
         } else {
             this.setDistance(row, this.distance);
         }
         return row;
     };
 
-    // MUsT BE at the end of the file after all the methods definition 
+    // Must BE at the end of the file after all the methods definition 
     this.init(json);
     
     return this;

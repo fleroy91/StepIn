@@ -124,8 +124,8 @@ function ApplicationTabGroup() { 'use strict';
 
 	var winSearch = new TabWindow({booking : false, tabGroup : self});
 	var tabSearch = Ti.UI.createTab({
-		title : Ti.Locale.getString('mystock_tab_title','A coté'),
-		icon : '/images/Sin-proximite.png',
+		title : Ti.Locale.getString('mystock_tab_title','Magasins'),
+		icon : '/images/sin-magasins.png',
 		window : winSearch
 	});
 	winSearch.containingTab = tabSearch;
@@ -152,7 +152,7 @@ function ApplicationTabGroup() { 'use strict';
 	var winPresents = new PresentListWindow(self);
 	var tabPresents = Ti.UI.createTab({
 		title : 'Cadeaux',
-        icon : '/images/Sin-cadeaux.png',
+        icon : '/images/sin-cadeaux.png',
 		window : winPresents
 	});
 	winPresents.containingTab = tabPresents;
@@ -161,11 +161,21 @@ function ApplicationTabGroup() { 'use strict';
     self.tabPresents = tabPresents;
     tabPresents.tv = winPresents.tv;
 
+    var WishListWindow = require('ui/common/WishListWindow');
+    var winWish = new WishListWindow(self);
+    var tabWish = Ti.UI.createTab({
+        title : 'Favoris',
+        icon : '/images/29-heart.png',
+        window : winWish
+    });
+    winWish.containingTab = tabWish;
+    Spinner.add(winWish);
+
 	var AccountWindow = require('ui/common/AccountWindow');
 	var winAccount = new AccountWindow({tabGroup : self});
 	var tabAccount = Ti.UI.createTab({
-		title : Ti.Locale.getString('account_tab_title','Compte'),
-        icon : '/images/Sin-param.png',
+		title : Ti.Locale.getString('account_tab_title','Profil'),
+        icon : '/images/sin-compte.png',
 		window : winAccount
 	});
 	winAccount.containingTab = tabAccount;
@@ -175,9 +185,13 @@ function ApplicationTabGroup() { 'use strict';
 	//  add tabs
 	//
 	self.addTab(tabSearch);
-	self.addTab(tabPresents);
     self.addTab(tabMorePoints);
+    self.addTab(tabPresents);
+    self.addTab(tabWish);
 	self.addTab(tabAccount);
+	
+	self.indexTabPresents = 2;
+    self.indexTabMorePoints = 1;
 	
 	//
 	// Management of arrays of objects
@@ -237,48 +251,57 @@ function ApplicationTabGroup() { 'use strict';
     self.createPointsButton = function() {
         // We change the titleControl of the current window
         var points = user.getTotalPoints() || 0;
-        var maxWidth = 80;
+        var maxWidth = 150;
         var viewWidth = maxWidth - 21;
         var w = Math.round(((points % 2000) + 1) / 2000 * viewWidth);
         var enclosingView = Ti.UI.createView({
             right : 10,
-            height : 30,
+            height : 50,
             width : maxWidth
         });
         var view = Ti.UI.createView({
             left : 0,
-            height : 16,
+            height : 50,
             width : viewWidth,
             borderRadius : 4,
-            borderColor : Ti.App.PinkColor,
-            borderWidth : 1
+            borderColor : 'white',
+            borderWidth : 0
         });
         enclosingView.add(view);
         var backView = Ti.UI.createView({
             width : w,
             left:0,
             height : view.height,
-            backgroundColor : Ti.App.PinkColor,
+            backgroundColor : 'white',
             borderRadius : view.borderRadius,
             borderWidth : 0
         });
-        view.add(backView);
+        // view.add(backView);
         var lblIn = Image.createStepInStar({
             right : 0,
-            height : 25,
-            width : 20,
-            bottom : 4,
-            image : "images/present.png"
+            height : 38,
+            bottom : 14,
+            image : "images/giftbox.png"
         });
         enclosingView.add(lblIn);
         var lblPoints = Ti.UI.createLabel({
             text : points,
             textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-            right : 4,
-            font:{fontSize : 12, fontWeight : 'bold'},
-            color : 'gray'
+            right : 8,
+            bottom : 6 ,
+            font: {fontSize : 18, fontWeight : 'bold'},
+            color : Ti.App.PinkColor
         });
         view.add(lblPoints);
+        var lblSteps = Ti.UI.createLabel({
+            text : 'steps',
+            textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
+            right : 5,
+            bottom : 8 ,
+            font: {fontSize : 9, fontWeight : 'normal'},
+            color : Ti.App.PinkColor
+        });
+        enclosingView.add(lblSteps);
         enclosingView.addEventListener('click', function(e) {
             displayPresentsExample(); 
         });
@@ -292,7 +315,7 @@ function ApplicationTabGroup() { 'use strict';
             if(_nextPresent) {
                 bmax = _nextPresent.points;
             }
-            lblPoints.setText(p);
+            lblPoints.setText(p );
             var w = Math.round((p - bmin) / (bmax - bmin) * viewWidth);
             if(animated) {
                 var a = Ti.UI.createAnimation({width : w, duration : 500});
@@ -327,6 +350,7 @@ function ApplicationTabGroup() { 'use strict';
     self.createTitle(winSearch, "A coté");
     self.createTitle(winAccount, "Mon compte");
     self.createTitle(winPresents, "Cadeaux");
+    self.createTitle(winWish, "Mes favoris");
     self.createTitle(winMorePoints, "Plus de points");
     
     self.updateTitleWindow = function(win, animated) {
@@ -469,6 +493,22 @@ function ApplicationTabGroup() { 'use strict';
             },3000);
         }
     };
+    
+    self.openShop = function(shop, catalog, scanUrl) {
+        self.closeAllWindows();
+        // We open the window 
+        var ShopDetailWindow = require("/ui/common/ShopDetailWindow"),
+            swin = new ShopDetailWindow(shop, self);
+        self.openWindow(null, swin, {animated:false});
+        
+        // Do we have to open the catalog
+        if(catalog) {
+            var ScanListWindow = require("/ui/common/ScanListWindow"),
+                cwin = new ScanListWindow(shop, self, catalog, scanUrl);
+            self.openWindow(null, cwin, {animated:false});
+        }
+        self.setActiveTab(0);
+    };
 
     var in_manage_code = false; 
     var allCodes = [];
@@ -513,9 +553,7 @@ function ApplicationTabGroup() { 'use strict';
                 
                 // We open the window 
                 // TODO (except if it's already opened)
-                var ShopDetailWindow = require("/ui/common/ShopDetailWindow"),
-                    swin = new ShopDetailWindow(shopFound, self);
-                self.openWindow(null, swin, {animated:true});
+                self.openShop(shopFound);
 
                 self.addNewReward(rew, function(reward) {
                     if(reward) {
@@ -540,8 +578,10 @@ function ApplicationTabGroup() { 'use strict';
     
     // To hear the sound
     var UDModule = require('com.ultradata');
+    // TODO : Set true to run UD with Simulator
+    var runUDWithSimulator = false;
     function myStartUD() {
-        if(! Tools.isSimulator()) {
+        if(runUDWithSimulator) {
             UDModule.StartUD({
                 onHear : function(e) {
                     // alert("Hear from UD : " + e);
@@ -554,23 +594,28 @@ function ApplicationTabGroup() { 'use strict';
         }
     }
     function myResumeUD() {
-        if(! Ti.App.Properties.getBool('isUDRunning')) {
-            UDModule.ResumeUD();
-            Ti.App.Properties.setBool('isUDRunning', true);
-            Ti.API.info("==> Resume de UD");
+        if(runUDWithSimulator) {
+            if(! Ti.App.Properties.getBool('isUDRunning')) {
+                UDModule.ResumeUD();
+                Ti.App.Properties.setBool('isUDRunning', true);
+                Ti.API.info("==> Resume de UD");
+            }
         }
     }
     function myPauseUD() {
-        if(Ti.App.Properties.getBool('isUDRunning')) {
-            UDModule.PauseUD();
-            Ti.API.info("==> Pause de UD");
-            Ti.App.Properties.setBool('isUDRunning', false);
+        if(runUDWithSimulator) {
+            if(Ti.App.Properties.getBool('isUDRunning')) {
+                UDModule.PauseUD();
+                Ti.API.info("==> Pause de UD");
+                Ti.App.Properties.setBool('isUDRunning', false);
+            }
         }
     }
     
     self.addEventListener('open', myStartUD);
     Ti.App.addEventListener("resumed", myResumeUD);
     Ti.App.addEventListener("paused", myPauseUD);
+    
     // Should never happen
     self.addEventListener('close', function(e) {
         Ti.API.info("****** ERROR : Should never happen !!! *********");

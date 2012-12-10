@@ -21,54 +21,67 @@ function BigScrollView(options, subviewWidth, subviewHeight) { 'use strict';
     options.backgroundColor = 'white';
     
     subviewWidth = subviewWidth || 142;
-    subviewHeight = subviewHeight || options.data[0].height;
+    subviewHeight = subviewHeight || (options.data && options.data.length > 0 && options.data[0].height) || 140;
     
     var containerWidth = (160 / 142) * subviewWidth;
     var containerHeight = (156 / 140) * subviewHeight;
         
     var view = Ti.UI.createScrollView(options);
     
-    var i, subviews = options.data;
-    var ntop = 0;
-    var nleft = 0;
-    
-    for(i = 0; i < subviews.length; i ++) {
-        var subview = subviews[i];
-        var container = Ti.UI.createView({
-            width : containerWidth,
-            height : containerHeight,
-            // backgroundImage : '/images/bck-shadow.png',
-            // backgroundColor : 'white',
-            top : ntop,
-            left : nleft
-        });
+    var i, subviews = null, containers = null;
+    view.setData = function(data) {
+        var ntop = 0;
+        var nleft = 0;
         
-        subview.top = (156 - 140) / 2 - 1; 
-        subview.left = 10;
-        var shadowView = Ti.UI.createView({
-            width : subview.width,
-            height : subview.height,
-            shadow :{
-                shadowRadius:2,
-                shadowOpacity:0.7,
-                shadowOffset:{x:2, y:2}
-            },
-            top : subview.top,
-            left : subview.left,
-            zIndex : -1
-        });
-        subview.right = subview.bottom = null;
-        subview.backgroundColor = 'white';
-        container.add(shadowView);
-        container.add(subview);
-        view.add(container);
-        
-        nleft += containerWidth;
-        if(nleft >= Ti.Platform.displayCaps.platformWidth) {
-            nleft = 0;
-            ntop += containerHeight;
+        if(containers) {
+            // We need to remove all subviews
+            for(i = 0; i < containers.length; i++) {
+                view.remove(containers[i]);
+            }
         }
-    }
+        subviews = data;
+        containers = [];
+        for(i = 0; i < subviews.length; i ++) {
+            var subview = subviews[i];
+            var container = Ti.UI.createView({
+                width : containerWidth,
+                height : containerHeight,
+                // backgroundImage : '/images/bck-shadow.png',
+                // backgroundColor : 'white',
+                top : ntop,
+                left : nleft
+            });
+            
+            subview.top = (156 - 140) / 2 - 1; 
+            subview.left = 10;
+            var shadowView = Ti.UI.createView({
+                width : subview.width,
+                height : subview.height,
+                shadow :{
+                    shadowRadius:2,
+                    shadowOpacity:0.7,
+                    shadowOffset:{x:2, y:2}
+                },
+                top : subview.top,
+                left : subview.left,
+                zIndex : -1
+            });
+            subview.right = subview.bottom = null;
+            subview.backgroundColor = 'white';
+            container.add(shadowView);
+            container.add(subview);
+            containers.push(container);
+            view.add(container);
+            
+            nleft += containerWidth;
+            if(nleft >= Ti.Platform.displayCaps.platformWidth) {
+                nleft = 0;
+                ntop += containerHeight;
+            }
+        }
+    };
+    
+    view.setData(options.data);
     
     return view;
 }

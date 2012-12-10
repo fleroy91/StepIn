@@ -15,7 +15,7 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
         backgroundColor : Ti.App.PinkColor
     });
     
-    var canScan = args.canScan;
+    var canScan = args && args.canScan;
     
     var view = scan.createHeaderView();
     
@@ -135,7 +135,7 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
             alert("Vous devez d'abord faire un Step-In dans la boutique pour pouvoir scanner des articles !");
         }
     });
-    self.add(btScan);
+    // self.add(btScan);
     
     if(canScan) {
         if(Tools.isSimulator()) {

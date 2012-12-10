@@ -15,7 +15,7 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
     var t = Titanium.UI.create2DMatrix({ scale : 0 });
     
     var buttonHeight = 25;
-    var height = Math.min(2, prevPresents.length) * 40 + 60 + buttonHeight + 10;
+    var height = Math.min(2, prevPresents.length) * 40 + 60 + buttonHeight;
     
     var self = Ti.UI.createWindow({
         width : '100%',
@@ -29,7 +29,7 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
         transform : t,
         top : 45,
         right : 5,
-        backgroundColor : '#f0f0f0',
+        backgroundColor : 'white',
         width : 260,
         height : height,
         anchorPoint:{x:1,y:0}
@@ -121,17 +121,20 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
         height : height - buttonHeight
     });
     internView.add(tv);
-    
-    var bt = Ti.UI.createButtonBar({
-        style : Ti.UI.iPhone.SystemButtonStyle.BAR,
-        backgroundColor : "#d92276",
-        labels : ["Tout voir", "Fermer"],
-        height : buttonHeight,
+    var bt = Ti.UI.createButton({
+        style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+        title : "Voir tous les cadeaux",
+        font:{fontSize : 14, fontWeight : 'normal'},
+        color : Ti.App.PinkColor,
+        backgroundImage : '/images/bck-gradient-button.png',
+        borderRadius : 0,
+        borderColor : '#bdbfc3',
         width : '100%',
+        height : buttonHeight,
         bottom : 0,
         zIndex : 10
     });
-    internView.add(bt);
+    view.add(bt);
     
     function niceClose(func) {
         var t3 = Ti.UI.create2DMatrix({scale : 0});
@@ -146,21 +149,21 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
     }
     
     bt.addEventListener('click', function(e) {
-        if(e.index === 0) {
-            niceClose(function() {          
-                tabGroup.setActiveTab(1);
-            });
-        } else {
-            niceClose();
-        }
+        niceClose(function() {          
+            tabGroup.setActiveTab(tabGroup.indexTabPresents);
+        });
     });
     self.add(view);
+    
+    tv.addEventListener('click', function() { niceClose(); });
     
     self.addEventListener('open', function() {
         var t2 = Ti.UI.create2DMatrix({scale : 1});
         var a = Ti.UI.createAnimation({transform : t2, duration : 500});
         view.animate(a); 
     });
+    
+    self.addEventListener('click', function() { niceClose(); });
     
     return self;
 }

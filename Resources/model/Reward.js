@@ -127,5 +127,6 @@ Reward.prototype.constructor = Reward;
 
 Reward.ACTION_KIND_STEPIN = "stepin";
 Reward.ACTION_KIND_SCAN = "scan";
+Reward.ACTION_KIND_CATALOG = "catalog";
 
 module.exports = Reward;

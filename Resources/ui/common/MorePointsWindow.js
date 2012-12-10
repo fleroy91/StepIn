@@ -252,84 +252,136 @@ function MorePointsWindow(tabGroup, options) {'use strict';
     function likeFacebook() {
         alert("Not Implemented !");
     }
+    
+    function readCatalog(params) {
+        // we need to open the shop window + the catalog of the shop
+        var shop = params && params.shop;
+        tabGroup.openShop(shop);
+    }
 
     // FIXME : check if actions are already done by the user !!!! (check rewards)
-    var actions = [
+    var actionsInvite = [
         {title : 'Invitez vos amis Facebook', detail : "+10 steps par invitation\n+150 steps par invitation acceptée", image : '/images/FB.png', points : 150, action : inviteFBFriends},
         {title : 'Invitez vos contacts', detail : "+10 steps par invitation\n+150 steps par invitation acceptée", image : '/images/apple.png', points : 150, action : invitePhoneFriends},
         {title : 'Partagez sur Twitter', detail : "+150 steps pour le premier tweet posté avec la mention #Step-In", image : '/images/twitter.png', points : 150, action : shareTwitter},
-        {title : 'Likez sur Facebook', detail : "+150 steps pour un like Facebook sur Step-In", image : '/images/like.png', points : 150, action : likeFacebook},
-        {title : 'Suivez-nous sur Twitter', detail : "+150 steps si vous suivez Step-In sur Twitter", image : '/images/follow.png', points : 150, action : followTwitter},
-        {title : "Notez nous sur l'App Store", detail : "+250 steps si vous nous notez sur l'AppStore", image : '/images/rate.png', points : 250, action : displayNoteAppStore}
+        {title : 'Likez sur Facebook', detail : "+150 steps pour un like Facebook sur Step-In", image : '/images/like.png', points : 150, action : likeFacebook}
     ];
     
-    function createRow(options) {
-        var row = Ti.UI.createView({
-            className : 'MorePoints',
+    var i;
+    
+    var actionsOthers = [
+        {title : "Notez nous sur l'App Store", detail : "+250 steps si vous nous notez sur l'AppStore", image : '/images/rate.png', points : 250, action : displayNoteAppStore},
+        {title : 'Suivez-nous sur Twitter', detail : "+150 steps si vous suivez Step-In sur Twitter", image : '/images/follow.png', points : 150, action : followTwitter}
+        ];
+        
+    var boxHeight = 90;
+    var rowHeight = 120;
+    
+    function createBox(options) {
+        var box = Ti.UI.createView({
             backgroundColor : 'white',
-            width : 142,
-            height : 170
+            width : 70,
+            height : boxHeight
         });
         
         var img = Ti.UI.createImageView({
             borderWidth : 0,
-            top : 35, 
-            width : 60, 
-            height : 60,
-            image : options.image
+            top : 3, 
+            width : 65, 
+            height : 65
         });
-        row.add(img);
+        box.add(img);
+        
+        if(Tools.startsWith(options.image, "http")) {
+            Image.loadImage(options.image, function(image) {
+               img.setImage(Image.squareImage(image, 65)); 
+            });
+        } else {
+           img.setImage(options.image); 
+        }
+        
+        function _clickBox(options) {
+            return function(e) {
+                if(options.detail) {
+                    var MorePointsDetailWindow = require("/ui/common/MorePointsDetailWindow"),
+                        swin = new MorePointsDetailWindow(tabGroup, options);
+                        
+                    tabGroup.openWindow(self.containingTab, swin, {animated:true});   
+                } else {
+                    options.action(options.params);
+                }
+            };
+        }
+        
+        box.addEventListener('click', _clickBox(options));
+
+        return box;
+    }
+    
+    function createBigRow(title, actions, points) {
+        var row = Ti.UI.createView({
+            height : rowHeight,
+            width : Ti.UI.FILL
+        });
+        
+        var internView = Ti.UI.createView({
+            left : 5,
+            top : 0,
+            right : 5,
+            bottom : 0,
+            borderColor : 'gray',
+            borderWidth : 1,
+            backgroundColor : 'white',
+            shadow : {
+                shadowOffset : { x:2,y:2},
+                shadowRadius : 3
+            }
+        });
+        row.add(internView);
         
         var lblTitle = Ti.UI.createLabel({
-            top : 2,
-            font : {fontSize : 12, fontWeight : 'bold'},
-            color : '#333333',
-            text : options.title,
-            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER
+            text : title,
+            top : 7,
+            left : 10,
+            textAlign : Ti.UI.TEXT_ALIGNMENT_LEFT,
+            font: {fontSize : 15, fontWeight : 'bold'},
+            color : Ti.App.PinkColor
         });
-        row.add(lblTitle);
-        var lblDetails = Ti.UI.createLabel({
-            left : 3,
-            right : 3,
-            top : 97,
-            font : {fontSize : 10},
-            color : '#989898',
-            text : options.detail,
-            textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER
-        });
-        row.add(lblDetails);
+        internView.add(lblTitle);
         
-        var bt = Ti.UI.createButtonBar({
-            style : Ti.UI.iPhone.SystemButtonStyle.BAR,
-            labels : ["+" + options.points + " steps"],
-            color : 'white',
-            bottom : 8,
-            width : 125,
-            height : 22,
-            backgroundColor : Ti.App.PinkColor
+        var views = Ti.UI.createView({
+            left : 5,
+            height : boxHeight,
+            top : 30,
+            width : Ti.UI.FILL
         });
-        row.add(bt);
         
-        bt.addEventListener('click', function(e) {
-            options.action();
-        });
-        img.addEventListener('click', function(e) {
-            options.action();
-        });
+        var nleft = 2;
+        for(i = 0; i < actions.length; i++) {
+            var box = createBox(actions[i]);
+            box.left = nleft;
+            views.add(box);
+            nleft += box.width + 5;
+        }
+        internView.add(views);
+
+        var vPoints = Image.createPointView(points, 30, 70, null, {ratio : 0.9});
+        vPoints.right = 10;
+        vPoints.top = 0;
+        internView.add(vPoints);
 
         return row;
     }
     
-    var i, data = [];
-    for(i = 0;i < actions.length; i++) {
-        var row = createRow(actions[i]);
-        data.push(row);
-    }
-    
-    var BigScrollView = require("ui/common/BigScrollView"),
-        bsc = new BigScrollView({ data : data}, 142, 170);
-    view.add(bsc);
-    
+    var ntop = 2;
+    var row1 = createBigRow("Invitez ! Partagez !", actionsInvite, 150);
+    row1.top = ntop;
+    view.add(row1);
+    ntop += 2 * (row1.height + 2);
+    var row3 = createBigRow("Gagnez plus de steps !", actionsOthers, 150);
+    row3.top = ntop;
+    view.add(row3);
+        
     niceClose = function(func) {
         if(popup) {
             var t = Ti.UI.create2DMatrix({scale:0});
@@ -342,7 +394,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
             });
             view.animate(a);
         } else {
-            tabGroup.setActiveTab(2);
+            tabGroup.setActiveTab(tabGroup.indexTabMorePoints);
             if(func) {
                 func();
             }
@@ -353,7 +405,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         var t2 = Ti.UI.create2DMatrix({scale : 1});
         var a = Ti.UI.createAnimation({ transform : t2, duration : 500});
         a.addEventListener('complete', function() {
-            tabGroup.setActiveTab(2);
+            tabGroup.setActiveTab(tabGroup.indexTabMorePoints);
             self.close({animated:false});             
         });
         self.addEventListener('open', function() {
@@ -361,6 +413,51 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         });
     }
     self.add(view);
+    
+    var added = false;
+    function updateMiddleRow() {
+        if(! added) {
+            added = true;
+            var actionsCatalog = [];
+            var shops = AppUser.getAllShops();
+            for(i = 0; shops && i < shops.length; i++) {
+                var shop = shops[i];
+                if(shop.catalogs && shop.catalogs.length > 0) {
+                    var action = {
+                        title : shop.getTitle(),
+                        image : shop.getPhotoUrl(0),
+                        points : shop.getCatalogPoints(),
+                        params : {shop:shop},
+                        action : readCatalog
+                    };
+                    actionsCatalog.push(action);
+                    /*
+                    var j;
+                    for(j = 0; j < shop.catalogs.length; j ++) {
+                        var catalog = shop.catalogs[j];
+                        var action = {
+                            title : catalog.name,
+                            image : catalog.getPhotoUrl(0),
+                            points : shop.getCatalogPoints(),
+                            params : {shop:shop, catalogIndex:j},
+                            action : readCatalog
+                        };
+                        actionsCatalog.push(action);
+                    }
+                    */
+                }
+            }
+            
+            var row2 = createBigRow("Parcourez des catalogues !", actionsCatalog, 150);
+            row2.top = row1.top + row1.height + 2;
+            view.add(row2);
+        }
+    }
+    
+    self.addEventListener('open', function() {
+        updateMiddleRow();
+    });
+    
     return self;
 }
 

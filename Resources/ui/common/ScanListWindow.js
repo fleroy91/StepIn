@@ -8,8 +8,9 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require('/etc/AppImage');
+var AppUser = require('/model/AppUser');
 
-function ScanListWindow(shop, tabGroup) { 'use strict';
+function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict';
     var self = Ti.UI.createWindow({
         barImage : '/images/topbar-stepin.png',
         barColor : 'black',
@@ -17,22 +18,72 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
     });
     
     var header = shop.createHeader(false);
-    self.add(header);    
+    self.add(header);
+    
+    // We add the progress bar
+    var nbPoints = shop.catalogPoints;
+    var nbScans = 0;
+    
+    var user = AppUser.getCurrentUser();
+    
+    function isBookmarked(scan) {
+        var j, bookmarks = user.getBookmarks();
+        var found = false;
+        for(j = 0; !found && bookmarks && j < bookmarks.length; j ++) {
+            var book = bookmarks[j];
+            if(book.scan.url === scan.getUrl() && ! book.inactive) {
+                found = true;
+            }
+        }
+        return found;
+    }
+    
+    var pgWidth = 150;
+    var progress = Ti.UI.createView({
+        top : 5,
+        left : 80,
+        width : pgWidth,
+        height : 10,
+        borderColor : "white",
+        borderRadius : 3,
+        borderWidth : 1
+    });
+    var internProgress =Ti.UI.createView({
+       top : progress.top,
+       left : progress.left,
+       backgroundColor : 'white',
+       borderRadius : progress.borderRadius,
+       borderWidth : progress.borderWidth,
+       borderColor : 'white',
+       width : 0,
+       height : 10
+    });
+    if(! catalog.viewed) {
+        header.add(progress);
+        header.add(internProgress);
+    }
+    
+    var vPoints = Image.createPointView(nbPoints, 20, 70, false, {
+        ratio: 0.7,
+        color :'white'});
+    vPoints.top = 2;
+    vPoints.right = 2;
+    header.add(vPoints);
     
     shop.addOverHeader(self, tabGroup, false);
     
     function createScanView(scan) {
-        var v = Ti.UI.createButton({
-            style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-            width : 142,
-            height : 170
+        var v = Ti.UI.createView({
+            width : Ti.UI.FILL,
+            height : Ti.UI.FILL,
+            scan : scan
         });
         
         var img = Ti.UI.createImageView({
             borderWidth : 0,
-            height : 100, 
-            width : 100,
-            top : 2
+            height : 220, 
+            width : 220,
+            top : 10
         });
         Image.cacheImage(scan.getPhotoUrl(0), function(image) {
             img.setImage(image); 
@@ -41,61 +92,149 @@ function ScanListWindow(shop, tabGroup) { 'use strict';
         
         var lbl1 = Ti.UI.createLabel({
             text : scan.title,
-            top : 105,
-            height : 15,
+            top : 230,
+            height : 20,
             color : 'blue',
-            font : {fontSize : 11, fontWeight : 'bold'}
+            font : {fontSize : 16, fontWeight : 'bold'}
         });
         v.add(lbl1);
         var lbl2 = Ti.UI.createLabel({
             text : scan.desc,
             top : lbl1.top + lbl1.height,
-            left : 2, right : 2,
+            left : 22, right : 22,
             textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER, 
-            height : 25,
+            height : 35,
             color : 'gray',
-            font : {fontSize : 9, fontWeight : 'normal'}
-        });
+            font : {fontSize : 12, fontWeight : 'normal'}
+        }); 
         v.add(lbl2);
         
-        var vPoints = Image.createPointView(scan.points, 30, Ti.UI.FILL, scan.scanned);
-        vPoints.top = 140;
-        vPoints.width = Ti.UI.FILL;
-        vPoints.right = 40;
-        v.add(vPoints);
-        v.addEventListener('click', function(e) {
+        var bookmarked = isBookmarked(scan);
+        v.savedBookmarked = bookmarked;
+        var bookmark = Ti.UI.createButton({
+            style:Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+            borderWidth :0,
+            image : (bookmarked ? '/images/bookmark.png' : '/images/bookmark_nude.png'),
+            width : 24,
+            height : 24,
+            bottom : 5,
+            left : 5
+        });
+        v.add(bookmark);
+        
+        bookmark.addEventListener('click', function() {
+            bookmarked = ! bookmarked;
+            if(bookmarked) {
+                bookmark.setImage("/images/bookmark.png");
+            } else {
+                bookmark.setImage("/images/bookmark_nude.png");
+            }
+        });
+        
+        var infoButton = Ti.UI.createButton({
+            style:Ti.UI.iPhone.SystemButton.INFO_DARK,
+            bottom : 5,
+            right : 5
+        });
+        v.add(infoButton); 
+        
+        infoButton.addEventListener('click', function() {
             var ScanDetailWindow = require("/ui/common/ScanDetailWindow"),
-                swin = new ScanDetailWindow(scan, tabGroup, {canScan : shop.checkin && ! scan.scanned});
-            swin.addEventListener('close', function(e) {
-                if(e.source.object) {
-                    // The object was scanned
-                    scan = e.source.object;
-                    var newView = Image.createPointView(scan.points, 30, Ti.UI.FILL, scan.scanned);
-                    newView.top = vPoints.top;
-                    newView.right = vPoints.right;
-                    newView.backgroundColor = 'white';
-                    v.add(newView);
-                    vPoints.animate({view : newView, duration : 500}, function(e) {
-                        vPoints.visible = false;
-                    });
-                    shop.setScan(scan);
-                }
-            });
-                
+                swin = new ScanDetailWindow(scan, tabGroup, {canScan : false});
             tabGroup.openWindow(null, swin, {animated:true});
         });
+        
+        v.getBookmark = function() {
+            return bookmarked;
+        };
+        
         return v;
     }
     
-    var i, data = [], scans = shop.scans;
+    var pageIndex = -1;
+    var i, views = [], scans = shop.scans;
     for(i = 0; i < scans.length; i++) {
-        data.push(createScanView(scans[i]));
+        var scan = scans[i];
+        if(scan.catalog.url === catalog.getUrl()) {
+            nbScans ++;
+            views.push(createScanView(scan));
+            
+            if(scan.getUrl() === urlScanSelected) {
+                pageIndex = views.length - 1;
+            }
+        }
     }
-    var BigScrollView = require("ui/common/BigScrollView"),
-        bsv = new BigScrollView({data : data, top : header.height - 10}, 142, 170);
+    
+    var bsv = Ti.UI.createScrollableView({
+        showPagingControl:true,
+        pagingControlColor : 'lightgray',
+        height : Ti.UI.FILL,
+        backgroundColor : '#f0f0f0',
+        top : header.height -10,
+        views:views
+    }); 
     self.add(bsv);
+    
+    function updateSize(max) {
+        internProgress.setWidth(pgWidth * max / nbScans); 
+    }
+    
+    var max = 1;
+    updateSize(max);
+
+    var displayed = catalog.viewed;
+    function updateCurrentPage(currentPage, dontDisplay) {
+        if(currentPage + 1 > max) {
+            max = currentPage + 1;
+            updateSize(max);
+        }
+        if(max === nbScans && !displayed && ! dontDisplay) {
+           displayed = true;
+           var Reward = require("model/Reward"),
+                rew = new Reward({ nb_points : nbPoints});
+            rew.setActionKind(Reward.ACTION_KIND_CATALOG);
+            rew.setShop(shop);
+            rew.catalog = catalog.getUrl();
+            rew.setUser(AppUser.getCurrentUser());
+            tabGroup.addNewReward(rew, function(newRew) {
+                if(newRew) {
+                    self.rewarded = true;
+                }
+            });
+        }
+    }
+    
+    bsv.addEventListener('scrollEnd', function(e) {
+        updateCurrentPage(e.currentPage);
+    });
    
+    if(pageIndex >= 0) {
+        bsv.setCurrentPage(pageIndex);
+        updateCurrentPage(pageIndex, true);
+    }
+    
     tabGroup.createTitle(self, "Scans");
+    
+    function saveBookmarks() {
+        // We need to save the bookmarks
+        var bookmarksToAdd = [];
+        var bookmarksToDelete = [];
+        for(i = 0;i < views.length; i++) {
+            if(views[i].getBookmark()) {
+                if(! views[i].savedBookmarked) {
+                    bookmarksToAdd.push(views[i].scan);
+                }
+                views[i].savedBookmarked = true;
+            } else if(views[i].savedBookmarked) {
+                bookmarksToDelete.push(views[i].scan);
+                views[i].savedBookmarked = false;
+            }
+        }
+        user.saveBookmarks(bookmarksToAdd, bookmarksToDelete);
+    }
+    
+    // self.addEventListener('close', saveBookmarks);
+    self.addEventListener('blur', saveBookmarks);
    
     return self;
 }

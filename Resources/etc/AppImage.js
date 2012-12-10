@@ -559,15 +559,16 @@ Image.createPointView_v2 = function(points, height, width, disabled, options) { 
     var pv = Ti.UI.createView(options);
     pv.height = height;
     pv.width = width;
-    var color = (disabled ? '#b9b9b9' :  Ti.App.PinkColor);
+    var color = (options && options.color) || (disabled ? '#b9b9b9' :  Ti.App.PinkColor);
+    var ratio = (options && options.ratio) || 1;
 
     var lblOptions = {
-        text : (disabled ? '✔ ' : '+') + points,
+        text : (disabled ? '✔ ' : '') + points,
         textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
-        font : {fontSize : 23, fontWeight : 'bold'},
+        font : {fontSize : Math.floor(23 * ratio), fontWeight : 'bold'},
         color : color,
         bottom :2,
-        right : 27,
+        right : 27 * ratio,
         shadowOffset : (options && options.shadowOffset),
         shadowColor : (options && options.shadowColor)
     };
@@ -576,7 +577,7 @@ Image.createPointView_v2 = function(points, height, width, disabled, options) { 
     pv.add(lbl);
     
     lblOptions.text = "steps";
-    lblOptions.font = {fontSize : 10, fontWeight : 'normal'};
+    lblOptions.font = {fontSize : Math.floor(10 * ratio), fontWeight : 'normal'};
     lblOptions.bottom = 5;
     lblOptions.right = 0;
     
@@ -585,6 +586,11 @@ Image.createPointView_v2 = function(points, height, width, disabled, options) { 
     
     pv.setPoints = function(newPoints) {
         lbl.text = (disabled ? '✔ ' : '+') + newPoints;
+    };
+    
+    pv.setColor = function(color) {
+        lbl.setColor(color);
+        lblSmall.setColor(color);
     };
     
     return pv;
@@ -719,7 +725,7 @@ Image.createStepInStarPoints = function(image, points, over) { 'use strict';
     });
     view.add(img);
     var lbl = Ti.UI.createLabel({
-        text : '+' + points,
+        text : points,
         color : (over ? 'black' : "#d92276"),
         font : {fontSize : 14, fontWeight : 'bold'},
         shadowColor : (over ? '#f0f0f0' : '#f0f0f1'),

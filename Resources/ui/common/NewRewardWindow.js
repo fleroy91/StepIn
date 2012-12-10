@@ -68,7 +68,7 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
         font : {fontSize : 19, fontWeight : 'bold'},
         top : 0
     });
-    middleView.add(lblDescAction);
+    // middleView.add(lblDescAction);
 
     var vPoints = Ti.UI.createLabel({
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
@@ -148,7 +148,7 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
             Ti.API.info("Timeout pour display Points : " + timeout);
             _timer = setInterval(function() {
                 if (from <= to) {
-                    vPoints.setText(from);
+                    vPoints.setText('+ ' + from);
                     from++;
                 } else {
                     clearInterval(_timer);

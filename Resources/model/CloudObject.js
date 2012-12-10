@@ -203,6 +203,7 @@ function CloudObject(json) {'use strict';
     };
     
     this.getList = function(obj, qparams, func, extra) {
+        Ti.API.info("Retrieve " + obj.getCloudType() + "s");
         _dm.getList(obj, qparams, func, extra);
     };
     this.setLocation = function(lng, lat) {

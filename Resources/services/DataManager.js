@@ -51,7 +51,7 @@ function DataManager() {'use strict';
              if(client.status === 204 && method === 'DELETE') {
                  Ti.API.info("DELETE Ok");
              } else {
-                 Ti.API.debug("HTTP Error : " + e);
+                 Ti.API.debug("HTTP Error : " + JSON.stringify(e) + " / " + qparams);
                  var prevAnswer = Ti.App.Properties.getString(url);
                  if(method === "GET" && prevAnswer) {
                      Ti.API.info("WARNING : Use cache value for " + url + "\n" + prevAnswer);
@@ -61,7 +61,7 @@ function DataManager() {'use strict';
                      if(silent) {
                          Ti.API.info("--> HTTP return code : " + client.status + '-' + client.statusText);
                      } else { 
-                         Ti.API.info('Impossible to connect to network' + client.status + '-' + client.statusText);
+                         Ti.API.info('Impossible to connect to network ' + client.status + ' - ' + client.statusText);
                      }
                      func(null);
                  }
