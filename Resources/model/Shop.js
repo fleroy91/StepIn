@@ -741,13 +741,19 @@ function Shop(json) {'use strict';
         
         // Then we add 2 views : for step and for scan
         var nbCatalogs = (this.catalogs && this.catalogs.length) || 0;
-        var stepInView = createButton(' ' + this.allPossiblePoints + ' steps'+ (nbCatalogs > 0 ? ' (+' + this.catalogPoints * nbCatalogs + ')' : '') ,
-            '/images/steps-small.png', '100%');
-        stepInView.left = null;
+        var stepInView = createButton(' ' + this.stepinPoints + ' steps', '/images/steps-small.png', '50%');
+        stepInView.left = 0;
         stepInView.right = null;        
         internView.add(stepInView);
         
+        var stepCataView = createButton(' ' + this.catalogPoints * nbCatalogs + ' steps',
+            '/images/catalog.png', '50%');
+        stepCataView.left = null;
+        stepCataView.right = 0;        
+        internView.add(stepCataView);
+        
         stepInView.addEventListener('click', gotoShop(this));
+        stepCataView.addEventListener('click', gotoShop(this));
         ntop += buttonHeight;
         
         this.updateRow(row);

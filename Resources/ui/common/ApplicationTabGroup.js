@@ -93,7 +93,7 @@ function ApplicationTabGroup() { 'use strict';
     self = Titanium.UI.createTabGroup({
     });
     
-    var TabWindow = require('ui/common/TabviewWindow');
+    var ShopListWindow = require('ui/common/ShopListWindow');
        
     var mainObject = user; 
     var actInd = Titanium.UI.createActivityIndicator({
@@ -122,7 +122,7 @@ function ApplicationTabGroup() { 'use strict';
 
     Spinner.add(self);
 
-	var winSearch = new TabWindow({booking : false, tabGroup : self});
+	var winSearch = new ShopListWindow({booking : false, tabGroup : self});
 	var tabSearch = Ti.UI.createTab({
 		title : Ti.Locale.getString('mystock_tab_title','Magasins'),
 		icon : '/images/sin-magasins.png',
@@ -508,6 +508,7 @@ function ApplicationTabGroup() { 'use strict';
             self.openWindow(null, cwin, {animated:false});
         }
         self.setActiveTab(0);
+        return swin;
     };
 
     var in_manage_code = false; 
@@ -553,7 +554,7 @@ function ApplicationTabGroup() { 'use strict';
                 
                 // We open the window 
                 // TODO (except if it's already opened)
-                self.openShop(shopFound);
+                var swin = self.openShop(shopFound);
 
                 self.addNewReward(rew, function(reward) {
                     if(reward) {
@@ -693,7 +694,7 @@ function ApplicationTabGroup() { 'use strict';
             }
         }
     }
-    setInterval(moveNext, 3000);
+    // setInterval(moveNext, 3000);
     
     setInterval(checkCode, 1000);
 

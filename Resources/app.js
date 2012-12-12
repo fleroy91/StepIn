@@ -62,6 +62,7 @@ Ti.App.allRewards = null;
 Ti.App.allBookmarks = null;
 Ti.App.allInvitations = null;
 Ti.App.allShops = null;
+
 Ti.App.FB_POINTS = 150;
 Ti.App.PinkColor = '#c12d74';
 
