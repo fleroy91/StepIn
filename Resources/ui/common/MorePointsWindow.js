@@ -133,9 +133,12 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         }
     }
     
-    function runFBContactQuery(func) {
+    function runFBContactQuery() {
         Ti.API.info("FB token = " + Ti.Facebook.getAccessToken());
         Ti.Facebook.requestWithGraphPath('me/friends', {fields:'id,name,last_name,gender,first_name,picture'}, 'GET', function(e) {
+        
+        	
+        	
             if(e.success && e.result) {
                 Ti.API.info("FB Result = " + e.result);
                 var FBResult = JSON.parse(e.result);
@@ -160,6 +163,8 @@ function MorePointsWindow(tabGroup, options) {'use strict';
                 // We need to sort them by last_name
                 persons.sort(comparePerson);
                 
+                
+                
                 var MultiSelectContactWindow = require("ui/common/MultiSelectContactWindow"),
                     swin = new MultiSelectContactWindow(persons, pointsToInvite, pointsIfInviteOk, tabGroup);
                 swin.addEventListener('close', function(e) {
@@ -171,8 +176,11 @@ function MorePointsWindow(tabGroup, options) {'use strict';
                 niceClose(function() {
                     self.containingTab.open(swin, {animated:true});
                 });
+                
+                Ti.App.fireEvent('EndActivityIndicator');
             } else {
                 alert("Connexion à Facebook impossible. Reessayez plus tard !");
+                Ti.App.fireEvent('EndActivityIndicator');
             }
         });
     }
@@ -182,10 +190,11 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         if(e.success) {
             runFBContactQuery();
         } else {
+        	Ti.App.fireEvent('EndActivityIndicator');
             alert("Connexion à Facebook impossible. Reessayez plus tard !");
         }  
     };
-        
+
     function inviteFBFriends() {
         if(Ti.Facebook.loggedIn) {
             runFBContactQuery();
@@ -194,6 +203,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
             Ti.Facebook.authorize();
         }    
     }
+
     
     function sub_invitePhoneFriends() {
         var performAddressBookFunction = function(){
@@ -220,6 +230,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
             });
             niceClose(function() {
                 self.containingTab.open(swin, {animated:true});
+              Ti.App.fireEvent('EndActivityIndicator');
             });
         };
         var addressBookDisallowed = function(){
@@ -244,12 +255,15 @@ function MorePointsWindow(tabGroup, options) {'use strict';
         checkLogin(sub_invitePhoneFriends);
     }
     function shareTwitter() {
+        Ti.App.fireEvent('EndActivityIndicator');
         alert("Not Implemented !");
     }
     function followTwitter() {
+        Ti.App.fireEvent('EndActivityIndicator');
         alert("Not Implemented !");
     }
     function likeFacebook() {
+        Ti.App.fireEvent('EndActivityIndicator');
         alert("Not Implemented !");
     }
     
