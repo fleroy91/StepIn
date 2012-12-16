@@ -597,19 +597,19 @@ function Shop(json) {'use strict';
         
         var mapview = Ti.UI.createButton({
             style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-            borderRadius : 1,
-            borderWidth : 2,
-            borderColor : 'white',
+            //borderRadius : 1,
+            //borderWidth : 2,
+            //borderColor : 'white',
             zIndex : 100,
-            height : 55,
-            width : 55,
-            top : ntop + 2,
-            left : 8,
-            shadow:{
-                shadowRadius:2,
-                shadowOpacity:0.7,
-                shadowOffset:{x:2, y:2}
-            }
+            height : 45,
+            width : 45,
+            top : ntop+7,
+            left : 4,
+            //shadow:{
+              //  shadowRadius:2,
+                //shadowOpacity:0.7,
+                //shadowOffset:{x:2, y:2}
+            //}
         });
         if(! isBig) {
             Image.cacheImage(shop.getPhotoUrl(0), function(image) {

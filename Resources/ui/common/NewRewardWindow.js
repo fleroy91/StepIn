@@ -42,15 +42,25 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
     });
     main.add(blackView);
     
+   
+    
     var view = Ti.UI.createScrollView({
         backgroundImage : '/images/popup-bck-pink.jpg',
-        width : '95%',
+		width : '100%',
         height : 430 - 200,
+        visible : false,
         borderRadius : 5,
-        borderColor : '#ba307c',
-        borderWidth : 2,
-        visible : false
+    	borderColor : '#ba307c',
+    	borderWidth : 2
     });
+    
+     var containerView=Ti.UI.createView({
+    	height:'auto',
+    	width:'95%',
+    	backgroundColor:'transparent'
+    })
+    
+    containerView.add(view);
     
     var yeah = Ti.UI.createImageView({
         image : '/images/yay.png',
@@ -210,8 +220,9 @@ function NewRewardWindow(tabGroup, reward) { 'use strict';
             }
         });
     }
-
-    main.add(view);
+	
+	///  TEST  /////
+    main.add(containerView);
     
     self.addEventListener('open', function(e) {
         Titanium.Media.vibrate();

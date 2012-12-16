@@ -76,8 +76,22 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         var v = Ti.UI.createView({
             width : Ti.UI.FILL,
             height : Ti.UI.FILL,
-            scan : scan
+            scan : scan,
+            layout:'vertical'
         });
+        
+         var bookmarked = isBookmarked(scan);
+        v.savedBookmarked = bookmarked;
+        var bookmark = Ti.UI.createButton({
+            style:Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+            borderWidth :0,
+            image : (bookmarked ? '/images/bookmark.png' : '/images/bookmark_nude.png'),
+            width : 24,
+            height : 24,
+            top : 5,
+            right : 5
+        });
+        v.add(bookmark);
         
         var img = Ti.UI.createImageView({
             borderWidth : 0,
@@ -92,15 +106,15 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         
         var lbl1 = Ti.UI.createLabel({
             text : scan.title,
-            top : 230,
+            top : 10,
             height : 20,
-            color : 'blue',
+            color : '#454545',
             font : {fontSize : 16, fontWeight : 'bold'}
         });
         v.add(lbl1);
         var lbl2 = Ti.UI.createLabel({
             text : scan.desc,
-            top : lbl1.top + lbl1.height,
+            top :20,
             left : 22, right : 22,
             textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER, 
             height : 35,
@@ -108,19 +122,6 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
             font : {fontSize : 12, fontWeight : 'normal'}
         }); 
         v.add(lbl2);
-        
-        var bookmarked = isBookmarked(scan);
-        v.savedBookmarked = bookmarked;
-        var bookmark = Ti.UI.createButton({
-            style:Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-            borderWidth :0,
-            image : (bookmarked ? '/images/bookmark.png' : '/images/bookmark_nude.png'),
-            width : 24,
-            height : 24,
-            bottom : 5,
-            left : 5
-        });
-        v.add(bookmark);
         
         bookmark.addEventListener('click', function() {
             bookmarked = ! bookmarked;
@@ -133,7 +134,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         
         var infoButton = Ti.UI.createButton({
             style:Ti.UI.iPhone.SystemButton.INFO_DARK,
-            bottom : 5,
+            top : 10,
             right : 5
         });
         v.add(infoButton); 
