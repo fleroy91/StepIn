@@ -63,6 +63,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
                     break;
             }
         });
+        Ti.App.fireEvent('EndActivityIndicator');
         alertDialog.show();
     }
     
@@ -122,6 +123,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
                     user.retrieveInvitations(func);
                 } else {
                     alert("Action impossible si vous n'avez pas de compte !");
+                     Ti.App.fireEvent('EndActivityIndicator');
                 }
             });
             
