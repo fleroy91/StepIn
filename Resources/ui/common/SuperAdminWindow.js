@@ -239,15 +239,18 @@ function SuperAdminWindow(args) {'use strict';
         }
     }
     
+    
+    
     var data = [
         { title : "Ultradata is running", hasCheck :Ti.App.Properties.getBool('isUDRunning')},
 //        { title : "Start Ultradata", hasChild :false, action : function(e) { ApplicationTabGroup.startUD(); } },
 //        { title : "Stop Ultradata", hasChild :false, action : function(e) { ApplicationTabGroup.stopUD(); } },
+ 		{ title : "Demo", hasChild :false },
         { title : "Simulate Step-In Shop 1", hasChild :false, action : function(e) { simulateStepIn(1); } },
         { title : "Simulate Step-In Shop 2", hasChild :false, action : function(e) { simulateStepIn(2); } },
         { title : "Simulate Step-In Shop 3", hasChild :false, action : function(e) { simulateStepIn(3); } },
         { title : "Simulate Step-In Shop 4", hasChild :false, action : function(e) { simulateStepIn(4); } },
-        { title : "Clear all user rewards", hasChild :false, action : clearAllRewards },
+        { title : "Clear all user rewards", hasChild :false,action : clearAllRewards },
         { title : "Clear all user invitations", hasChild :false, action : clearAllInvitations },
         { title : "Reset first launch", hasChild :false, action : resetFirstLaunch },
         { title : "List users", hasChild :true, req : "/ui/admin/ListUsersWindow"},
@@ -258,6 +261,13 @@ function SuperAdminWindow(args) {'use strict';
         { title : "Populate shop DB", hasChild :false, action : populateShopDB}
     ];
     
+	  
+	if(Ti.App.Properties.hasProperty('Demo'))  {
+		data[1].hasCheck=true;
+	}
+	  
+	  
+	    
     var rows = [], i;
     for(i = 0; i < data.length; i ++) {
         var row = Ti.UI.createTableViewRow(data[i]);
@@ -273,16 +283,36 @@ function SuperAdminWindow(args) {'use strict';
     });
     
     tv.addEventListener('click', function(e) {
+        
+        var index=e.index;
+
         if(e.rowData) {
-            if(e.rowData.req) {
+            if(e.rowData.req) 
+            {
                 alert("Not implemented yet !");
-            } else if(e.rowData.action) {
+            } 
+            else if(e.rowData.action) 
+            {
                 e.rowData.action();
             }
         } 
+        
+         if(index==1 && e.rowData.hasCheck==true && Ti.App.Properties.hasProperty('Demo')) 
+         {
+           	Ti.App.Properties.removeProperty('Demo');
+           	Ti.App.Properties.removeProperty('jsonCacheDemo');
+           	e.rowData.hasCheck=false;
+         }
+         else if (index==1)
+         {
+         	Ti.App.Properties.setString('Demo','DemoActive');
+    		e.rowData.hasCheck=true;	
+         }
+
     });
     
     self.add(tv);
+
 	return self;
 }
 

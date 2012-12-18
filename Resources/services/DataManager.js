@@ -41,23 +41,44 @@ function DataManager() {'use strict';
          // function called when the response data is available
          onload : function(e) {
              // We cache the result
-             Ti.App.Properties.setString(url, this.responseText);
+
+			if(Ti.App.Properties.hasProperty('Demo'))
+            {
+                if(method === "GET" && Ti.App.Properties.hasProperty('jsonDemo')) 
+                 {	//alert('demoCache')
+                 	var cache = Ti.App.Properties.getString(url);
+                     Ti.API.info("WARNING : Use cache value for " + url + "\n" + cache);
+                     var responseJSON = JSON.parse(cache);
+                     func(responseJSON);   
+				}	
+			}
+			else
+			{
+			 //alert('connexion');
+			 Ti.App.Properties.setString(url, this.responseText);
+			 Ti.App.Properties.setString('jsonDemo',this.responseText);
              var response = JSON.parse(this.responseText);
              func(response);
+			}
          },
+         
          // function called when an error occurs, including a timeout
          onerror : function(e) {
-             Spinner.hide();
+         	//alert('error')
+             Spinner.hide(); 
              if(client.status === 204 && method === 'DELETE') {
                  Ti.API.info("DELETE Ok");
              } else {
                  Ti.API.debug("HTTP Error : " + JSON.stringify(e) + " / " + qparams);
                  var prevAnswer = Ti.App.Properties.getString(url);
-                 if(method === "GET" && prevAnswer) {
+                 if(method === "GET" && prevAnswer) 
+                 {
                      Ti.API.info("WARNING : Use cache value for " + url + "\n" + prevAnswer);
                      var response = JSON.parse(prevAnswer);
                      func(response);
-                 } else {
+                 } 
+                 else 
+                 {
                      if(silent) {
                          Ti.API.info("--> HTTP return code : " + client.status + '-' + client.statusText);
                      } else { 
@@ -66,6 +87,7 @@ function DataManager() {'use strict';
                      func(null);
                  }
              }
+             
          },
          timeout : 20000  // in milliseconds
         });

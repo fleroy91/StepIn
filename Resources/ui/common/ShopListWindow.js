@@ -16,6 +16,7 @@ var refresh_all = true;
 var TV = require("/etc/AppTV");
 var Tools = require("/etc/Tools");
 var AppUser = require("/model/AppUser");
+var ShopDistance = require("/model/Shop");
 
 function ShopListWindow(args) {
     'use strict';
@@ -143,12 +144,12 @@ function ShopListWindow(args) {
     var labelDistance = Ti.UI.createLabel({
         backgroundImage : '/images/bck-pink-60p.png',
         color : 'white',
-        width : 48,
+        width : 52,
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
-        font : { fontSize : 10, fontWeight : 'normal'},
+        font : { fontSize : 13, fontWeight : 'bold'},
         visible : false,
         right : 10,
-        opacity : 0.8
+       // opacity : 0.9
     });
     self.add(labelDistance);
     
