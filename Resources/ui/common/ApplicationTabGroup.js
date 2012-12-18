@@ -408,6 +408,10 @@ function ApplicationTabGroup() { 'use strict';
                         func(newRew);
                     }
                 }
+            } else {
+                if(func) {
+                    func();
+                }
             }
         });
         rewardWindow.open();
@@ -510,13 +514,35 @@ function ApplicationTabGroup() { 'use strict';
         self.setActiveTab(0);
         return swin;
     };
+    
+    self.resetCheckInOfShops = function() {
+        var section = self.tvSearch.getData(); 
+        var row_index, obj_index;
+        if(section && section.length > 0) {
+            var rows = section[0].getRows();
+            if(rows) {
+                var i;
+                for(i = 0; i < rows.length; i++) {
+                    row_index = i;
+                    if(rows[i].object_index) {
+                        var shop = AppUser.getShop(rows[i].object_index);
+                        if(shop.isCheckin()) {
+                            shop.checkin = false;
+                            shop.saveAll();
+                        }
+                    }
+                }
+            }
+        }                                
+    };
 
     var in_manage_code = false; 
-    var allCodes = [];
+    Ti.App.allCodes = [];
     self.didHearCode = function(code) {
-        if(allCodes.indexOf(code) >= 0) {
-            Ti.API.info("Code already heard so ignored : " + code);
+        if(Ti.App.allCodes.indexOf(code) >= 0) {
+            Ti.API.info("Code alreadxy heard so ignored : " + code);
         } else if(! in_manage_code){
+            Ti.API.info("Hearing and managing : " + code);
             in_manage_code = true;
             // The shop must be in the tvSearch
             var section = self.tvSearch.getData(); 
@@ -558,11 +584,15 @@ function ApplicationTabGroup() { 'use strict';
 
                 self.addNewReward(rew, function(reward) {
                     if(reward) {
-                        allCodes.push(code);
+                        var data = Ti.App.allCodes;
+                        data.push(code);
+                        Ti.App.allCodes = data;
+                        
                         var newShop = AppUser.getShop(obj_index);
                         newShop.checkin = true;
-                        var row = newShop.createTableRow(self);
-                        self.tvSearch.updateRow(row_index, row);
+                        // The row doesn't change if we are checkin or not - so no need to update it
+                        // var row = newShop.createTableRow(self);
+                        // self.tvSearch.updateRow(row_index, row);
                         newShop.saveAll();
                         swin.setObject(newShop);
                     }

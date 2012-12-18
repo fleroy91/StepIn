@@ -81,7 +81,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         return row;
     }
     
-    var rowStepIn = createRow('/images/steps.png', "Step-In", "Entrez dans le magasin et gagnez des steps", shop.getPoints(Reward.ACTION_KIND_STEPIN), false);
+    var rowStepIn = createRow('/images/steps.png', "Step-In", "Entrez dans le magasin et gagnez des steps", shop.getStepInPoints(), false);
     if(shop.checkin) {
         rowStepIn.backgroundColor = '#eadae3';
     }
