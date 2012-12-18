@@ -77,7 +77,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
             width : Ti.UI.FILL,
             height : Ti.UI.FILL,
             scan : scan,
-            layout:'vertical'
+            //layout:'vertical'
         });
         
          var bookmarked = isBookmarked(scan);

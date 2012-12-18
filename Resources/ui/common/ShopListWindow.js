@@ -148,7 +148,7 @@ function ShopListWindow(args) {
         textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER,
         font : { fontSize : 13, fontWeight : 'bold'},
         visible : false,
-        right : 10,
+        right : 10
        // opacity : 0.9
     });
     self.add(labelDistance);

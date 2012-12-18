@@ -741,7 +741,7 @@ function Shop(json) {'use strict';
         
         // Then we add 2 views : for step and for scan
         var nbCatalogs = (this.catalogs && this.catalogs.length) || 0;
-        var stepInView = createButton(' ' + this.stepinPoints + ' steps', '/images/steps-small.png', '50%');
+        var stepInView = createButton(' ' + this.getPoints(Reward.ACTION_KIND_STEPIN) + ' steps', '/images/steps-small.png', '50%');
         stepInView.left = 0;
         stepInView.right = null;        
         internView.add(stepInView);

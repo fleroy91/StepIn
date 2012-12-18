@@ -13,19 +13,27 @@ var Spinner = require("etc/AppSpinner");
 function SplashWindow() { 'use strict';
     var win = Ti.UI.createWindow({
         backgroundImage : "/iphone/Default.png",
-        navBarHidden : true
+        navBarHidden : true,
+        fullscreen:true,
+        backgroundColor:'black',
+        width:'100%',
+        height:'100%'
     });
 
-    var screens = ['tutorial1.png', 'tutorial2.jpg', 'tutorial3.jpg'];    
+    var screens = ['ecran1.jpg', 'ecran2.jpg', 'ecran3.jpg','ecran4.jpg','ecran5.jpg','ecran6.jpg'];    
     var i, views = [];
     for(i = 0; i < screens.length; i ++) {
         var img = Ti.UI.createImageView({
-            image : '/images/' + screens[i]
+            image : '/images/' + screens[i],
+            width:'100%',
+            height:'100%'
         });
         views.push(img);
     }
     var tutorial = Ti.UI.createScrollableView({
         showPagingControl : true,
+         width:'100%',
+        height:'100%',
         views : views,
         visible : false
     });
