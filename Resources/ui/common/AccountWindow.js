@@ -106,20 +106,29 @@ function AccountWindow(args) {'use strict';
 	var r21 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Comment ça marche', hasChild : true });
 	var r22 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Foire aux questions', hasChild : true });
 	var r23 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : "Conditions d'utilisations", hasChild : true });
-	sInfo.add(r21);
-	sInfo.add(r22);
+	//sInfo.add(r21);
+	//sInfo.add(r22);
 	sInfo.add(r23);
 	
     r21.addEventListener('click', notImplemented);
     r22.addEventListener('click', notImplemented);
-    r23.addEventListener('click', notImplemented);
+   
+    r23.addEventListener('click', function(e){
+    	var ConditionsWindow = require("/ui/common/ConditionsWindow"),
+                win = new ConditionsWindow({ tabGroup : tabGroup});
+            self.addEventListener('close', updateWindow);
+            self.containingTab.open(win, {animated:true}); 
+    });
 
 	var sContact = Ti.UI.createTableViewSection({});
-	var r31 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Feedback', hasChild : true });
+	
+	
+	
+	/*var r31 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Feedback', hasChild : true });
 	sContact.add(r31);
     r31.addEventListener('click', function(e) {
         Ti.App.testflight.openFeedbackView();
-    });
+    });*/
 
 	var sLogin = Ti.UI.createTableViewSection({});
 	var r41 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Connexion'});
@@ -144,7 +153,7 @@ function AccountWindow(args) {'use strict';
     if(sSuperAdmin) { 
         data.push(sSuperAdmin);
     }
-    // data.push(sInfo);
+    data.push(sInfo);
     data.push(sContact);
     data.push(sLogin);
 	
