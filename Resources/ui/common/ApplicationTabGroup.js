@@ -580,7 +580,7 @@ function ApplicationTabGroup() { 'use strict';
     // To hear the sound
     var UDModule = require('com.ultradata');
     // TODO : Set true to run UD with Simulator
-    var runUDWithSimulator = false;
+    var runUDWithSimulator = true;
     function myStartUD() {
         if(runUDWithSimulator) {
             UDModule.StartUD({
