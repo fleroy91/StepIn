@@ -21,6 +21,15 @@ function DataManager() {'use strict';
 	    return this.base_url + sub_url;
 	};
 	
+	function removeDate(url) {
+	    var ret = url;
+	    var place = url.indexOf("&when!gte", 0);
+	    if(place > 0) {
+	        ret = url.substring(0, place - 1);
+	    }
+	    return ret;
+	}
+	
     this.doCall = function(method, url, qparams, body, func, not_storage_room_call) {
         var silent = this.silent;
         
@@ -35,17 +44,27 @@ function DataManager() {'use strict';
                 url = url + "&" + qparams;
             }
         }
-        Ti.API.info(method + ' ' + url + '\nBody : ' + body);
-        if(Ti.App.Properties.hasProperty('Demo') && method === "GET" && Ti.App.Properties.hasProperty(url)) { 
-             var cache = Ti.App.Properties.getString(url);
-             Ti.API.info("WARNING : Use cache value for " + url + "\n" + cache);
-             var responseJSON = JSON.parse(cache);
-             func(responseJSON);   
-        } else {
+        // Ti.API.info(method + ' ' + url + '\nBody : ' + body);
+        
+        var nodate_url = removeDate(url);
+        
+        var doCall = true;
+        if(Ti.App.Properties.hasProperty('Demo') && method === "GET") {
+            if(Ti.App.Properties.hasProperty(nodate_url)) { 
+                 var cache = Ti.App.Properties.getString(nodate_url);
+                 Ti.API.info("WARNING : Use cache value for " + url + "\n" + cache);
+                 doCall = false;
+                 var responseJSON = JSON.parse(cache);
+                 func(responseJSON);   
+            } else {
+                Ti.API.info("CACHE WARNING : this URL is not cached " + nodate_url);
+            }
+        }
+        if(doCall) {
             var client = Ti.Network.createHTTPClient({
              // function called when the response data is available
              onload : function(e) {
-                 Ti.App.Properties.setString(url, this.responseText);
+                 Ti.App.Properties.setString(nodate_url, this.responseText);
                  var response = JSON.parse(this.responseText);
                  func(response);
              },
@@ -58,7 +77,7 @@ function DataManager() {'use strict';
                      Ti.API.info("DELETE Ok");
                  } else {
                      Ti.API.debug("HTTP Error : " + JSON.stringify(e) + " / " + qparams);
-                     var prevAnswer = Ti.App.Properties.getString(url);
+                     var prevAnswer = Ti.App.Properties.getString(nodate_url);
                      if(method === "GET" && prevAnswer) 
                      {
                          Ti.API.info("WARNING : Use cache value for " + url + "\n" + prevAnswer);

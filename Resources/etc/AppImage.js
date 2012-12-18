@@ -371,7 +371,12 @@ Image.loadImage = function(url, func) { 'use strict';
         xhr.onload = function() {
             if (xhr.status === 200) {
                 func(xhr.responseData);
+            } else {
+                func(null);
             }
+        };
+        xhr.onerror = function() {
+            func(null);
         };
         xhr.open('GET', url);
         xhr.send();
@@ -407,6 +412,11 @@ Image.cacheImage = function(url, func, width, height) { 'use strict';
             // Create the HTTP client to download the asset.
             var xhr = Ti.Network.createHTTPClient();
     
+            xhr.onerror = function() {
+                if(func) {
+                    func(null);
+                }
+            };
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     // On successful load, take that image file we tried to grab before and 
@@ -417,6 +427,10 @@ Image.cacheImage = function(url, func, width, height) { 'use strict';
                     ret = file.nativePath;
                     if(func) {
                         func(ret);
+                    }
+                } else {
+                    if(func) {
+                        func(null);
                     }
                 }
             };
