@@ -64,8 +64,8 @@ function Scan(json) {'use strict';
         // Line 1
         var labelName = Ti.UI.createLabel({
             font : {fontSize: 13, fontWeight : 'bold'},
-            left : 75,
-            top : 17,
+            left : 50,
+            top : 19,
             color: 'white',
             zIndex : 2000,
             text : this.title,
@@ -91,24 +91,25 @@ function Scan(json) {'use strict';
     this.addOverHeader = function(view) {
         var img = Ti.UI.createButton({
             style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-            borderRadius : 1,
-            borderWidth : 2,
-            borderColor : 'darkgray',
+            //borderRadius : 1,
+            //borderWidth : 2,
+            //borderColor : 'darkgray',
             zIndex : 2000,
-            height : 60,
-            width : 60,
-            top : 1,
+            height : 35,
+            width : 35,
+            top : 18,
             left : 9,
-            shadow:{
+            backgroundImage:'/images/iconInfo.png'
+           /* shadow:{
                 shadowRadius:2,
                 shadowOpacity:0.7,
                 shadowOffset:{x:2, y:2}
-            }
+            }*/
         });
         view.add(img);
-        Image.cacheImage(this.getPhotoUrl(0), function(image) {
+       /* Image.cacheImage(this.getPhotoUrl(0), function(image) {
             img.setImage(Image.squareImage(image, 60));
-        });
+        });*/
 
         // Add the points
         var vPoints = Image.createPointView(this.points, 50,120, this.scanned, {

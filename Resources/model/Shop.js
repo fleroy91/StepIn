@@ -535,7 +535,7 @@ function Shop(json) {'use strict';
                 header.setBackgroundImage(image);
             });
         } else {
-            header.setBackgroundColor(Ti.App.PinkColor);
+            header.setBackgroundColor('white');
         }
         
         if(callback) {
