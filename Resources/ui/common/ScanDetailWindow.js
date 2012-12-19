@@ -12,20 +12,25 @@ var Image = require("/etc/AppImage");
 
 function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
     var self = Ti.UI.createWindow({
-        backgroundColor : Ti.App.PinkColor
+        backgroundColor:'#f0f0f0'
     });
-    
+   
     var canScan = args && args.canScan;
     
     var view = scan.createHeaderView();
-    
+   
     // We display the picture of the scan instead of the scan
     view.top = 0;
     var img = Ti.UI.createView({
-        top : view.height - 7
+        top : view.height - 7,
+        width:300,
+        height:300
     });
+   
     self.add(img);
+     
     self.add(view);
+    //self.add(PinkBanner);
     Image.cacheImage(scan.getPhotoUrl(0), function(image) {
         img.setBackgroundImage(image); 
     });
@@ -92,8 +97,10 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
             TiBar.scan({
                 configure: config,
                 overlay : overlayImgView, 
-                success:function(data){
-                    if(data && data.barcode){
+                success:function(data)
+                {
+                    if(data && data.barcode)
+                    {
                         Ti.API.info("TiBar success callback ! Barcode: " + data.barcode + " Symbology:"+data.symbology);
                         // We need to find the article in the DB
                         if(scan) {

@@ -34,11 +34,18 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     function createRow(image, title, detail, points, withAction) {
         var row = Ti.UI.createTableViewRow({
             height : 70,
+            
             className : 'shopDetailRow'
         });
         
-        Image.cacheImage(image, function(img) {
-             row.setLeftImage(img);
+        Image.cacheImage(image, function(img) { 
+            var imageRow=Ti.UI.createImageView({
+                width:70,
+                left:0,
+                height:"auto",
+                image:img
+            });
+            row.add(imageRow);
         });
         
         var lbl = Ti.UI.createLabel({
@@ -46,17 +53,19 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
             color : '#4d4d4d',
             text : title,
             width : 190 - 40,
-            left : 70,
-            top : 23
+            left : 80,
+            top : 13
         });
         row.add(lbl);
         
         var lblDetail = Ti.UI.createLabel({
             font : {fontSize : 11, fontWeight : 'normal'},
             color : 'lightgray',
-            top : 50,
+            top : 40,
+            height:25,
+            wordWrap:true,
             text : detail,
-            left : 70
+            left : 80
         });
         row.add(lblDetail);
 
@@ -81,7 +90,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
         return row;
     }
     
-    var rowStepIn = createRow('/images/steps.png', "Step-In", "Entrez dans le magasin et gagnez des steps", shop.getStepInPoints(), false);
+    var rowStepIn = createRow('/images/steps.png', "Step-In", "Entrez dans le magasin \net gagnez des steps", shop.getStepInPoints(), false);
     if(shop.checkin) {
         rowStepIn.backgroundColor = '#eadae3';
     }
@@ -90,7 +99,7 @@ function ShopDetailWindow(shop, tabGroup) { 'use strict';
     var catalogs = shop.catalogs;
     for(i = 0; i < catalogs.length; i ++) {
         var catalog = catalogs[i];
-        var rowScans = createRow(catalog.getPhotoUrl(0), catalog.kind, "Parcourez ce catalogue pour gagner plus de steps", shop.catalogPoints, true);
+        var rowScans = createRow(catalog.getPhotoUrl(0), catalog.kind, "Parcourez ce catalogue \npour gagner plus de steps", shop.catalogPoints, true);
         if(catalog.viewed) {
             rowScans.backgroundColor = '#eadae3';
         }

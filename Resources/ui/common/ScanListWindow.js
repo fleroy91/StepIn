@@ -44,17 +44,17 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         left : 80,
         width : pgWidth,
         height : 10,
-        borderColor : "white",
+        borderColor : Ti.App.PinkColor,
         borderRadius : 3,
         borderWidth : 1
     });
     var internProgress =Ti.UI.createView({
        top : progress.top,
        left : progress.left,
-       backgroundColor : 'white',
+       backgroundColor :  Ti.App.PinkColor,
        borderRadius : progress.borderRadius,
        borderWidth : progress.borderWidth,
-       borderColor : 'white',
+       borderColor :  Ti.App.PinkColor,
        width : 0,
        height : 10
     });
@@ -65,7 +65,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
     
     var vPoints = Image.createPointView(nbPoints, 20, 70, false, {
         ratio: 0.7,
-        color :'white'});
+        color : Ti.App.PinkColor});
     vPoints.top = 2;
     vPoints.right = 2;
     header.add(vPoints);
@@ -76,8 +76,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         var v = Ti.UI.createView({
             width : Ti.UI.FILL,
             height : Ti.UI.FILL,
-            scan : scan,
-            //layout:'vertical'
+            scan : scan
         });
         
          var bookmarked = isBookmarked(scan);
@@ -97,7 +96,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
             borderWidth : 0,
             height : 220, 
             width : 220,
-            top : 10
+            top : 30
         });
         Image.cacheImage(scan.getPhotoUrl(0), function(image) {
             img.setImage(image); 
@@ -134,7 +133,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         
         var infoButton = Ti.UI.createButton({
             style:Ti.UI.iPhone.SystemButton.INFO_DARK,
-            top : 10,
+            bottom : 10,
             right : 5
         });
         v.add(infoButton); 
