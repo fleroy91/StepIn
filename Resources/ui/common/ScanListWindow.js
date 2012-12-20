@@ -83,7 +83,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
     header.add(vPoints);
     
     shop.addOverHeader(self, tabGroup, false);
-    
+    var bookmarks_changed = false;    
     function createScanView(scan) {
         var v = Ti.UI.createView({
             width : Ti.UI.FILL,
@@ -135,6 +135,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         v.add(lbl2);
         
         bookmark.addEventListener('click', function() {
+            bookmarks_changed = true;
             bookmarked = ! bookmarked;
             if(bookmarked) {
                 bookmark.setImage("/images/bookmark.png");
@@ -231,26 +232,30 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
     tabGroup.createTitle(self, "Scans");
     
     function saveBookmarks() {
-        Ti.API.info("In saving bookmarks !");
-        // We need to save the bookmarks
-        var bookmarksToAdd = [];
-        var bookmarksToDelete = [];
-        for(i = 0;i < views.length; i++) {
-            if(views[i].getBookmark()) {
-                if(! views[i].savedBookmarked) {
-                    var scan = views[i].scan;
-                    scan.shop = shop;
-                    bookmarksToAdd.push(scan);
+        if(bookmarks_changed) {
+            Ti.API.info("In saving bookmarks !");
+            // We need to save the bookmarks
+            var bookmarksToAdd = [];
+            var bookmarksToDelete = [];
+            for(i = 0;i < views.length; i++) {
+                if(views[i].getBookmark()) {
+                    if(! views[i].savedBookmarked) {
+                        var scan = views[i].scan;
+                        scan.shop = shop;
+                        bookmarksToAdd.push(scan);
+                    }
+                    views[i].savedBookmarked = true;
+                } else if(views[i].savedBookmarked) {
+                    bookmarksToDelete.push(views[i].scan);
+                    views[i].savedBookmarked = false;
                 }
-                views[i].savedBookmarked = true;
-            } else if(views[i].savedBookmarked) {
-                bookmarksToDelete.push(views[i].scan);
-                views[i].savedBookmarked = false;
+            }
+            if(bookmarksToAdd.length > 0 || bookmarksToDelete.length > 0) {
+                user.saveBookmarks(bookmarksToAdd, bookmarksToDelete, function() {
+                    Ti.App.fireEvent('NewBookmarks');
+                });
             }
         }
-        user.saveBookmarks(bookmarksToAdd, bookmarksToDelete, function() {
-            Ti.App.fireEvent('NewBookmarks');
-        });
     }
     
     self.addEventListener('close', saveBookmarks);

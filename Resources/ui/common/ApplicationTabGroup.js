@@ -140,7 +140,7 @@ function ApplicationTabGroup() { 'use strict';
     var winPresents = new PresentListWindow(self);
     var tabPresents = Ti.UI.createTab({
         title : 'Cadeaux',
-        icon : '/images/sin-cadeaux.png',
+        icon : '/images/Sin-cadeaux.png',
         window : winPresents
     });
     winPresents.containingTab = tabPresents;
@@ -208,7 +208,9 @@ function ApplicationTabGroup() { 'use strict';
         }
         return ret;
     }
+    Ti.App.inAddingNewObject = false;
     self.addNewObject = function(obj) {
+        Ti.App.inAddingNewObject = true;
         var row = obj.createTableRow(self);
         var res = "";
         Ti.API.info('START Insertion ROW'+ row.idistance);
@@ -219,8 +221,6 @@ function ApplicationTabGroup() { 'use strict';
             var rows = section[0].getRows();
             if(rows) {
                 var i;
-                
-                
                 for(i = 0; !found && i < rows.length; i++) {
                     if(rows[i].idistance > row.idistance) {
                         // je dois m'insérer avant
@@ -239,6 +239,7 @@ function ApplicationTabGroup() { 'use strict';
         if(self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
         }
+        Ti.App.inAddingNewObject = false;
     };
     
     /**

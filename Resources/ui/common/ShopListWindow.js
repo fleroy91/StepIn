@@ -157,7 +157,7 @@ function ShopListWindow(args) {
     tv.addEventListener('scroll', function(e) {
         var offset = e.contentOffset.y;
         // We need to find the row associated to this offset
-        if(offset >= 0) {
+        if(offset >= 0 && ! Ti.App.inAddingNewObject) {
             // Ti.API.info("Offset = " + offset);
             var section = tv.getData();
             if(section && section.length > 0) {

@@ -40,7 +40,8 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
         borderWidth : 0,
         image : '/images/close.png',
         top : 5,
-        right : 5
+        right : 5,
+        zIndex : 100
     });
     view.add(btClose);
     
