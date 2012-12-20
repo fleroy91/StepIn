@@ -121,7 +121,7 @@ function AppUser(json) {'use strict';
         return Ti.App.allBookmarks;
     };
     
-    this.saveBookmarks = function(toAdd, toDelete) {
+    this.saveBookmarks = function(toAdd, toDelete, endFunc) {
         var bookmarks = Ti.App.allBookmarks;
         var i;
         // We delete first
@@ -129,7 +129,7 @@ function AppUser(json) {'use strict';
             // We need to find it
             var scan = toDelete[i];
             var found = false, j;
-            for(j = 0; ! found && j < bookmarks.length; i++) {
+            for(j = 0; ! found && j < bookmarks.length; j++) {
                 var b = bookmarks[j];
                 if(b.scan.url === scan.getUrl()) {
                     b.remove();
@@ -147,23 +147,32 @@ function AppUser(json) {'use strict';
         Ti.App.allBookmarks = data;
         
         // Then we add        
-        function addBookmark(newBook) {
-            if(newBook) {
-                var data = Ti.App.allBookmarks;
-                if(! data) {
-                    data = [];
+        function _addBookmark(endFunc) {
+            return function(newBook) {
+                if(newBook) {
+                    var data = Ti.App.allBookmarks;
+                    if(! data) {
+                        data = [];
+                    }
+                    data.push(newBook);
+                    Ti.App.allBookmarks = data;
                 }
-                data.push(newBook);
-                Ti.App.allBookmarks = data;
-            }
+                if(endFunc) {
+                    endFunc();
+                }
+            };
         }
         for(i = 0; i < toAdd.length; i++) {
             var book = new Bookmark();
             book.setUser(this);
             book.setScan(toAdd[i]);
             book.setShop(toAdd[i].shop);
-            book.create(addBookmark);
+            book.create(_addBookmark(i === toAdd.length - 1 ? endFunc : null));
         }
+        if( toAdd.length === 0 && endFunc) {
+            endFunc();
+        }
+        
     };
     
     this.retrievePresents = function(func) {

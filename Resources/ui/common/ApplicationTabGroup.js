@@ -129,11 +129,35 @@ function ApplicationTabGroup() { 'use strict';
 		window : winSearch
 	});
 	winSearch.containingTab = tabSearch;
+	
 	Spinner.add(winSearch);
 	self.tabSearch = tabSearch;
 	self.tvSearch = winSearch.tv;
     self.mapSearch = winSearch.map;
     tabSearch.tv = winSearch.tv;
+    
+    var PresentListWindow = require('ui/common/PresentListWindow');
+    var winPresents = new PresentListWindow(self);
+    var tabPresents = Ti.UI.createTab({
+        title : 'Cadeaux',
+        icon : '/images/sin-cadeaux.png',
+        window : winPresents
+    });
+    winPresents.containingTab = tabPresents;
+    Spinner.add(winPresents);
+    self.tvPresents = winPresents.tv;
+    self.tabPresents = tabPresents;
+    tabPresents.tv = winPresents.tv;
+    
+    var WishListWindow = require('ui/common/WishListWindow');
+    var winWish = new WishListWindow(self);
+    var tabWish = Ti.UI.createTab({
+        title : 'Favoris',
+        icon : '/images/29-heart.png',
+        window : winWish
+    });
+    winWish.containingTab = tabWish;
+    Spinner.add(winWish);
     
     var MorePointsWindow = require("/ui/common/MorePointsWindow");
     var winMorePoints = new MorePointsWindow(self);
@@ -148,28 +172,6 @@ function ApplicationTabGroup() { 'use strict';
     self.tvMorePoints = winMorePoints.tv;
     tabMorePoints.tv = winMorePoints.tv;
 
-	var PresentListWindow = require('ui/common/PresentListWindow');
-	var winPresents = new PresentListWindow(self);
-	var tabPresents = Ti.UI.createTab({
-		title : 'Cadeaux',
-        icon : '/images/sin-cadeaux.png',
-		window : winPresents
-	});
-	winPresents.containingTab = tabPresents;
-    Spinner.add(winPresents);
-    self.tvPresents = winPresents.tv;
-    self.tabPresents = tabPresents;
-    tabPresents.tv = winPresents.tv;
-
-    var WishListWindow = require('ui/common/WishListWindow');
-    var winWish = new WishListWindow(self);
-    var tabWish = Ti.UI.createTab({
-        title : 'Favoris',
-        icon : '/images/29-heart.png',
-        window : winWish
-    });
-    winWish.containingTab = tabWish;
-    Spinner.add(winWish);
 
 	var AccountWindow = require('ui/common/AccountWindow');
 	var winAccount = new AccountWindow({tabGroup : self});
@@ -185,9 +187,9 @@ function ApplicationTabGroup() { 'use strict';
 	//  add tabs
 	//
 	self.addTab(tabSearch);
-    self.addTab(tabMorePoints);
     self.addTab(tabPresents);
     self.addTab(tabWish);
+    self.addTab(tabMorePoints);
 	self.addTab(tabAccount);
 	
 	self.indexTabPresents = 2;
@@ -208,7 +210,32 @@ function ApplicationTabGroup() { 'use strict';
     }
     self.addNewObject = function(obj) {
         var row = obj.createTableRow(self);
-        self.tvSearch.appendRow(row, {animated: true});
+        var res = "";
+        Ti.API.info('START Insertion ROW'+ row.idistance);
+        // Parcourir toutes les rows et savoir l'index où insérer la row actuelle en fonction de sa distance
+        var section = self.tvSearch.getData(); 
+        var found = false;
+        if(section && section.length > 0) {
+            var rows = section[0].getRows();
+            if(rows) {
+                var i;
+                
+                
+                for(i = 0; !found && i < rows.length; i++) {
+                    if(rows[i].idistance > row.idistance) {
+                        // je dois m'insérer avant
+                        res = "insert à " + i;
+                        self.tvSearch.insertRowBefore(i, row, {animated: true});
+                        found = true;
+                    }
+                }
+            }
+        }
+        if(! found) {               
+            res = "Append";
+            self.tvSearch.appendRow(row, {animated: true});
+        }
+        Ti.API.info('END Insertion ROW'+ row.distance + " - " + res);
         if(self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
         }

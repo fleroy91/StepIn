@@ -18,13 +18,15 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
     var self = Ti.UI.createWindow({
         width : '100%',
         height : '100%'
+       // layout:'vertical'
     });
 
     var view = Ti.UI.createView({
         borderRadius : 4,
-        borderColor : "#d92276",
+        borderColor : "darkGray",
         borderWidth : 2,
         transform : t,
+        layout:'vertical',
         left : x,
         top : y,
         width : '90%',
@@ -32,6 +34,15 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
         backgroundColor : 'white',
         anchorPoint:{x:0.5,y:0.5}
     });
+    
+     var btClose = Ti.UI.createButton({
+        style : Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
+        borderWidth : 0,
+        image : '/images/close.png',
+        top : 5,
+        right : 5
+    });
+    view.add(btClose);
     
     var user = AppUser.getCurrentUser();
     var points = user.getTotalPoints() || 0;
@@ -41,15 +52,20 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
     var convert = true;
 
     var lblTitle = Ti.UI.createLabel({
-        text : present.title,
-        top : 10,
+        //text : present.title,
+        text:present.desc,
+        wordWrap:true,
+        height:'auto',
+        top:-20,
+        textAlign : 'center',
+        width:150,
         color : 'black',
         font : {fontSize : 20, fontWeight : 'bold'}
     });
     view.add(lblTitle);
     
     var img = Ti.UI.createImageView({
-        top : 40, 
+        top : 0, 
         height : 150,
         width : 150
     });
@@ -62,27 +78,30 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
         text : present.desc,
         left : 5, 
         right : 5,
-        textAlign : Ti.UI.TEXT_ALIGNMENT_CENTER, 
         top : img.top + img.height + 10,
         color : 'gray',
         font: {fontSize : 14, fontWeight : 'normal'}
     });
-    view.add(lblDetails);
-
+    //view.add(lblDetails);
+   
+    
     // TODO : implement nicer conditions
     var lblConditions = Ti.UI.createLabel({
         text : "Le Lorem Ipsum est simplement du faux texte employé dans la composition et la mise en page avant impression. Le Lorem Ipsum est le faux texte standard de l'imprimerie depuis les années 1500, quand un peintre anonyme assembla ensemble des morceaux de texte pour réaliser un livre spécimen de polices de texte. Il n'a pas fait que survivre cinq siècles, mais s'est aussi adapté à la bureautique informatique, sans que son contenu n'en soit modifié. Il a été popularisé dans les années 1960 grâce à la vente de feuilles Letraset contenant des passages du Lorem Ipsum, et, plus récemment, par son inclusion dans des applications de mise en page de texte, comme Aldus PageMaker.",
-        top : lblDetails.top + 40,
+       //z top : 10,
         height : 80,
-        left : 5,
-        right : 5,
-        color : '#1ca5d2',
-        font: {fontSize : 10, fontWeight : 'normal'}
+        left : 20,
+        right : 20,
+        color : '#darkGray',
+        font: {fontSize : 12, fontWeight : 'normal'}
     });
     view.add(lblConditions);
     
-    var lblPoints = Image.createPointView(pointsRequired, 40, 120, null, {
-        bottom : 60,
+    var lblPoints = Image.createPointView(pointsRequired, 40, 95, null, 
+    {
+        //left:0,
+        //backgroundImage:'black',
+        //textAlign:Titanium.UI.TEXT_ALIGNMENT_CENTER,
         color : Ti.App.PinkColor,
         font : {fontSize : 14},
         height : 18
@@ -90,11 +109,12 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
     view.add(lblPoints);
     
     var bt = Ti.UI.createButtonBar({
-        bottom : 10,
         backgroundColor:Ti.App.PinkColor,
         style:Titanium.UI.iPhone.SystemButtonStyle.BAR,
-        height:25,
-        width : '70%'
+        height:30,
+        top:20,
+       // bottom:30,
+        width : 150
     });
     view.add(bt);
     
@@ -142,26 +162,21 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
         if(pointsRequired <= totalPoints || (totalPoints - pointsRequired) >= 1000) {
             convert = true;
             // lblPoints.setText(pointsRequired + ' steps');
-            bt.setLabels([{title:'Echanger ce cadeau'}]);
-            bt.setBackgroundColor(Ti.App.PinkColor);
+            //bt.setLabels([{title:'Echanger ce cadeau'}]);
+             bt.setBackgroundImage('/images/btEchangerStep.png');
+            //bt.setBackgroundColor(Ti.App.PinkColor);
         } else {
             convert = false;
             // lblPoints.setText('Il vous manque ' + (pointsRequired - totalPoints) + ' steps');
-            bt.setLabels([{title:'Gagner plus de points'}]);
-            bt.setBackgroundColor('#dedede');
+            //bt.setLabels([{title:'Gagner plus de points'}]);
+           // bt.setBackgroundColor('#dedede');
+           bt.setBackgroundImage('/images/btPlusDeStep.png');
         }
     };
     
     view.update(user.getTotalPoints());
     
-    var btClose = Ti.UI.createButton({
-        style : Titanium.UI.iPhone.SystemButtonStyle.PLAIN,
-        borderWidth : 0,
-        image : '/images/close.png',
-        top : 5,
-        right : 5
-    });
-    view.add(btClose);
+   
     
     btClose.addEventListener('click', function(e) {
         niceClose();
