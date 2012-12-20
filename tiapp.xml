@@ -11,7 +11,7 @@
     <property name="ti.facebook.appid">228159347198277</property>
     <id>com.stepin.app</id>
     <name>StepIn</name>
-    <version>0.7</version>
+    <version>0.7.5</version>
     <publisher>Frederic Leroy</publisher>
     <url>http://www.stepin.fr</url>
     <description>Application de géolocalisation indoor permettant de gagner de l'argent en simplement entrant dans les boutiques !</description>

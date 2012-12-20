@@ -117,7 +117,13 @@ function WishListWindow(tabGroup) { 'use strict';
         self.updateBookmarks(user.getBookmarks());
     }
     
-    self.addEventListener('focus', updateBookmarks);
+    var updateBookmarksOnce = function() {
+        self.removeEventListener('focus', updateBookmarksOnce);
+        updateBookmarks();
+    };      
+    
+    self.addEventListener('focus', updateBookmarksOnce);
+    
     Ti.App.addEventListener('NewBookmarks', function() {
         updateBookmarks();
     });

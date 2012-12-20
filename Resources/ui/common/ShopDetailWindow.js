@@ -47,7 +47,7 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
 
         Image.cacheImage(image, function(img) {
             //row.setLeftImage(Image.squareImage(img,70));
-            imageRow.setImage(image);
+            imageRow.setImage(img);
         });
 
         var lbl = Ti.UI.createLabel({

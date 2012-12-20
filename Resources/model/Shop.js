@@ -748,7 +748,7 @@ function Shop(json) {'use strict';
         stepInView.right = null;        
         internView.add(stepInView);
         
-        var stepCataView = createButton(' ' + this.catalogPoints * nbCatalogs + ' steps',
+        var stepCataView = createButton(' ' + (nbCatalogs === 0 ? 50 : this.catalogPoints * nbCatalogs) + ' steps',
             '/images/catalog.png', '50%');
         stepCataView.left = null;
         stepCataView.right = 0;        

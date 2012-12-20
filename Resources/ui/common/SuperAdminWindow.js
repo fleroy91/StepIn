@@ -210,9 +210,6 @@ function SuperAdminWindow(args) {'use strict';
             dlg.addEventListener('click', function(e) {
                 if (e.index === 0) {
                     user.deleteAllRewards(function() {
-                        user.setTotalPoints(0);
-                        user.save();
-                        user.setCurrentUser();
                         tabGroup.updateTitle();
                         user.checkAll(tabGroup.updateAllRows);
                         self.close();
