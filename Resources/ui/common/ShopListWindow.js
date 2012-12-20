@@ -29,10 +29,9 @@ function ShopListWindow(args) {
     });
     
     var viewList = true;
-    var btChangeView =Ti.UI.createButtonBar({
-        style : Ti.UI.iPhone.SystemButtonStyle.BAR,
-        color : 'black',
-        labels : [{image : '/images/switch-map.png'}],
+       var btChangeView =Ti.UI.createButton({
+        style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
+        backgroundImage:'/images/switch-map.png',
         width : 40,
         height : 27
     });
@@ -137,7 +136,7 @@ function ShopListWindow(args) {
                 listView.show();
             }
             viewList = ! viewList;
-            btChangeView.setLabels([{image : (viewList ? "/images/switch-map.png" : "/images/switch-list.png")}]);
+            btChangeView.setBackgroundImage([{image : (viewList ? "/images/switch-map.png" : "/images/switch-list.png")}]);
         }
     });
     

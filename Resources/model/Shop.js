@@ -439,6 +439,7 @@ function Shop(json) {'use strict';
     // --------------------------------------------------------
     this.setDistance = function(row, dist) {
         if(dist && row) {
+            row.idistance = dist;
             if(dist > 1000) {
                 row.distance = "à " + Math.round(dist / 10) / 100 + " km.";
             } else {
@@ -480,7 +481,7 @@ function Shop(json) {'use strict';
         });
         
         var imgNormal = Image.createStepInStarPoints('/images/annotation-stepin.png', this.allPoints, false);
-        var imgOver = Image.createStepInStarPoints('/images/annotation-stepin-over.png', this.allPoints, true);
+        //var imgOver = Image.createStepInStarPoints('/images/annotation-stepin-over.png', this.allPoints, true);
         
         var annotation = Titanium.Map.createAnnotation({
             latitude:shoploc.lat,
@@ -502,7 +503,7 @@ function Shop(json) {'use strict';
                         e.map.selectedAnnotation.setImage(e.map.selectedAnnotation.imgNormal); //'/images/annotation-stepin.png');
                     }
                     e.map.selectedAnnotation = e.annotation;
-                    e.annotation.setImage(imgOver); // '/images/annotation-stepin-over.png');
+                   // e.annotation.setImage(imgOver); // '/images/annotation-stepin-over.png');
                 }
                 if(e.clicksource === "rightButton" || e.clicksource === "rightView") {
                     var ShopDetailWindow = require('ui/common/ShopDetailWindow'),
@@ -535,7 +536,8 @@ function Shop(json) {'use strict';
                 header.setBackgroundImage(image);
             });
         } else {
-            header.setBackgroundColor('white');
+            //header.setBackgroundColor('white');
+            header.setBackgroundColor(Ti.App.PinkColor);
         }
         
         if(callback) {
@@ -604,7 +606,7 @@ function Shop(json) {'use strict';
             height : 45,
             width : 45,
             top : ntop+7,
-            left : 4,
+            left : 4
             //shadow:{
               //  shadowRadius:2,
                 //shadowOpacity:0.7,

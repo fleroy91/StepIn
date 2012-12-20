@@ -112,9 +112,14 @@ function WishListWindow(tabGroup) { 'use strict';
         }
         bsv.setData(data);
     };
-    self.addEventListener('focus', function(e) {
+    function updateBookmarks() {
         var user = AppUser.getCurrentUser();
         self.updateBookmarks(user.getBookmarks());
+    }
+    
+    self.addEventListener('focus', updateBookmarks);
+    Ti.App.addEventListener('NewBookmarks', function() {
+        updateBookmarks();
     });
     
     return self;

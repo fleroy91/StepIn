@@ -721,8 +721,11 @@ Image.squareImage = function(image, size) { 'use strict';
         } else {
             blob = image;
         }
-        
-        ret = blob.imageAsThumbnail(size, 0);
+        if(blob) {
+            ret = blob.imageAsThumbnail(size, 0);
+        } else {
+            ret = image;
+        }
     } 
     return ret;
 };

@@ -38,34 +38,46 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         return found;
     }
     
-    var pgWidth = 150;
+    var pgWidth = 153;
+    
+    var backgroundProgress=Ti.UI.createView({
+        top : 5,
+        left : 80,
+        width : pgWidth+1,
+        height : 10,
+        backgrounColor:'white',
+        borderRadius : 3,
+        borderWidth:1,
+        borderColor:'white'
+    });
+    
+    
     var progress = Ti.UI.createView({
         top : 5,
         left : 80,
-        width : pgWidth,
+        width : pgWidth+1,
         height : 10,
-        borderColor : Ti.App.PinkColor,
+        borderColor : 'white',
         borderRadius : 3,
         borderWidth : 1
     });
+    
     var internProgress =Ti.UI.createView({
-       top : progress.top,
+       top : 6,
        left : progress.left,
-       backgroundColor :  Ti.App.PinkColor,
-       borderRadius : progress.borderRadius,
-       borderWidth : progress.borderWidth,
-       borderColor :  Ti.App.PinkColor,
+       backgroundColor :  'white',
        width : 0,
-       height : 10
+       height : 8
     });
     if(! catalog.viewed) {
+        header.add(backgroundProgress);
         header.add(progress);
         header.add(internProgress);
     }
     
     var vPoints = Image.createPointView(nbPoints, 20, 70, false, {
         ratio: 0.7,
-        color : Ti.App.PinkColor});
+        color : 'white'});
     vPoints.top = 2;
     vPoints.right = 2;
     header.add(vPoints);
@@ -131,6 +143,8 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
             }
         });
         
+        
+        /*
         var infoButton = Ti.UI.createButton({
             style:Ti.UI.iPhone.SystemButton.INFO_DARK,
             bottom : 10,
@@ -143,6 +157,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
                 swin = new ScanDetailWindow(scan, tabGroup, {canScan : false});
             tabGroup.openWindow(null, swin, {animated:true});
         });
+        */
         
         v.getBookmark = function() {
             return bookmarked;
@@ -216,13 +231,16 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
     tabGroup.createTitle(self, "Scans");
     
     function saveBookmarks() {
+        Ti.API.info("In saving bookmarks !");
         // We need to save the bookmarks
         var bookmarksToAdd = [];
         var bookmarksToDelete = [];
         for(i = 0;i < views.length; i++) {
             if(views[i].getBookmark()) {
                 if(! views[i].savedBookmarked) {
-                    bookmarksToAdd.push(views[i].scan);
+                    var scan = views[i].scan;
+                    scan.shop = shop;
+                    bookmarksToAdd.push(scan);
                 }
                 views[i].savedBookmarked = true;
             } else if(views[i].savedBookmarked) {
@@ -230,10 +248,12 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
                 views[i].savedBookmarked = false;
             }
         }
-        user.saveBookmarks(bookmarksToAdd, bookmarksToDelete);
+        user.saveBookmarks(bookmarksToAdd, bookmarksToDelete, function() {
+            Ti.App.fireEvent('NewBookmarks');
+        });
     }
     
-    // self.addEventListener('close', saveBookmarks);
+    self.addEventListener('close', saveBookmarks);
     self.addEventListener('blur', saveBookmarks);
    
     return self;
