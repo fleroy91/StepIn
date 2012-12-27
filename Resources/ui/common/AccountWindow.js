@@ -63,13 +63,48 @@ function AccountWindow(args) {'use strict';
     sProfil.add(r10);
     // sProfil.add(r12);
     // sProfil.add(r13);
+    
+    function showLoader() {
+        Ti.App.Properties.setString('LoaderActive','Active');
+        var viewIndicator = Ti.UI.createView({
+            width : self.width,
+            height : self.width,
+            backgroundColor : 'black',
+            opacity : 0.5
+        });
 
+        var ActivityIndicator = Titanium.UI.createActivityIndicator({
+            font : {
+                fontFamily : 'Helvetica Neue',
+                fontSize : 15,
+                fontWeight : 'bold'
+            },
+            color : 'black',
+            message : 'Chargement...',
+            width : 'auto',
+            style : Titanium.UI.iPhone.ActivityIndicatorStyle.BIG
+        });
+        viewIndicator.add(ActivityIndicator);
+        ActivityIndicator.show();
+        self.add(viewIndicator);
+
+         Ti.App.addEventListener('EndActivityIndicator', function(e) {
+        if(viewIndicator){
+            viewIndicator.opacity=0;
+        Ti.App.Properties.removeProperty('LoaderActive');
+           }
+        
+        });
+    }
+    
     function setNewUser(user, func) {
+        if(!Ti.App.Properties.hasProperty('LoaderActive')){showLoader();}
         if (user) {
             user.setCurrentUser();
             user.checkAll(function(e) {
                 tabGroup.updateAllRows();
                 updateWindow(null, user);
+                Ti.App.fireEvent('EndActivityIndicator');
                 if (func) {
                     func();
                 }
@@ -90,6 +125,7 @@ function AccountWindow(args) {'use strict';
     }
 
     function doLogin() {
+        if(!Ti.App.Properties.hasProperty('LoaderActive')){showLoader();}
         var LoginWindow = require("/ui/common/LoginWindow"), win = new LoginWindow(tabGroup);
 
         win.addEventListener('close', function(e) {
@@ -247,6 +283,7 @@ function AccountWindow(args) {'use strict';
     self.add(tv);
 
     updateWindow = function(e, user) {
+        if(!Ti.App.Properties.hasProperty('LoaderActive')){showLoader();}
         if (user) {
             tabGroup.closeAllWindows();
         } else {
@@ -266,6 +303,7 @@ function AccountWindow(args) {'use strict';
             r41.setTitle('Déconnexion');
         }
         tabGroup.updateTitle(self);
+        Ti.App.fireEvent('EndActivityIndicator');
     };
 
     r41.addEventListener('click', function(e) {
@@ -288,6 +326,7 @@ function AccountWindow(args) {'use strict';
                     Ti.Facebook.logout();
                     user = new AppUser();
                     setNewUser(user);
+                    Ti.App.fireEvent('EndActivityIndicator');
                 }
             });
             dlg.show();

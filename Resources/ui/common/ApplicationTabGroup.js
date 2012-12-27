@@ -192,8 +192,8 @@ function ApplicationTabGroup() { 'use strict';
     self.addTab(tabMorePoints);
 	self.addTab(tabAccount);
 	
-	self.indexTabPresents = 2;
-    self.indexTabMorePoints = 1;
+	self.indexTabPresents = 1;
+    self.indexTabMorePoints = 3;
 	
 	//
 	// Management of arrays of objects
