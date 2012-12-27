@@ -41,6 +41,7 @@ function ShopListWindow(args) {
         tabGroup.getAllObjects();
 	}
 	
+	/*
 	var advertHeight = 0 ; //45;
     var AdvertView = require("ui/common/AdvertView"),
         advertView = new AdvertView(['/images/advert2.png', '/images/advert3.png'], {
@@ -48,10 +49,11 @@ function ShopListWindow(args) {
             top : 0,
             backgroundColor : 'white'
     });
+    */
 	
 	var listView = Ti.UI.createView({ top : 0});
     // listView.add(advertView);
-    self.advertView = advertView;
+    //self.advertView = advertView;
 
     var mapView = null;
     
@@ -76,7 +78,7 @@ function ShopListWindow(args) {
         }
     }
 	
-	var tv = TV.create({ top : advertHeight
+	var tv = TV.create({ top : 0
 	}, refresh);
 	tv.separatorStyle = Ti.UI.iPhone.TableViewSeparatorStyle.NONE;
 	tv.allowsSelection = false;
@@ -175,7 +177,9 @@ function ShopListWindow(args) {
                         }
                     } 
                     var tvHeight = rows.length * rowHeight;
-                    labelDistance.top = advertHeight + (offset / tvHeight * (366 - advertHeight)) + 28;
+                    labelDistance.top = (offset / tvHeight * (366)) + 28;
+                    if(labelDistance.top>=300){labelDistance.top=300;}
+                    //labelDistance.top = advertHeight + (offset / tvHeight * (366 - advertHeight)) + 28;
                     // Ti.API.info("Top = " + labelDistance.top);
                     labelDistance.visible = true;
                 }

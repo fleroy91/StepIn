@@ -14,9 +14,6 @@ function SplashWindow() { 'use strict';
     var win = Ti.UI.createWindow({
         backgroundImage : "/iphone/Default.png",
         navBarHidden : true,
-        //fullscreen:true,
-        statusBarHidden:true,
-        backgroundColor:'black',
         width:'100%',
         height:'100%'
     });
