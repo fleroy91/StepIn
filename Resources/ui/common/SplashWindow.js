@@ -12,39 +12,42 @@ var Spinner = require("etc/AppSpinner");
 
 function SplashWindow() { 'use strict';
     var win = Ti.UI.createWindow({
-        backgroundImage : "/iphone/Default.png",
+        //backgroundImage : "/images/default.png",
         navBarHidden : true,
         width:'100%',
         height:'100%'
     });
+    
+    var view1,view2,view3,view4,view5,view6;
+    
+    view1 = Ti.UI.createView({backgroundImage:'/images/ecran1.jpg'});
+    view2 = Ti.UI.createView({backgroundImage:'/images/ecran2.jpg'});
+    view3 = Ti.UI.createView({backgroundImage:'/images/ecran3.jpg'});
+    view4 = Ti.UI.createView({backgroundImage:'/images/ecran4.jpg'});
+    view5 = Ti.UI.createView({backgroundImage:'/images/ecran5.jpg'});
+    view6 = Ti.UI.createView({backgroundImage:'/images/ecran6.jpg'});
 
-    var screens = ['ecran1.jpg', 'ecran2.jpg', 'ecran3.jpg','ecran4.jpg','ecran5.jpg','ecran6.jpg'];    
-    var i, views = [];
-    for(i = 0; i < screens.length; i ++) {
-        var img = Ti.UI.createImageView({
-            image : '/images/' + screens[i],
-            width:'100%',
-            height:'100%'
-        });
-        views.push(img);
-    }
+    var screens = [view1,view2,view3,view4,view5,view6];    
+
     var tutorial = Ti.UI.createScrollableView({
         showPagingControl : true,
-         width:'100%',
+        width:'100%',
         height:'100%',
-        views : views,
+        views : screens,
+        disableBounce:true,
+        maxZoomScale:2.0,
+        currentPage:1,
         visible : false
     });
-    win.add(tutorial);
     
     var btClose = Ti.UI.createButton({
         style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-        right : 140,
-        bottom : 0,
+        right : 10,
+        top : 0,
         visible : false,
-        image : "/images/bullet.png"
+        image : "/images/bt_fermer.png"
     });
-    win.add(btClose);
+    
     
     var _callback = null;
     btClose.addEventListener('click', function(e) {
@@ -59,8 +62,9 @@ function SplashWindow() { 'use strict';
         btClose.visible = (e.currentPage === screens.length - 1); 
     });
     
-    win.displayTutorial = function(func) {
-        _callback = func;
+    win.displayTutorial = function() {
+         win.add(tutorial);
+         win.add(btClose);
         tutorial.visible = true;
     };
     

@@ -38,23 +38,20 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         return found;
     }
     
-    var pgWidth = 153;
+   var pgWidth = 146;
     
     var backgroundProgress=Ti.UI.createView({
         top : 5,
-        left : 80,
         width : pgWidth+1,
         height : 10,
-        backgrounColor:'white',
+        backgroundColor:'white',
         borderRadius : 3,
-        borderWidth:1,
-        borderColor:'white'
+        borderWidth:1
+       // borderColor:'white'
     });
-    
-    
+
     var progress = Ti.UI.createView({
         top : 5,
-        left : 80,
         width : pgWidth+1,
         height : 10,
         borderColor : 'white',
@@ -64,9 +61,12 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
     
     var internProgress =Ti.UI.createView({
        top : 6,
-       left : progress.left,
-       backgroundColor :  'white',
+       left:87,
+       backgroundColor :  Ti.App.PinkColor,
        width : 0,
+       borderColor:'white',
+       borderRadius:3,
+       borderWidth:0.5,
        height : 8
     });
     if(! catalog.viewed) {
@@ -207,7 +207,7 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) { 'use strict'
         if(max === nbScans && !displayed && ! dontDisplay) {
            displayed = true;
            var Reward = require("model/Reward"),
-                rew = new Reward({ nb_points : nbPoints});
+            rew = new Reward({ nb_points : nbPoints});
             rew.setActionKind(Reward.ACTION_KIND_CATALOG);
             rew.setShop(shop);
             rew.catalog = catalog.getUrl();

@@ -1,22 +1,24 @@
-// 
+//
 //  ShopApplicationTabGroup.js
 //  StepInShopApp
-//  
+//
 //  Created by Frédéric Leroy on 2012-09-23.
 //  Copyright 2012 Frédéric Leroy. All rights reserved.
-// 
+//
 // Display tabWindows for Objects + bookings
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var Image = require("etc/AppImage");
+var SplashWindow = require("ui/common/SplashWindow");
 
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
 var _allWindows = [];
 var _allPresents = null;
 var _prevPresents = [];
 var _nextPresent = null;
+var main = new SplashWindow();
 
 /**
  * Override a tab group's tab bar on iOS.
@@ -29,7 +31,7 @@ var _nextPresent = null;
  * @param selectedOptions The options for a selected tab button.
  * @param deselectedOptions The options for a deselected tab button.
  */
-function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOptions) { 'use strict';
+function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOptions) {'use strict';
 
     // are we restyling the tab groups?
     if (tabGroup.overrideTabs) {
@@ -37,8 +39,7 @@ function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOp
     }
 
     // a bunch of our options need to default to 0 for everything to position correctly; we'll do it en mass:
-    deselectedOptions.top = deselectedOptions.bottom = selectedOptions.top = selectedOptions.bottom = backgroundOptions.left
-            = backgroundOptions.right = backgroundOptions.bottom = 0;
+    deselectedOptions.top = deselectedOptions.bottom = selectedOptions.top = selectedOptions.bottom = backgroundOptions.left = backgroundOptions.right = backgroundOptions.bottom = 0;
 
     // create the overriding tab bar using the passed in background options
     backgroundOptions.height = 50;
@@ -47,13 +48,13 @@ function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOp
     // and create our individual tab buttons
     var activeTab = null, increment = 100 / tabGroup.tabs.length;
     deselectedOptions.width = selectedOptions.width = String(increment) + '%';
-    
+
     function setOverride(tab, i) {
         selectedOptions.left = deselectedOptions.left = String(increment * i) + '%';
 
         // set the title of the button to be the title of the tab
         selectedOptions.title = deselectedOptions.title = tab.title;
-        
+
         tab.selected = Ti.UI.createButton(selectedOptions);
         tab.deselected = Ti.UI.createButton(deselectedOptions);
         tab.deselected.addEventListener('click', function() {
@@ -68,9 +69,9 @@ function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOp
         background.add(tab.deselected);
         background.add(tab.selected);
     }
-    
+
     var i, l = tabGroup.tabs.length;
-    for (i = 0; i < l; i++) {
+    for ( i = 0; i < l; i++) {
         var tab = tabGroup.tabs[i];
         setOverride(tab, i);
     }
@@ -82,60 +83,67 @@ function overrideTabs(tabGroup, backgroundOptions, selectedOptions, deselectedOp
     tabGroup.tabs[0].deselected.fireEvent('click');
 }
 
+function ApplicationTabGroup() {'use strict';
 
-function ApplicationTabGroup() { 'use strict';
+    var Shop = require("/model/Shop"), shop = Shop.getCurrentShop();
+    var AppUser = require("model/AppUser"), user = AppUser.getCurrentUser();
 
-    var Shop = require("/model/Shop"),
-       shop = Shop.getCurrentShop();
-    var AppUser = require("model/AppUser"),
-        user = AppUser.getCurrentUser();
-    
     self = Titanium.UI.createTabGroup({
     });
-    
+
     var ShopListWindow = require('ui/common/ShopListWindow');
-       
-    var mainObject = user; 
+
+    var mainObject = user;
+
     var actInd = Titanium.UI.createActivityIndicator({
         style : Titanium.UI.iPhone.ActivityIndicatorStyle.PLAIN,
-        font : {fontFamily:'Helvetica Neue', fontSize:15,fontWeight:'bold'},
+        font : {
+            fontFamily : 'Helvetica Neue',
+            fontSize : 15,
+            fontWeight : 'bold'
+        },
         color : 'white',
-        message : Ti.Locale.getString('loading_indicator_text','Chargement...'),
+        message : Ti.Locale.getString('loading_indicator_text', 'Chargement...'),
         textAlign : 'center'
     });
     self.actInd = actInd;
-        
+
     self.showIndicator = function() {
         var tab = self.getActiveTab();
-        if(tab && tab.window) {
-            tab.window.setToolbar([self.actInd],{animated:true});
+        if (tab && tab.window) {
+            tab.window.setToolbar([self.actInd], {
+                animated : true
+            });
             self.actInd.show();
         }
     };
     self.hideIndicator = function() {
         var tab = self.getActiveTab();
-        if(tab && tab.window) {
+        if (tab && tab.window) {
             self.actInd.hide();
-            tab.window.setToolbar(null,{animated:true});
+            tab.window.setToolbar(null, {
+                animated : true
+            });
         }
     };
 
-    Spinner.add(self);
+    var winSearch = new ShopListWindow({
+        booking : false,
+        tabGroup : self
+    });
+    var tabSearch = Ti.UI.createTab({
+        title : Ti.Locale.getString('mystock_tab_title', 'Magasins'),
+        icon : '/images/sin-magasins.png',
+        window : winSearch
+    });
+    winSearch.containingTab = tabSearch;
 
-	var winSearch = new ShopListWindow({booking : false, tabGroup : self});
-	var tabSearch = Ti.UI.createTab({
-		title : Ti.Locale.getString('mystock_tab_title','Magasins'),
-		icon : '/images/sin-magasins.png',
-		window : winSearch
-	});
-	winSearch.containingTab = tabSearch;
-	
-	Spinner.add(winSearch);
-	self.tabSearch = tabSearch;
-	self.tvSearch = winSearch.tv;
+    Spinner.add(winSearch);
+    self.tabSearch = tabSearch;
+    self.tvSearch = winSearch.tv;
     self.mapSearch = winSearch.map;
     tabSearch.tv = winSearch.tv;
-    
+
     var PresentListWindow = require('ui/common/PresentListWindow');
     var winPresents = new PresentListWindow(self);
     var tabPresents = Ti.UI.createTab({
@@ -148,7 +156,7 @@ function ApplicationTabGroup() { 'use strict';
     self.tvPresents = winPresents.tv;
     self.tabPresents = tabPresents;
     tabPresents.tv = winPresents.tv;
-    
+
     var WishListWindow = require('ui/common/WishListWindow');
     var winWish = new WishListWindow(self);
     var tabWish = Ti.UI.createTab({
@@ -158,7 +166,7 @@ function ApplicationTabGroup() { 'use strict';
     });
     winWish.containingTab = tabWish;
     Spinner.add(winWish);
-    
+
     var MorePointsWindow = require("/ui/common/MorePointsWindow");
     var winMorePoints = new MorePointsWindow(self);
     var tabMorePoints = Ti.UI.createTab({
@@ -172,93 +180,99 @@ function ApplicationTabGroup() { 'use strict';
     self.tvMorePoints = winMorePoints.tv;
     tabMorePoints.tv = winMorePoints.tv;
 
-
-	var AccountWindow = require('ui/common/AccountWindow');
-	var winAccount = new AccountWindow({tabGroup : self});
-	var tabAccount = Ti.UI.createTab({
-		title : Ti.Locale.getString('account_tab_title','Profil'),
+    var AccountWindow = require('ui/common/AccountWindow');
+    var winAccount = new AccountWindow({
+        tabGroup : self
+    });
+    var tabAccount = Ti.UI.createTab({
+        title : Ti.Locale.getString('account_tab_title', 'Profil'),
         icon : '/images/sin-compte.png',
-		window : winAccount
-	});
-	winAccount.containingTab = tabAccount;
+        window : winAccount
+    });
+    winAccount.containingTab = tabAccount;
     Spinner.add(winAccount);
-
-	//
-	//  add tabs
-	//
-	self.addTab(tabSearch);
+    //
+    //  add tabs
+    //
+    self.addTab(tabSearch);
     self.addTab(tabPresents);
     self.addTab(tabWish);
     self.addTab(tabMorePoints);
-	self.addTab(tabAccount);
-	
-	self.indexTabPresents = 1;
+    self.addTab(tabAccount);
+
+    self.indexTabPresents = 1;
     self.indexTabMorePoints = 3;
-	
-	//
-	// Management of arrays of objects
-	//
+
+    //
+    // Management of arrays of objects
+    //
     function tagAlreadyIn(all, tag) {
         var i, ret = null;
-        for(i = 0 ; !ret && i< all.length; i ++) {
+        for ( i = 0; !ret && i < all.length; i++) {
             var t = all[i];
-            if(t.tag === tag) {
+            if (t.tag === tag) {
                 ret = t;
             }
         }
         return ret;
     }
+
+
     Ti.App.inAddingNewObject = false;
     self.addNewObject = function(obj) {
         Ti.App.inAddingNewObject = true;
         var row = obj.createTableRow(self);
         var res = "";
-        Ti.API.info('START Insertion ROW'+ row.idistance);
+        Ti.API.info('START Insertion ROW' + row.idistance);
         // Parcourir toutes les rows et savoir l'index où insérer la row actuelle en fonction de sa distance
-        var section = self.tvSearch.getData(); 
+        var section = self.tvSearch.getData();
         var found = false;
-        if(section && section.length > 0) {
+        if (section && section.length > 0) {
             var rows = section[0].getRows();
-            if(rows) {
+            if (rows) {
                 var i;
-                for(i = 0; !found && i < rows.length; i++) {
-                    if(rows[i].idistance > row.idistance) {
+                for ( i = 0; !found && i < rows.length; i++) {
+                    if (rows[i].idistance > row.idistance) {
                         // je dois m'insérer avant
                         res = "insert à " + i;
-                        self.tvSearch.insertRowBefore(i, row, {animated: true});
+                        self.tvSearch.insertRowBefore(i, row, {
+                            animated : true
+                        });
                         found = true;
                     }
                 }
             }
         }
-        if(! found) {               
+        if (!found) {
             res = "Append";
-            self.tvSearch.appendRow(row, {animated: true});
+            self.tvSearch.appendRow(row, {
+                animated : true
+            });
         }
-        Ti.API.info('END Insertion ROW'+ row.distance + " - " + res);
-        if(self.activeTab.tv) {
+        Ti.API.info('END Insertion ROW' + row.distance + " - " + res);
+        if (self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
         }
         Ti.App.inAddingNewObject = false;
     };
-    
+
     /**
      * Find the 2 previous earned presents + the next one
-     */ 
+     */
     var _prevUser = null;
     var _prevPoints = 0;
     function updatePresents() {
         var user = AppUser.getCurrentUser();
         var points = user.getTotalPoints() || 0;
-        
+
         // We store the current user to not compute it every time
-        if(_allPresents && (! _prevUser || _prevUser.m_url !== user.m_url || _prevPoints !== points)) {
+        if (_allPresents && (!_prevUser || _prevUser.m_url !== user.m_url || _prevPoints !== points)) {
             var i;
             _nextPresent = null;
             _prevPresents = [];
-            for(i = 0; !_nextPresent && i < _allPresents.length; i ++) {
+            for ( i = 0; !_nextPresent && i < _allPresents.length; i++) {
                 var present = _allPresents[i];
-                if(present.points <= points) {
+                if (present.points <= points) {
                     _prevPresents.push(present);
                 } else {
                     _nextPresent = present;
@@ -268,14 +282,14 @@ function ApplicationTabGroup() { 'use strict';
             _prevUser = user;
         }
     }
-    
+
     function displayPresentsExample() {
         updatePresents();
-        var SmallPresentWindow = require("/ui/common/SmallPresentWindow"),
-            swin = new SmallPresentWindow(_prevPresents, _nextPresent, self);
+        var SmallPresentWindow = require("/ui/common/SmallPresentWindow"), swin = new SmallPresentWindow(_prevPresents, _nextPresent, self);
         swin.open();
     }
-    
+
+
     self.createPointsButton = function() {
         // We change the titleControl of the current window
         var points = user.getTotalPoints() || 0;
@@ -298,7 +312,7 @@ function ApplicationTabGroup() { 'use strict';
         enclosingView.add(view);
         var backView = Ti.UI.createView({
             width : w,
-            left:0,
+            left : 0,
             height : view.height,
             backgroundColor : 'white',
             borderRadius : view.borderRadius,
@@ -316,8 +330,11 @@ function ApplicationTabGroup() { 'use strict';
             text : points,
             textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
             right : 8,
-            bottom : 6 ,
-            font: {fontSize : 18, fontWeight : 'bold'},
+            bottom : 6,
+            font : {
+                fontSize : 18,
+                fontWeight : 'bold'
+            },
             color : Ti.App.PinkColor
         });
         view.add(lblPoints);
@@ -325,28 +342,34 @@ function ApplicationTabGroup() { 'use strict';
             text : 'steps',
             textAlign : Ti.UI.TEXT_ALIGNMENT_RIGHT,
             right : 5,
-            bottom : 8 ,
-            font: {fontSize : 9, fontWeight : 'normal'},
+            bottom : 8,
+            font : {
+                fontSize : 9,
+                fontWeight : 'normal'
+            },
             color : Ti.App.PinkColor
         });
         enclosingView.add(lblSteps);
         enclosingView.addEventListener('click', function(e) {
-            displayPresentsExample(); 
+            displayPresentsExample();
         });
         enclosingView.setPoints = function(p, animated) {
             p = p || 0;
             var bmin = 0;
-            if(_prevPresents.length > 0) {
-                bmin = _prevPresents[_prevPresents.length-1].points;
+            if (_prevPresents.length > 0) {
+                bmin = _prevPresents[_prevPresents.length - 1].points;
             }
             var bmax = 2000;
-            if(_nextPresent) {
+            if (_nextPresent) {
                 bmax = _nextPresent.points;
             }
-            lblPoints.setText(p );
+            lblPoints.setText(p);
             var w = Math.round((p - bmin) / (bmax - bmin) * viewWidth);
-            if(animated) {
-                var a = Ti.UI.createAnimation({width : w, duration : 500});
+            if (animated) {
+                var a = Ti.UI.createAnimation({
+                    width : w,
+                    duration : 500
+                });
                 backView.animate(a);
             } else {
                 backView.setWidth(w);
@@ -354,7 +377,7 @@ function ApplicationTabGroup() { 'use strict';
         };
         return enclosingView;
     };
-    
+
     self.createTitle = function(win, hiddenTitle) {
         win.addEventListener('focus', function(e) {
             self.updateTitle(win);
@@ -366,56 +389,56 @@ function ApplicationTabGroup() { 'use strict';
         win.barColor = 'black';
         win.setTitle(null);
         win.hiddenTitle = hiddenTitle || win.hiddenTitle;
-        if(Ti.UI.getCurrentWindow() && Ti.UI.getCurrentWindow().hiddenTitle) {
+        if (Ti.UI.getCurrentWindow() && Ti.UI.getCurrentWindow().hiddenTitle) {
             win.setLeftNavButtonTitle(Ti.UI.getCurrentWindow().hiddenTitle);
         }
-        
+
         var btPoints = self.createPointsButton();
         win.setRightNavButton(btPoints);
         win.btPoints = btPoints;
     };
-    
+
     self.createTitle(winSearch, "A coté");
     self.createTitle(winAccount, "Mon compte");
     self.createTitle(winPresents, "Cadeaux");
     self.createTitle(winWish, "Mes favoris");
     self.createTitle(winMorePoints, "Plus de points");
-    
+
     self.updateTitleWindow = function(win, animated) {
-        if(win && win.btPoints) {
+        if (win && win.btPoints) {
             var user = AppUser.getCurrentUser();
             var points = user.getTotalPoints() || 0;
             win.btPoints.setPoints(points || 0, animated);
         }
     };
-    
+
     self.updateTitle = function(win, animated) {
         updatePresents();
-        if(! win) {
+        if (!win) {
             self.updateTitleWindow(winSearch, animated);
             self.updateTitleWindow(winAccount, animated);
             self.updateTitleWindow(winPresents, animated);
             self.updateTitleWindow(winMorePoints, animated);
             var i = 0;
-            for(i = _allWindows.length-1; i >=0; i--) {
+            for ( i = _allWindows.length - 1; i >= 0; i--) {
                 self.updateTitleWindow(_allWindows[i], animated);
             }
         } else {
             self.updateTitleWindow(win, animated);
         }
     };
-    
+
     self.fillPresents = function(allPresents) {
         _allPresents = allPresents;
-        if(allPresents) {
+        if (allPresents) {
             winPresents.setPresents(allPresents);
         }
         self.updateTitle(self.activeTab.window);
-        if(self.activeTab.tv) {
+        if (self.activeTab.tv) {
             self.activeTab.tv.fireEvent('app:endReloading');
         }
     };
-    
+
     self.addNewReward = function(rew, func) {
         // We display the screen but we need to compute the next actions
         displayNewPoints = true;
@@ -423,7 +446,7 @@ function ApplicationTabGroup() { 'use strict';
         var NewRewardWindow = require("ui/common/NewRewardWindow");
         rewardWindow = new NewRewardWindow(self, rew);
         rewardWindow.addEventListener('close', function(e) {
-            if(e.source.object) {
+            if (e.source.object) {
                 var newRew = e.source.object;
                 user = AppUser.getCurrentUser();
                 newRew.setUser(user);
@@ -431,35 +454,47 @@ function ApplicationTabGroup() { 'use strict';
                 user.setTotalPoints(user.getTotalPoints() + newRew.getNbPoints());
                 user.saveAll();
                 self.updateTitle(null, true);
-                if(! e.source.managedWindow) {
-                    if(func) {
+                if (!e.source.managedWindow) {
+                    if (func) {
                         func(newRew);
                     }
                 }
             } else {
-                if(func) {
+                if (func) {
                     func();
                 }
             }
         });
         rewardWindow.open();
     };
-    
+
     function getNbRows(tv) {
         var nb = 0;
         var section = tv.getData();
-        if(section && section.length > 0) {
+        if (section && section.length > 0) {
             nb = section.getRows().length;
         }
         return nb;
     }
-    
+
+
     self.getAllObjects = function() {
         self.showIndicator();
         self.tvSearch.setData([]);
         mainObject.retrieveShops(null, self.addNewObject, function(e) {
-            self.hideIndicator();
+
+            if (Ti.App.Properties.hasProperty('openSpinner')) {
+                SplashLoader.hide();
+                if (Ti.App.Properties.getBool('isFirstLaunch', true)) {
+                    main.open();
+                    main.displayTutorial();
+                    Ti.App.Properties.setBool('isFirstLaunch', false);
+                }
+            }
+
         });
+        self.hideIndicator();
+
     };
 
     self.getAllPresents = function() {
@@ -467,122 +502,122 @@ function ApplicationTabGroup() { 'use strict';
     };
 
     messageWin = Titanium.UI.createWindow({
-        height:80,
-        width:250,
+        height : 80,
+        width : 250,
         bottom : 70,
-        borderRadius:10,
-        touchEnabled:false,
-        orientationModes : [
-            Titanium.UI.PORTRAIT,
-            Titanium.UI.UPSIDE_PORTRAIT,
-            Titanium.UI.LANDSCAPE_LEFT,
-            Titanium.UI.LANDSCAPE_RIGHT
-        ]
+        borderRadius : 10,
+        touchEnabled : false,
+        orientationModes : [Titanium.UI.PORTRAIT, Titanium.UI.UPSIDE_PORTRAIT, Titanium.UI.LANDSCAPE_LEFT, Titanium.UI.LANDSCAPE_RIGHT]
     });
     messageView = Titanium.UI.createView({
-        id:'messageview',
-        height:80,
-        width:250,
-        borderRadius:10,
-        backgroundColor:'#000',
-        opacity:0.7,
-        touchEnabled:false
+        id : 'messageview',
+        height : 80,
+        width : 250,
+        borderRadius : 10,
+        backgroundColor : '#000',
+        opacity : 0.7,
+        touchEnabled : false
     });
-        
+
     messageLabel = Titanium.UI.createLabel({
-        id:'messagelabel',
-        text:'',
-        color:'#fff',
-        width:250,
-        height:80,
-        font:{
-            fontFamily:'Helvetica Neue',
-            fontSize:13
+        id : 'messagelabel',
+        text : '',
+        color : '#fff',
+        width : 250,
+        height : 80,
+        font : {
+            fontFamily : 'Helvetica Neue',
+            fontSize : 13
         },
-        textAlign:'center'
+        textAlign : 'center'
     });
     messageWin.add(messageView);
     messageWin.add(messageLabel);
-    
+
     self.setDisplayMessage = function(message) {
         displayNewPoints = false;
-        if(message) {
+        if (message) {
             messageLabel.text = message;
         }
     };
-    
+
     self.displayMessage = function(message) {
         Titanium.UI.setBackgroundColor('#fff');
-        if(message) {
+        if (message) {
             messageLabel.text = message;
         }
         // We don't display an empty message !
-        if(messageLabel.text) {
+        if (messageLabel.text) {
             messageWin.open();
 
             setTimeout(function() {
-                messageWin.close({opacity:0,duration:500});
-            },3000);
+                messageWin.close({
+                    opacity : 0,
+                    duration : 500
+                });
+            }, 3000);
         }
     };
-    
+
     self.openShop = function(shop, catalog, scanUrl) {
         self.closeAllWindows();
-        // We open the window 
-        var ShopDetailWindow = require("/ui/common/ShopDetailWindow"),
-            swin = new ShopDetailWindow(shop, self);
-        self.openWindow(null, swin, {animated:false});
-        
+        // We open the window
+        var ShopDetailWindow = require("/ui/common/ShopDetailWindow"), swin = new ShopDetailWindow(shop, self);
+        self.openWindow(null, swin, {
+            animated : false
+        });
+
         // Do we have to open the catalog
-        if(catalog) {
-            var ScanListWindow = require("/ui/common/ScanListWindow"),
-                cwin = new ScanListWindow(shop, self, catalog, scanUrl);
-            self.openWindow(null, cwin, {animated:false});
+        if (catalog) {
+            var ScanListWindow = require("/ui/common/ScanListWindow"), cwin = new ScanListWindow(shop, self, catalog, scanUrl);
+            self.openWindow(null, cwin, {
+                animated : false
+            });
         }
         self.setActiveTab(0);
         return swin;
     };
-    
+
     self.resetCheckInOfShops = function() {
-        var section = self.tvSearch.getData(); 
+        var section = self.tvSearch.getData();
         var row_index, obj_index;
-        if(section && section.length > 0) {
+        if (section && section.length > 0) {
             var rows = section[0].getRows();
-            if(rows) {
+            if (rows) {
                 var i;
-                for(i = 0; i < rows.length; i++) {
+                for ( i = 0; i < rows.length; i++) {
                     row_index = i;
-                    if(rows[i].object_index) {
+                    if (rows[i].object_index) {
                         var shop = AppUser.getShop(rows[i].object_index);
-                        if(shop.isCheckin()) {
+                        if (shop.isCheckin()) {
                             shop.checkin = false;
                             shop.saveAll();
                         }
                     }
                 }
             }
-        }                                
+        }
     };
 
-    var in_manage_code = false; 
+    var in_manage_code = false;
     Ti.App.allCodes = [];
     self.didHearCode = function(code) {
-        if(Ti.App.allCodes.indexOf(code) >= 0) {
+        if (Ti.App.allCodes.indexOf(code) >= 0) {
             Ti.API.info("Code alreadxy heard so ignored : " + code);
-        } else if(! in_manage_code){
+        } else if (!in_manage_code) {
             Ti.API.info("Hearing and managing : " + code);
             in_manage_code = true;
             // The shop must be in the tvSearch
-            var section = self.tvSearch.getData(); 
+            var section = self.tvSearch.getData();
             var shopFound = null, row_index, obj_index;
-            if(section && section.length > 0) {
+            if (section && section.length > 0) {
                 var rows = section[0].getRows();
-                if(rows) {
+                if (rows) {
                     var i;
-                    for(i = 0; !shopFound && i < rows.length; i++) {
-                        if(rows[i].object_index) {
+                    for ( i = 0; !shopFound && i < rows.length; i++) {
+                        if (rows[i].object_index) {
                             var s = AppUser.getShop(rows[i].object_index);
-                            if(s.beancode.toString() === code.toString() && ! s.isCheckin()) {
+                            if (s.beancode.toString() === code.toString() && ! s.isCheckin()) {
                                 shopFound = s;
                                 obj_index = rows[i].object_index;
                                 row_index = i;
@@ -591,31 +626,30 @@ function ApplicationTabGroup() { 'use strict';
                     }
                 }
             }
-            if(shopFound) {
+            if (shopFound) {
                 Ti.API.info("Shop found for code : " + code + " :" + shopFound.getJSON());
                 // We create a reward
                 var row = shopFound.createTableRow(self);
                 self.tvSearch.updateRow(row_index, row);
-                
-                var Reward = require("model/Reward"), 
-                    rew = new Reward();
+
+                var Reward = require("model/Reward"), rew = new Reward();
                 rew.setUser(user);
                 rew.setShop(shopFound);
                 rew.setNbPoints(shopFound.getPoints(Reward.ACTION_KIND_STEPIN));
                 rew.setActionKind(Reward.ACTION_KIND_STEPIN);
                 self.closeAllWindows();
                 self.setActiveTab(0);
-                
-                // We open the window 
+
+                // We open the window
                 // TODO (except if it's already opened)
                 var swin = self.openShop(shopFound);
 
                 self.addNewReward(rew, function(reward) {
-                    if(reward) {
+                    if (reward) {
                         var data = Ti.App.allCodes;
                         data.push(code);
                         Ti.App.allCodes = data;
-                        
+
                         var newShop = AppUser.getShop(obj_index);
                         newShop.checkin = true;
                         // The row doesn't change if we are checkin or not - so no need to update it
@@ -628,19 +662,21 @@ function ApplicationTabGroup() { 'use strict';
                 });
             } else {
                 in_manage_code = false;
-            } 
-        } 
+            }
+        }
     };
-    
+
     self.addEventListener('open', self.getAllPresents);
-    self.addEventListener('open', self.getAllObjects);
-    
+    self.addEventListener('open', function() {
+        self.getAllObjects();
+    });
+
     // To hear the sound
     var UDModule = require('com.ultradata');
     // TODO : Set true to run UD with Simulator
-    var runUDWithSimulator = true;
+    var runUDWithSimulator = false;
     function myStartUD() {
-        if(runUDWithSimulator) {
+        if (runUDWithSimulator) {
             UDModule.StartUD({
                 onHear : function(e) {
                     // alert("Hear from UD : " + e);
@@ -652,49 +688,56 @@ function ApplicationTabGroup() { 'use strict';
             Ti.API.info("==> Lancement de UD");
         }
     }
+
     function myResumeUD() {
-        if(runUDWithSimulator) {
-            if(! Ti.App.Properties.getBool('isUDRunning')) {
+        if (runUDWithSimulator) {
+            if (! Ti.App.Properties.getBool('isUDRunning')) {
                 UDModule.ResumeUD();
                 Ti.App.Properties.setBool('isUDRunning', true);
                 Ti.API.info("==> Resume de UD");
             }
         }
     }
+
     function myPauseUD() {
-        if(runUDWithSimulator) {
-            if(Ti.App.Properties.getBool('isUDRunning')) {
+        if (runUDWithSimulator) {
+            if (Ti.App.Properties.getBool('isUDRunning')) {
                 UDModule.PauseUD();
                 Ti.API.info("==> Pause de UD");
                 Ti.App.Properties.setBool('isUDRunning', false);
             }
         }
     }
-    
+
+
     self.addEventListener('open', myStartUD);
     Ti.App.addEventListener("resumed", myResumeUD);
     Ti.App.addEventListener("paused", myPauseUD);
-    
+
     // Should never happen
     self.addEventListener('close', function(e) {
         Ti.API.info("****** ERROR : Should never happen !!! *********");
         myPauseUD();
     });
-   
+
     self.closeWindow = function(win) {
         var pos = _allWindows.indexOf(win);
-        if(pos >= 0) {
+        if (pos >= 0) {
             _allWindows = _allWindows.slice(pos, 1);
         } else {
             alert("Fenetre inconnue !");
         }
-        if(win.containingTab) {
-            win.containingTab.close(win, {animated:true});
+        if (win.containingTab) {
+            win.containingTab.close(win, {
+                animated : true
+            });
         } else {
-            win.close({animated:true});
+            win.close({
+                animated : true
+            });
         }
     };
-    
+
     self.openWindow = function(tab, win, options) {
         tab = tab || self.tabSearch;
         self.createTitle(win);
@@ -702,30 +745,32 @@ function ApplicationTabGroup() { 'use strict';
         win.containingTab = tab;
         tab.open(win, options);
     };
-    
+
     self.closeAllWindows = function(options) {
         var i = 0;
-        for(i = _allWindows.length-1; i >=0; i--) {
-            _allWindows[i].containingTab.close(_allWindows[i], options || {animated : false});    
+        for ( i = _allWindows.length - 1; i >= 0; i--) {
+            _allWindows[i].containingTab.close(_allWindows[i], options || {
+                animated : false
+            });
         }
         _allWindows = [];
     };
-    
+
     var count = 0;
     self.updateAllRows = function() {
         Spinner.show();
         var count2 = count;
-        count ++ ;
+        count++;
         Ti.API.info("Start updateAllRows : " + count2);
-        var section = self.tvSearch.getData(); 
-        if(section && section.length > 0) {
+        var section = self.tvSearch.getData();
+        if (section && section.length > 0) {
             var rows = section[0].getRows();
-            if(rows) {
+            if (rows) {
                 var i;
-                for(i = 0; i < rows.length; i++) {
-                    if(rows[i].object_index) {
+                for ( i = 0; i < rows.length; i++) {
+                    if (rows[i].object_index) {
                         var s = AppUser.getShop(rows[i].object_index);
-                        if(s.changed) {
+                        if (s.changed) {
                             var row = s.createTableRow(self);
                             self.tvSearch.updateRow(i, row);
                             s.changed = false;
@@ -741,22 +786,23 @@ function ApplicationTabGroup() { 'use strict';
     };
 
     function moveNext() {
-        winSearch.advertView.moveNext();   
+        winSearch.advertView.moveNext();
     }
-    
+
     function checkCode() {
-        if(Ti.App.Properties.getBool('isUDRunning')) {
+        if (Ti.App.Properties.getBool('isUDRunning')) {
             var code = UDModule.getUDCode();
-            if(code) {
+            if (code) {
                 self.didHearCode(code);
             }
         }
     }
+
     // setInterval(moveNext, 3000);
-    
+
     setInterval(checkCode, 1000);
 
-	return self;
+    return self;
 }
 
 module.exports = ApplicationTabGroup;
