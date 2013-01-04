@@ -55,6 +55,7 @@ Ti.App.testflight.setDeviceIdenifier(Ti.Platform.id);
 
 var AppUser = require('model/AppUser');
 var Tools = require('/etc/Tools');
+var SplashLoader = require('/etc/SplachSpinner');
 
 // Init global variables
 Ti.App.currentUser = null;
@@ -66,28 +67,13 @@ Ti.App.allShops = null;
 Ti.App.FB_POINTS = 150;
 Ti.App.PinkColor = '#c12d74';
 
-var debug;
-if (Tools.isSimulator()) {
-    // do something useful here
-    // alert("We're in simulator !");
-    debug = 0;
-} else {
-    // alert("We're NOT in simulator !'");
-    debug = 0;
-}
-
-var ApplicationTabGroup ;
-if(debug) {
-    ApplicationTabGroup = require('ui/common/NewApplicationTabGroup');
-} else {
-    ApplicationTabGroup = require('ui/common/ApplicationTabGroup');
-}
+var ApplicationTabGroup  = require('ui/common/ApplicationTabGroup');
 
 // Management of the Ultradata Service !
 Ti.App.Properties.setBool('isUDRunning', false);
 
-var SplashWindow = require("ui/common/SplashWindow");
-var main = new SplashWindow();
+//var SplashWindow = require("ui/common/SplashWindow");
+//var main = new SplashWindow();
 
 function isArray(a) {'use strict';
     return Object.prototype.toString.apply(a) === '[object Array]';
@@ -118,11 +104,13 @@ function runApp() {'use strict';
         user_url : user.m_url,
         session_id : Ti.App.sessionId
     });
-    Spinner.hide(main);
+    
     var win = new ApplicationTabGroup();
     win.open({
         animated : true
     });
+    //Spinner.hide(main);
+    SplashLoader.show();
 }
 
 function checkUser(e) {'use strict';
@@ -148,21 +136,31 @@ function checkUser(e) {'use strict';
     }
 }
 
+/*
 main.addEventListener('open', function(e){ 'use strict';
-    Spinner.show(main);
-    if(Ti.App.Properties.getBool('isFirstLaunch', true)) {
+        //Spinner.show(main);
+
         Ti.App.Properties.setBool('isFirstLaunch', false);
-        Spinner.hide(main);
+        //Spinner.hide(main);
         main.displayTutorial(checkUser);
-    } else {
-        checkUser();
-    }
 });
+*/
 
 var options = {};
 options[Ti.App.testflight.ATTACH_BACKTRACE_TO_FEEDBACK] = true;
 options[Ti.App.testflight.DISABLE_IN_APP_UPDATES] = true;
 
 Ti.App.testflight.takeOff('9e90e19a193196af8292ac34f6e3f8a6_MTQ0MTA0MjAxMi0xMC0xNiAxNToyNTo0MC42NjA0NTM', options);
-Spinner.add(main);
+//Spinner.add(main);
+
+checkUser();
+
+/*
+if(Ti.App.Properties.getBool('isFirstLaunch', true)) 
+{
+checkUser();
 main.open();
+}else{
+    checkUser();
+}
+*/

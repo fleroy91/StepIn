@@ -41,7 +41,7 @@ function ShopListWindow(args) {
         tabGroup.getAllObjects();
 	}
 	
-	/*
+	
 	var advertHeight = 0 ; //45;
     var AdvertView = require("ui/common/AdvertView"),
         advertView = new AdvertView(['/images/advert2.png', '/images/advert3.png'], {
@@ -49,11 +49,11 @@ function ShopListWindow(args) {
             top : 0,
             backgroundColor : 'white'
     });
-    */
+    
 	
 	var listView = Ti.UI.createView({ top : 0});
     // listView.add(advertView);
-    //self.advertView = advertView;
+    self.advertView = advertView;
 
     var mapView = null;
     
@@ -138,7 +138,20 @@ function ShopListWindow(args) {
                 listView.show();
             }
             viewList = ! viewList;
-            btChangeView.setBackgroundImage([{image : (viewList ? "/images/switch-map.png" : "/images/switch-list.png")}]);
+            
+            btChangeView.setBackgroundImage([{image : (viewList ? "/images/switch-map.png" : "/images/viewlist.png")}]);
+           /*if(viewList){
+               //alert("helloMap");
+                btChangeView.backgroundImage='' ;
+              btChangeView.backgroundImage='images/switch-map.png' ;
+               //btChangeView.setBackgroundImage(""/images/switch-map.png");
+           }else{
+              // alert("helloList");
+               btChangeView.backgroundImage='' ;
+               btChangeView.backgroundImage='images/switch-list.png';
+               //btChangeView.setBackgroundImage=("/images/switch-list.png");
+           }*/
+            
         }
     });
     
