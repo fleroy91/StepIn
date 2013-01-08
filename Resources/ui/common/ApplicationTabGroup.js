@@ -12,6 +12,7 @@ var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var Image = require("etc/AppImage");
 var SplashWindow = require("ui/common/SplashWindow");
+var AdvertViewTranstions = require("ui/common/AdvertViewTransition");
 
 var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
 var _allWindows = [];
@@ -464,9 +465,20 @@ function ApplicationTabGroup() {'use strict';
                     func();
                 }
             }
+            
+         //self.displayTransitionAdvert();   
         });
         rewardWindow.open();
     };
+    
+    self.displayTransitionAdvert = function() {
+    var Advert=new AdvertViewTranstions(self);
+    };
+
+    
+    
+    
+    
 
     function getNbRows(tv) {
         var nb = 0;
@@ -589,7 +601,7 @@ function ApplicationTabGroup() {'use strict';
                     row_index = i;
                     if (rows[i].object_index) {
                         var shop = AppUser.getShop(rows[i].object_index);
-                        if (shop.isCheckin()) {
+                        if (shop.checkin===true) {
                             shop.checkin = false;
                             shop.saveAll();
                         }
@@ -599,9 +611,19 @@ function ApplicationTabGroup() {'use strict';
         }
     };
 
+
     var in_manage_code = false;
     Ti.App.allCodes = [];
+   
     self.didHearCode = function(code) {
+        
+        if(Ti.App.Properties.hasProperty('ArrayCode'))
+         {
+          var list=Ti.App.Properties.getList('ArrayCode');
+          Ti.App.allCodes=list;
+         }
+        
+        
         if (Ti.App.allCodes.indexOf(code) >= 0) {
             Ti.API.info("Code alreadxy heard so ignored : " + code);
         } else if (!in_manage_code) {
@@ -610,20 +632,29 @@ function ApplicationTabGroup() {'use strict';
             // The shop must be in the tvSearch
             var section = self.tvSearch.getData();
             var shopFound = null, row_index, obj_index;
+            
             if (section && section.length > 0) {
+               // Ti.API.info(section.length);
                 var rows = section[0].getRows();
+                
                 if (rows) {
                     var i;
+                    //Ti.API.info(rows.length);
+                    ////  PROBLEM HERE /////////
                     for ( i = 0; !shopFound && i < rows.length; i++) {
-                        if (rows[i].object_index) {
+                        Ti.API.info(rows[i].object_index);
+                       // alert(rows.length);
+                        //if (rows[i].object_index) {
                             var s = AppUser.getShop(rows[i].object_index);
-                            if (s.beancode.toString() === code.toString() && ! s.isCheckin()) {
+                            Ti.API.myLog("BeanCode="+s.beancode.toString()+"  "+"Code"+code.toString()+" "+"CheckingValue="+! s.isCheckin());
+                            if (s.beancode.toString() === code.toString() && !  s.isCheckin()) {
                                 shopFound = s;
                                 obj_index = rows[i].object_index;
-                                row_index = i;
+                                row_index = i; 
                             }
-                        }
+                       // }
                     }
+                    /////////////////////////////
                 }
             }
             if (shopFound) {
@@ -674,7 +705,7 @@ function ApplicationTabGroup() {'use strict';
     // To hear the sound
     var UDModule = require('com.ultradata');
     // TODO : Set true to run UD with Simulator
-    var runUDWithSimulator = false;
+    var runUDWithSimulator = true;
     function myStartUD() {
         if (runUDWithSimulator) {
             UDModule.StartUD({
@@ -700,6 +731,13 @@ function ApplicationTabGroup() {'use strict';
     }
 
     function myPauseUD() {
+        if(Ti.App.Properties.hasProperty('ArrayCode')){
+             Ti.App.Properties.removeProperty('ArrayCode');
+             Ti.App.Properties.setList('ArrayCode',Ti.App.allCodes);
+        }
+        else{
+             Ti.App.Properties.setList('ArrayCode',Ti.App.allCodes);
+        }
         if (runUDWithSimulator) {
             if (Ti.App.Properties.getBool('isUDRunning')) {
                 UDModule.PauseUD();

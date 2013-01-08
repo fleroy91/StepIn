@@ -43,7 +43,9 @@ function WishDetailWindow(tabGroup, shop, scans) { 'use strict';
         Image.cacheImage(scan.getPhotoUrl(0), function(image) {
             img.setImage(image); 
         });
-                
+         
+         
+        /*        
         function displayBookmark(e) {
             // to whom catalog the scan belongs to ?
             var i, catalogs = shop.catalogs, found = false;
@@ -59,8 +61,16 @@ function WishDetailWindow(tabGroup, shop, scans) { 'use strict';
                 tabGroup.openShop(shop);
             }
         }
+        */
         
-        view.addEventListener('click', displayBookmark);
+         function openDetailBookmark(e) {
+            // We need to open a bigger detailed window
+            var WishDetailZoomWindow = require("ui/common/WishDetailZoomWindow"),
+                swin = new WishDetailZoomWindow(scan,e.x, e.y,tabGroup);
+            swin.open();
+        }
+        
+        view.addEventListener('click', openDetailBookmark);
         
         return view;
     }

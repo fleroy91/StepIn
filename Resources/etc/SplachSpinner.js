@@ -31,6 +31,8 @@ SplachSpinner.hide = function() { 'use strict';
 actIndicator.hide();
 Win.remove(actIndicator);
 Win.close();
+Win=null;
+actIndicator=null;
 Ti.App.Properties.removeProperty('openSpinner');
 };
 

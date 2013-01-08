@@ -64,8 +64,7 @@ Image.loadOrTakeImage = function(img) {'use strict';
                 success : function(event) {
                     var image = event.media;
 
-                    // set image view
-                    Ti.API.debug('Our type was: ' + event.mediaType);
+                    // set image view  
                     e.source.img.setImage(image);
                     e.source.img.changed = true;
 

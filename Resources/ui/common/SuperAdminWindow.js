@@ -62,7 +62,8 @@ function SuperAdminWindow(args) {'use strict';
     function emailLogFile(e) {
         var emailDialog = Ti.UI.createEmailDialog();
         emailDialog.subject = "Step'In Logfile";
-        emailDialog.toRecipients = ['flperso@gmail.com'];
+        //emailDialog.toRecipients = ['flperso@gmail.com'];
+        emailDialog.toRecipients = ['damien.bigot@gmail.com'];
         emailDialog.messageBody = '<b>Log file from : XXX !</b> ' + (new Date()).toLocaleString();
         var f = Ti.Filesystem.getFile(Ti.Filesystem.applicationDataDirectory, "log.txt");
         emailDialog.addAttachment(f);
@@ -254,7 +255,10 @@ function SuperAdminWindow(args) {'use strict';
         title : "Reset heard codes",
         hasChild : false,
         action : function(e) {
+            
             Ti.App.allCodes = [];
+          
+            Ti.App.Properties.removeProperty('ArrayCode');
             tabGroup.resetCheckInOfShops();
             alert("RAZ des Codes entendus !");
         }

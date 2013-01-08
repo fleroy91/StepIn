@@ -86,6 +86,7 @@ function WishListWindow(tabGroup) { 'use strict';
         var shops = [];
         var user = AppUser.getCurrentUser();
         var j;
+        if(bookmarks){
         for(i = 0; i < bookmarks.length; i++) {
             // We need to organise it by shops
             var book = bookmarks[i];
@@ -106,6 +107,7 @@ function WishListWindow(tabGroup) { 'use strict';
                 shops[shops.length - 1].bookmarks = [scan];
             }
         }
+    }
         data = [];
         for(j = 0; j < shops.length; j ++) {
             data.push(createBookmarkView(shops[j]));
