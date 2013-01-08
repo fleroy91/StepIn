@@ -36,7 +36,7 @@ function SplashWindow() { 'use strict';
         views : screens,
         disableBounce:true,
         maxZoomScale:2.0,
-        currentPage:1,
+        currentPage:0,
         visible : false
     });
     
@@ -53,6 +53,9 @@ function SplashWindow() { 'use strict';
     btClose.addEventListener('click', function(e) {
         tutorial.visible = false;
         btClose.visible = false;
+        win.remove(tutorial,btClose);
+        win.close();
+        win=null;
         if(_callback) {
             _callback();
         }

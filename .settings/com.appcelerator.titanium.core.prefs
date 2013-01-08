@@ -1,9 +1,9 @@
 eclipse.preferences.version=1
-provisioning_profiles/development/B72B26D1-4E2E-4493-A668-CC32175C08FA/appid=*
-provisioning_profiles/development/B72B26D1-4E2E-4493-A668-CC32175C08FA/filepath=/Users/viaduc143/Library/MobileDevice/Provisioning Profiles/B72B26D1-4E2E-4493-A668-CC32175C08FA.mobileprovision
-provisioning_profiles/development/B72B26D1-4E2E-4493-A668-CC32175C08FA/name=iOS Team Provisioning Profile\: *
-provisioning_profiles/development/B72B26D1-4E2E-4493-A668-CC32175C08FA/uuid=B72B26D1-4E2E-4493-A668-CC32175C08FA
-provisioning_profiles/development/FD4E94ED-55A2-458F-B0C8-B26869583CE9/appid=*
-provisioning_profiles/development/FD4E94ED-55A2-458F-B0C8-B26869583CE9/filepath=/Users/viaduc143/Library/MobileDevice/Provisioning Profiles/FD4E94ED-55A2-458F-B0C8-B26869583CE9.mobileprovision
-provisioning_profiles/development/FD4E94ED-55A2-458F-B0C8-B26869583CE9/name=StepIn
-provisioning_profiles/development/FD4E94ED-55A2-458F-B0C8-B26869583CE9/uuid=FD4E94ED-55A2-458F-B0C8-B26869583CE9
+provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/appid=com.eckografik.charityfair
+provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/filepath=/Users/damienbigot/Library/MobileDevice/Provisioning Profiles/280A2B93-323B-4206-9CEE-BE857286A2EB.mobileprovision
+provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/name=charityfair
+provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/uuid=280A2B93-323B-4206-9CEE-BE857286A2EB
+provisioning_profiles/development/C50C2858-8F42-46B3-BECD-825C01A6562E/appid=com.stepin.app
+provisioning_profiles/development/C50C2858-8F42-46B3-BECD-825C01A6562E/filepath=/Users/damienbigot/Library/MobileDevice/Provisioning Profiles/C50C2858-8F42-46B3-BECD-825C01A6562E.mobileprovision
+provisioning_profiles/development/C50C2858-8F42-46B3-BECD-825C01A6562E/name=stepIn
+provisioning_profiles/development/C50C2858-8F42-46B3-BECD-825C01A6562E/uuid=C50C2858-8F42-46B3-BECD-825C01A6562E

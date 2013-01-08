@@ -190,9 +190,6 @@ function PresentDetailWindow(present, x, y, tabGroup, displayMorePoints) { 'use 
         view.animate(a); 
     });
     
-    self.addEventListener('open', function(e) {
-        Ti.App.testflight.passCheckpoint("View detail of a present : " + present.inspect());
-    });
     return self;
 }
 

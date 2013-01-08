@@ -169,9 +169,6 @@ function ScanDetailWindow(scan, tabGroup, args) { 'use strict';
 
     tabGroup.createTitle(self, "Scan");
     
-    self.addEventListener('open', function(e) {
-        Ti.App.testflight.passCheckpoint("View detail of a scan : " + scan.inspect());
-    });
     
     return self;
 }

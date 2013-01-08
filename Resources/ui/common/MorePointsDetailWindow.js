@@ -130,9 +130,6 @@ function MorePointsDetailWindow(tabGroup, action) {'use strict';
     }]);
     bt.setBackgroundColor(Ti.App.PinkColor);
 
-    self.addEventListener('open', function(e) {
-        Ti.App.testflight.passCheckpoint("View detail of a more points : " + action.title);
-    });
     return self;
 }
 

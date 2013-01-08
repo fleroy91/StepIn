@@ -64,6 +64,8 @@ function AccountWindow(args) {'use strict';
     // sProfil.add(r12);
     // sProfil.add(r13);
     
+    Ti.App.fireEvent('CallSpinner');
+    
     function showLoader() {
         Ti.App.Properties.setString('LoaderActive','Active');
         var viewIndicator = Ti.UI.createView({
@@ -198,7 +200,6 @@ function AccountWindow(args) {'use strict';
     /*var r31 = Ti.UI.createTableViewRow({ font:{fontWeight:'normal'},title : 'Feedback', hasChild : true });
      sContact.add(r31);
      r31.addEventListener('click', function(e) {
-     Ti.App.testflight.openFeedbackView();
      });*/
 
     var sLogin = Ti.UI.createTableViewSection({});

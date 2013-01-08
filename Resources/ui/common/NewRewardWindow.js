@@ -278,9 +278,6 @@ function NewRewardWindow(tabGroup, reward) {'use strict';
 
     Spinner.add(self);
 
-    self.addEventListener('open', function(e) {
-        Ti.App.testflight.passCheckpoint("New reward : " + reward.inspect());
-    });
 
     return self;
 }

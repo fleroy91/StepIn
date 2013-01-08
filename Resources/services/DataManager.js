@@ -76,7 +76,6 @@ function DataManager() {'use strict';
                  if(client.status === 204 && method === 'DELETE') {
                      Ti.API.info("DELETE Ok");
                  } else {
-                     Ti.API.debug("HTTP Error : " + JSON.stringify(e) + " / " + qparams);
                      var prevAnswer = Ti.App.Properties.getString(nodate_url);
                      if(method === "GET" && prevAnswer) 
                      {

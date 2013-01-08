@@ -154,9 +154,6 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
         rowStepIn.backgroundColor = (shop.checkin ? '#eadae3' : null);
     };
 
-    self.addEventListener('open', function(e) {
-        Ti.App.testflight.passCheckpoint("View detail of a shop : " + shop.inspect());
-    });
 
     return self;
 }
