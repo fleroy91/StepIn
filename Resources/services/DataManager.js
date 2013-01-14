@@ -15,6 +15,7 @@ function DataManager() {'use strict';
 	this.account_id = '4ff6ebed1b338a6ace001893';
 	this.auth_token = 'seK41wiSZxB6Rr1iGLyg';
 	this.base_url = "http://api.storageroomapp.com/accounts/" + this.account_id;
+	
 	this.silent = false;
 	
 	this.completeURL = function(sub_url) {

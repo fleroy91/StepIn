@@ -12,6 +12,7 @@ var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
 var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
+var dataManager = require("services/DataManager");
 var Reward = require('model/Reward');
 var Bookmark = require('model/Bookmark');
 var Invitation = require('model/AppInvitation');
@@ -27,6 +28,7 @@ function AppUser(json) {'use strict';
     };
     this.getEntriesUrl = function() {
         return "/collections/4ff6f9851b338a3e72000c64/entries";    
+       //return "?user=http://api.storageroomapp.com/accounts/" + this.account_id +"/collections/4ff6f9851b338a3e72000c64/entries"; 
     };
     //--------------------------------------------------------
     this.getFormPhotoFields = function() {
@@ -66,6 +68,22 @@ function AppUser(json) {'use strict';
         Ti.API.info("p = -" + p + "-" + p.length + (p.length === 10));
         return (p.length === 10);
     }
+    
+   /* // TODO
+    this.init=function() {
+        dataManager.doCall('GET', "http://backoffice.step-in.fr/home/init_mobile", 
+            Tools.Hash2Qparams({ user : this.getUrl(),
+                lat : this.location.lat,
+                lng : this.location.lng }),
+                null, function(bigJSON) {
+                    Ti.API.myLog(bigJSON);
+        // Interpretation de big JSON pour remplir
+        // Les rewards bigJSON.rewards
+        // Les shops bigJSON.shops
+        // ...
+                    
+        });
+    } */
 
     this.validate = function() {
         var bOk = false;
@@ -301,6 +319,7 @@ function AppUser(json) {'use strict';
     };
     
     this.retrieveInvitationsAndRewards = function(func) {
+        //init();
         function _retrieveRewards(self) {
             return function() {
                 self.retrieveRewards(func);
@@ -354,6 +373,7 @@ function AppUser(json) {'use strict';
         Spinner.show();
         this.geolocalize(function(self) {
             self.setCurrentUser();
+            //self.init();
             if(! Ti.App.allRewards) {
                 self.retrieveInvitationsAndRewards(function(allRewards) {
                     getShops(self, tags, onNewShop, finalFunc);

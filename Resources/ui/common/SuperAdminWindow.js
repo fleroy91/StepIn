@@ -252,42 +252,40 @@ function SuperAdminWindow(args) {'use strict';
         title : "Demo",
         hasChild : false
     }, {
-        title : "Reset heard codes",
+        title : "Reset en cours de démo",
         hasChild : false,
         action : function(e) {
-            
             Ti.App.allCodes = [];
-          
             Ti.App.Properties.removeProperty('ArrayCode');
             tabGroup.resetCheckInOfShops();
             alert("RAZ des Codes entendus !");
         }
-    },{
-        title : "Simulate Step-In Shop 1",
+    }, {
+        title : "Simulate Step-In Shop 10",
         hasChild : false,
         action : function(e) {
-            simulateStepIn(1);
+            simulateStepIn(10);
         }
     }, {
-        title : "Simulate Step-In Shop 2",
+        title : "Simulate Step-In Shop 20",
         hasChild : false,
         action : function(e) {
-            simulateStepIn(2);
+            simulateStepIn(20);
         }
     }, {
-        title : "Simulate Step-In Shop 3",
+        title : "Simulate Step-In Shop 30",
         hasChild : false,
         action : function(e) {
-            simulateStepIn(3);
+            simulateStepIn(30);
         }
     }, {
-        title : "Simulate Step-In Shop 4",
+        title : "Simulate Step-In Shop 40",
         hasChild : false,
         action : function(e) {
-            simulateStepIn(4);
+            simulateStepIn(40);
         }
     }, {
-        title : "Clear all user rewards",
+        title : "Prepa démo",
         hasChild : false,
         action : clearAllRewards
     }, {
@@ -370,4 +368,4 @@ function SuperAdminWindow(args) {'use strict';
     return self;
 }
 
-module.exports = SuperAdminWindow; 
+module.exports = SuperAdminWindow;

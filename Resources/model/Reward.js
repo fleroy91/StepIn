@@ -61,6 +61,10 @@ function Reward(json) {    'use strict';
     this.setNbPoints = function(nb) {
         this.setField('nb_points', nb);    
     };
+   this.setRayon = function(rayon){
+        this.setFieldObject('name_rayon',rayon);
+    };
+    
     // Returns the number of minutes passed between the reward action and the given date
     this.howLong = function(now) {
         var ret = 0;
