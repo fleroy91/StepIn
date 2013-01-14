@@ -178,13 +178,20 @@ function AccountWindow(args) {'use strict';
         title : "Conditions d'utilisations",
         hasChild : true
     });
-    //sInfo.add(r21);
+    sInfo.add(r21);
     //sInfo.add(r22);
     sInfo.add(r23);
 
-    r21.addEventListener('click', notImplemented);
     r22.addEventListener('click', notImplemented);
-
+    
+    r21.addEventListener('click', function(e) {
+        var SplashWindow = require("ui/common/SplashWindow"), tuto = new SplashWindow();
+        tuto.open();
+        tuto.displayTutorial();
+    });
+    
+    
+    
     r23.addEventListener('click', function(e) {
         var ConditionsWindow = require("/ui/common/ConditionsWindow"), win = new ConditionsWindow({
             tabGroup : tabGroup

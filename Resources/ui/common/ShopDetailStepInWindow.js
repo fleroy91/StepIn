@@ -1,17 +1,16 @@
 //
-//  ShopDetailWindow.js
+//  ShopDetailStepInWindow.js
 //  StepIn
 //
-//  Created by Frederic Leroy on 2012-10-18.
-//  Copyright 2012 Frederic Leroy. All rights reserved.
+//  Created by Damien Bigot on 2013-01-10.
+//  Copyright 2013 Damien Bigot. All rights reserved.
 //
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 var Image = require('/etc/AppImage');
 var AppUser = require('/model/AppUser');
-var Reward = require('/model/Reward');
 
-function ShopDetailWindow(shop, tabGroup) {'use strict';
+function ShopDetailStepInWindow(shop, tabGroup) {'use strict';
     var self = Ti.UI.createWindow({
         object : shop
     });
@@ -31,17 +30,17 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
         backgroundColor : 'white'
     });
 
-    function createRow(image, title, detail, points, withAction) {
+    function createRow(image, title, detail, points) {
         var row = Ti.UI.createTableViewRow({
             className : 'shopDetailRow',
             height : 80
         });
 
         var imageRow = Ti.UI.createImageView({
-            top:5,
-            width : 70,
-            left : 5,
-            height : 70
+            top:22,
+            width : 40,
+            left : 15,
+            height : 40
         });
         row.add(imageRow);
 
@@ -56,7 +55,7 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
             },
             color : '#4d4d4d',
             text : title,
-            width : 190 - 40,
+            width : 190,
             left : 85,
             top : 13
         });
@@ -83,12 +82,8 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
             right : 5
         });
 
-        if (withAction) {
-            row.add(btAction);
-        }
-
         var pt = Image.createPointView(points, 40, 120, null, {
-            right : btAction.right + btAction.width + 4,
+            right : btAction.right+4,
             bottom : 17,
             shadowOffset : {
                 x : 1,
@@ -100,57 +95,51 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
         row.ptView = pt;
         return row;
     }
-   
-    var data = [], i;
-    var catalogs = shop.catalogs;
-    for ( i = 0; i < catalogs.length; i++) {
-        var catalog = catalogs[i];
-        var rowScans = createRow(catalog.getPhotoUrl(0), catalog.kind, "Parcourez ce catalogue \npour gagner plus de steps", shop.catalogPoints, true);
-        if (catalog.viewed) {
-            rowScans.backgroundColor = '#eadae3';
-        }
-        rowScans.catalogIndex = i;
-        data.push(rowScans);
+
+    var rowStepIn = createRow('/images/steps.png', shop.getRayonName(0), "Entrez dans le magasin \net gagnez des steps", shop.getStepInPoints());
+    var rowStepInRayon1 = createRow('/images/steps.png', shop.getRayonName(1), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(1));
+    var rowStepInRayon2 = createRow('/images/steps.png', shop.getRayonName(2), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(2));
+    var rowStepInRayon3 = createRow('/images/steps.png', shop.getRayonName(3), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(3));
+    var rowStepInRayon4 = createRow('/images/steps.png', shop.getRayonName(4), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(4));
+
+    if (shop.checkin) {
+        rowStepIn.backgroundColor = '#eadae3';
     }
+
+    var data = [rowStepIn,rowStepInRayon1,rowStepInRayon2,rowStepInRayon3,rowStepInRayon4], i;
+    var catalogs = shop.catalogs;
 
     tv.setData(data);
 
-    if(data.length===0){
-    var rowEmptyScan = createRow("test", "catalog.kind", "Parcourez ce catalogue \npour gagner plus de steps", "", false);
-     data.push(rowEmptyScan);
-    }
-
     tv.addEventListener('click', function(e) {
-            
-            var index = e.rowData.catalogIndex;
-            var catalog = catalogs[index];
-            var rowScan = data[e.index];
-            var ScanListWindow = require("/ui/common/ScanListWindow"), swin = new ScanListWindow(shop, tabGroup, catalog);
-
-            swin.addEventListener('close', function() {
-                if (swin.rewarded) {
-                    shop.catalogs[index].viewed = true;
-                    rowScan.backgroundColor = '#eadae3';
-                }
-            });
-            tabGroup.openWindow(null, swin, {
-                animated : true
-            });
-
+        if (e.index === 0) {
+            if (!shop.checkin) {
+                alert("Entrez dans le magasin et gardez votre téléphone en main.\nVous gagnerez automatiquement des steps !");
+            } else {
+                alert("Vous avez déjà fait un Step-In aujourd'hui dans ce magasin ! Ré-essayez demain :-)");
+            }
+        } 
+        else if (e.index >= 1) 
+        {
+            if (!shop.checkin) {
+                alert("Passez dans le rayon\npour gagner vos Steps !");
+            } else {
+                alert("Vous êtes déjà entré dans ce rayon ! Ré-essayez demain :-)");
+            }
+        }
         tv.deselectRow(e.index);
     });
     self.add(tv);
 
     tabGroup.createTitle(self, shop.getTitle());
 
-    /*
     self.setObject = function(newObject) {
         shop = newObject;
         rowStepIn.backgroundColor = (shop.checkin ? '#eadae3' : null);
     };
-    */
+
 
     return self;
 }
 
-module.exports = ShopDetailWindow;
+module.exports = ShopDetailStepInWindow;

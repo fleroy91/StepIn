@@ -14,7 +14,7 @@ var Image = require("etc/AppImage");
 var SplashWindow = require("ui/common/SplashWindow");
 var AdvertViewTranstions = require("ui/common/AdvertViewTransition");
 
-var self, messageWin, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
+var self, messageWin, codeJustHeard, messageView, messageLabel, displayNewPoints = false, rewardWindow = null;
 var _allWindows = [];
 var _allPresents = null;
 var _prevPresents = [];
@@ -255,6 +255,7 @@ function ApplicationTabGroup() {'use strict';
             self.activeTab.tv.fireEvent('app:endReloading');
         }
         Ti.App.inAddingNewObject = false;
+
     };
 
     /**
@@ -406,7 +407,8 @@ function ApplicationTabGroup() {'use strict';
     self.createTitle(winMorePoints, "Plus de points");
 
     self.updateTitleWindow = function(win, animated) {
-        if (win && win.btPoints) {
+        if (win && win.btPoints) 
+        {
             var user = AppUser.getCurrentUser();
             var points = user.getTotalPoints() || 0;
             win.btPoints.setPoints(points || 0, animated);
@@ -465,20 +467,16 @@ function ApplicationTabGroup() {'use strict';
                     func();
                 }
             }
-            
-         //self.displayTransitionAdvert();   
+
+            self.displayTransitionAdvert();
         });
         rewardWindow.open();
     };
-    
-    self.displayTransitionAdvert = function() {
-    var Advert=new AdvertViewTranstions(self);
-    };
 
-    
-    
-    
-    
+    self.displayTransitionAdvert = function() {
+        alert(codeJustHeard);
+        var Advert = new AdvertViewTranstions(self,codeJustHeard);
+    };
 
     function getNbRows(tv) {
         var nb = 0;
@@ -494,7 +492,7 @@ function ApplicationTabGroup() {'use strict';
         self.showIndicator();
         self.tvSearch.setData([]);
         mainObject.retrieveShops(null, self.addNewObject, function(e) {
-
+                
             if (Ti.App.Properties.hasProperty('openSpinner')) {
                 SplashLoader.hide();
                 if (Ti.App.Properties.getBool('isFirstLaunch', true)) {
@@ -503,7 +501,6 @@ function ApplicationTabGroup() {'use strict';
                     Ti.App.Properties.setBool('isFirstLaunch', false);
                 }
             }
-
         });
         self.hideIndicator();
 
@@ -601,58 +598,64 @@ function ApplicationTabGroup() {'use strict';
                     row_index = i;
                     if (rows[i].object_index) {
                         var shop = AppUser.getShop(rows[i].object_index);
-                        if (shop.checkin===true) {
+                        if (shop.checkin === true) {
                             shop.checkin = false;
                             shop.saveAll();
                         }
                     }
                 }
+                    user.deleteAllRewards(function() {
+                    self.updateTitle();
+                    user.checkAll(self.updateAllRows);
+                    });
             }
         }
     };
 
-
     var in_manage_code = false;
     Ti.App.allCodes = [];
-   
+
     self.didHearCode = function(code) {
-        
-        if(Ti.App.Properties.hasProperty('ArrayCode'))
-         {
-          var list=Ti.App.Properties.getList('ArrayCode');
-          Ti.App.allCodes=list;
-         }
-        
-        
+        codeJustHeard = code;
+        var beancode, rayon;
+       
+        if (Ti.App.Properties.hasProperty('ArrayCode')) {
+            var list = Ti.App.Properties.getList('ArrayCode');
+            Ti.App.allCodes = list;
+        }
+
         if (Ti.App.allCodes.indexOf(code) >= 0) {
             Ti.API.info("Code alreadxy heard so ignored : " + code);
         } else if (!in_manage_code) {
             Ti.API.info("Hearing and managing : " + code);
+            beancode = Math.floor(code / 10) * 10;
+            rayon = code % 10;
+            //alert(beancode+"  "+rayon);
             in_manage_code = true;
             // The shop must be in the tvSearch
             var section = self.tvSearch.getData();
             var shopFound = null, row_index, obj_index;
-            
+
             if (section && section.length > 0) {
-               // Ti.API.info(section.length);
+                // Ti.API.info(section.length);
                 var rows = section[0].getRows();
-                
+
                 if (rows) {
                     var i;
                     //Ti.API.info(rows.length);
                     ////  PROBLEM HERE /////////
                     for ( i = 0; !shopFound && i < rows.length; i++) {
                         Ti.API.info(rows[i].object_index);
-                       // alert(rows.length);
+                        // alert(rows.length);
                         //if (rows[i].object_index) {
-                            var s = AppUser.getShop(rows[i].object_index);
-                            Ti.API.myLog("BeanCode="+s.beancode.toString()+"  "+"Code"+code.toString()+" "+"CheckingValue="+! s.isCheckin());
-                            if (s.beancode.toString() === code.toString() && !  s.isCheckin()) {
-                                shopFound = s;
-                                obj_index = rows[i].object_index;
-                                row_index = i; 
-                            }
-                       // }
+                        var s = AppUser.getShop(rows[i].object_index);
+                        Ti.API.myLog("BeanCode=" + s.beancode.toString() + "  " + "Code" + beancode.toString() + " " + "CheckingValue=" + ! s.isCheckin());
+                        if (s.beancode.toString() === beancode.toString() && !  s.isCheckin()) {
+                            shopFound = s;
+                            obj_index = rows[i].object_index;
+                            row_index = i;
+                        }
+                        // }
                     }
                     /////////////////////////////
                 }
@@ -666,8 +669,9 @@ function ApplicationTabGroup() {'use strict';
                 var Reward = require("model/Reward"), rew = new Reward();
                 rew.setUser(user);
                 rew.setShop(shopFound);
-                rew.setNbPoints(shopFound.getPoints(Reward.ACTION_KIND_STEPIN));
+                rew.setNbPoints(shopFound.getPoints(Reward.ACTION_KIND_STEPIN, rayon));
                 rew.setActionKind(Reward.ACTION_KIND_STEPIN);
+                rew.setRayon(shopFound.getRayonName(rayon));
                 self.closeAllWindows();
                 self.setActiveTab(0);
 
@@ -731,12 +735,11 @@ function ApplicationTabGroup() {'use strict';
     }
 
     function myPauseUD() {
-        if(Ti.App.Properties.hasProperty('ArrayCode')){
-             Ti.App.Properties.removeProperty('ArrayCode');
-             Ti.App.Properties.setList('ArrayCode',Ti.App.allCodes);
-        }
-        else{
-             Ti.App.Properties.setList('ArrayCode',Ti.App.allCodes);
+        if (Ti.App.Properties.hasProperty('ArrayCode')) {
+            Ti.App.Properties.removeProperty('ArrayCode');
+            Ti.App.Properties.setList('ArrayCode', Ti.App.allCodes);
+        } else {
+            Ti.App.Properties.setList('ArrayCode', Ti.App.allCodes);
         }
         if (runUDWithSimulator) {
             if (Ti.App.Properties.getBool('isUDRunning')) {

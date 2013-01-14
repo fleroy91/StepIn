@@ -61,7 +61,7 @@ function SmallPresentWindow(prevPresents, nextPresent, tabGroup) { 'use strict';
         });
         row.add(leftImg);
         Image.cacheImage(present.getPhotoUrl(0), function(image) {
-            leftImg.setImage(image); 
+        leftImg.setImage(image); 
         });
         
         var rightWidth = 0, rightImg;

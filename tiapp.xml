@@ -9,7 +9,7 @@
     </deployment-targets>
     <sdk-version>2.1.4.GA</sdk-version>
     <property name="ti.facebook.appid">228159347198277</property>
-    <id>com.stepin.app</id>
+    <id>com.cosm.stepin</id>
     <name>StepIn</name>
     <version>0.7.5</version>
     <publisher>Frederic Leroy</publisher>
