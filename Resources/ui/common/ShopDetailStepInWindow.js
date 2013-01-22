@@ -95,22 +95,31 @@ function ShopDetailStepInWindow(shop, tabGroup) {'use strict';
         row.ptView = pt;
         return row;
     }
-
+    
     var rowStepIn = createRow('/images/steps.png', shop.getRayonName(0), "Entrez dans le magasin \net gagnez des steps", shop.getStepInPoints());
     var rowStepInRayon1 = createRow('/images/steps.png', shop.getRayonName(1), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(1));
     var rowStepInRayon2 = createRow('/images/steps.png', shop.getRayonName(2), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(2));
     var rowStepInRayon3 = createRow('/images/steps.png', shop.getRayonName(3), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(3));
     var rowStepInRayon4 = createRow('/images/steps.png', shop.getRayonName(4), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(4));
 
-    if (shop.checkin) {
+   
+    if (shop.checkin) 
+    {
         rowStepIn.backgroundColor = '#eadae3';
     }
+    
+    //TODO TO REMOVE ---- Used just for demo
+    self.addEventListener('focus',function(){
+        if(Ti.App.Properties.hasProperty('checkinRayon')){            
+            rowStepInRayon1.backgroundColor = '#eadae3';
+        }
+    });
 
     var data = [rowStepIn,rowStepInRayon1,rowStepInRayon2,rowStepInRayon3,rowStepInRayon4], i;
     var catalogs = shop.catalogs;
 
     tv.setData(data);
-
+    
     tv.addEventListener('click', function(e) {
         if (e.index === 0) {
             if (!shop.checkin) {

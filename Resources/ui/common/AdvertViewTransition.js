@@ -21,6 +21,7 @@ function AdvertViewTransitions(currentWindow, index) {'use strict';
    //TODO 
    //if resolution sup 480 alors Iphone 5
 
+
     var self = Ti.UI.createImageView({
         width : 320,
         height : 480,
@@ -48,9 +49,18 @@ function AdvertViewTransitions(currentWindow, index) {'use strict';
     '/images/image7.jpg',
     '/images/image2.jpg',
     '/images/image5.jpg'];
-
-    var nbImgs = arrayImage.length;
-    self.setImage(arrayImage[index/10]);
+    
+    //TODO TO REMOVE ---- Used just for demo
+    if(index==='11'){
+        index=1;
+        self.setImage(arrayImage[index]);
+    }
+    else
+    {
+        self.setImage(arrayImage[index/10]);
+    }
+    
+    
 
     currentWindow.add(self);
     self.animate(pub_slide_in);

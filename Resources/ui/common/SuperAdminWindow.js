@@ -257,6 +257,7 @@ function SuperAdminWindow(args) {'use strict';
         action : function(e) {
             Ti.App.allCodes = [];
             Ti.App.Properties.removeProperty('ArrayCode');
+             Ti.App.Properties.removeProperty('checkinRayon');
             tabGroup.resetCheckInOfShops();
             alert("RAZ des Codes entendus !");
         }

@@ -570,7 +570,7 @@ function ApplicationTabGroup() {'use strict';
     self.openShop = function(shop, catalog, scanUrl) {
         self.closeAllWindows();
         // We open the window
-        var ShopDetailWindow = require("/ui/common/ShopDetailWindow"), swin = new ShopDetailWindow(shop, self);
+        var ShopDetailStepInWindow = require("/ui/common/ShopDetailStepInWindow"), swin = new ShopDetailStepInWindow(shop, self);
         self.openWindow(null, swin, {
             animated : false
         });
@@ -650,7 +650,17 @@ function ApplicationTabGroup() {'use strict';
                         // alert(rows.length);
                         //if (rows[i].object_index) {
                         var s = AppUser.getShop(rows[i].object_index);
-                        Ti.API.myLog("BeanCode=" + s.beancode.toString() + "  " + "Code" + beancode.toString() + " " + "CheckingValue=" + ! s.isCheckin());
+
+                       // Ti.API.myLog("BeanCode=" + s.beancode.toString() + "  " + "Code" + beancode.toString() + " " + "CheckingValue=" + ! s.isCheckin()); 
+                         //TODO TO REMOVE ---- Used just for demo
+                         if (s.beancode.toString() === beancode.toString() &&  s.isCheckin()===true && code==='11') {
+                            shopFound = s;
+                            obj_index = rows[i].object_index;
+                            row_index = i;
+                            Ti.App.properties.setString('checkinRayon','check');
+                        }
+                       
+                        
                         if (s.beancode.toString() === beancode.toString() && !  s.isCheckin()) {
                             shopFound = s;
                             obj_index = rows[i].object_index;
