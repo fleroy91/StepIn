@@ -474,7 +474,6 @@ function ApplicationTabGroup() {'use strict';
     };
 
     self.displayTransitionAdvert = function() {
-        alert(codeJustHeard);
         var Advert = new AdvertViewTranstions(self,codeJustHeard);
     };
 
@@ -604,10 +603,12 @@ function ApplicationTabGroup() {'use strict';
                         }
                     }
                 }
+                    /*
                     user.deleteAllRewards(function() {
                     self.updateTitle();
                     user.checkAll(self.updateAllRows);
                     });
+                    */
             }
         }
     };
