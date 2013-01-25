@@ -18,7 +18,7 @@ function SplashWindow() { 'use strict';
         height:'100%'
     });
     
-    var view1,view2,view3,view4,view5,view6;
+    var view1,view2,view3,view4,view5,view6,view7;
     
     view1 = Ti.UI.createView({backgroundImage:'/images/ecran1.jpg'});
     view2 = Ti.UI.createView({backgroundImage:'/images/ecran2.jpg'});
@@ -26,9 +26,9 @@ function SplashWindow() { 'use strict';
     view4 = Ti.UI.createView({backgroundImage:'/images/ecran4.jpg'});
     view5 = Ti.UI.createView({backgroundImage:'/images/ecran5.jpg'});
     view6 = Ti.UI.createView({backgroundImage:'/images/ecran6.jpg'});
-    view6 = Ti.UI.createView({backgroundImage:'/images/ecran7.jpg'});
+    view7 = Ti.UI.createView({backgroundImage:'/images/ecran7.jpg'});
 
-    var screens = [view1,view2,view3,view4,view5,view6];    
+    var screens = [view1,view2,view3,view4,view5,view6,view7];    
 
     var tutorial = Ti.UI.createScrollableView({
         showPagingControl : true,

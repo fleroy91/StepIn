@@ -216,7 +216,7 @@ function Shop(json) {'use strict';
         }
         return ret;
     };
-    
+
     this.retrieveLocation = function(func) {
         if (this.location) {
             func(this.location);
@@ -346,6 +346,7 @@ function Shop(json) {'use strict';
         this.allPossiblePoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.catalogPoints = this.getPoints(Reward.ACTION_KIND_CATALOG) || 0;
+
         this.enableAllScans();
         var nb_checkins = 0, i;
         for ( i = 0; i < rewards.length; i++) {
@@ -361,7 +362,8 @@ function Shop(json) {'use strict';
                         this.checkin = true;
                         this.stepinPoints = 0;
                     }
-                } else if (rew.getActionKind() === Reward.ACTION_KIND_CATALOG) {
+                }
+                else if (rew.getActionKind() === Reward.ACTION_KIND_CATALOG) {
                     if (elapsedTime <= 24 * 60 * 7) {
                         // We need to find the catalog
                         var j;
@@ -373,7 +375,8 @@ function Shop(json) {'use strict';
                             }
                         }
                     }
-                } else if (rew.getActionKind() === Reward.ACTION_KIND_SCAN) {
+                }
+                else if (rew.getActionKind() === Reward.ACTION_KIND_SCAN) {
                     if (elapsedTime <= 24 * 60) {
                         this.disableScan(rew);
                     }
@@ -408,6 +411,7 @@ function Shop(json) {'use strict';
                 Spinner.hide();
             };
         }
+
 
         Ti.API.info("Get Social Rewards of " + this.name);
         this.getList(rew, Tools.Hash2Qparams({

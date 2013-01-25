@@ -22,8 +22,8 @@ function SplachSpinner(){ 'use strict';
 
 SplachSpinner.show = function() { 'use strict';
 Win.add(actIndicator);
-actIndicator.show();
-Win.open();
+//actIndicator.show();
+//Win.open();
 Ti.App.Properties.setString('openSpinner','opening');
 };
 

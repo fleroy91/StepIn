@@ -20,8 +20,6 @@ function AdvertViewTransitions(currentWindow, index) {'use strict';
     }*/
    //TODO 
    //if resolution sup 480 alors Iphone 5
-
-
     var self = Ti.UI.createImageView({
         width : 320,
         height : 480,
