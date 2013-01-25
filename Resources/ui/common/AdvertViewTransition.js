@@ -18,7 +18,8 @@ function AdvertViewTransitions(currentWindow, index) {'use strict';
     }else if (index===40){
         index=4;
     }*/
-   
+   //TODO 
+   //if resolution sup 480 alors Iphone 5
 
     var self = Ti.UI.createImageView({
         width : 320,
@@ -29,6 +30,7 @@ function AdvertViewTransitions(currentWindow, index) {'use strict';
     var pub_slide_in = Titanium.UI.createAnimation({
         left : 0
     });
+    
     var pub_slide_out = Titanium.UI.createAnimation({
         left : 320
     });
@@ -42,16 +44,14 @@ function AdvertViewTransitions(currentWindow, index) {'use strict';
     self.animate(pub_slide_in);
 
     function CloseAdvert() {
+        self.animate(pub_slide_out);
         setTimeout(function() {
             currentWindow.remove(self);
             self = null;
         }, 1000);
     }
 
-    setTimeout(function() {
-        self.animate(pub_slide_out);
-        CloseAdvert();
-    }, 4000);
+    self.addEventListener('click',CloseAdvert);
 
     return self;
 }

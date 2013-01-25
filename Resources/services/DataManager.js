@@ -25,7 +25,8 @@ function DataManager() {'use strict';
 	function removeDate(url) {
 	    var ret = url;
 	    var place = url.indexOf("&when!gte", 0);
-	    if(place > 0) {
+	    if(place > 0) 
+	    {
 	        ret = url.substring(0, place - 1);
 	    }
 	    return ret;

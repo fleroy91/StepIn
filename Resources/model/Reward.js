@@ -34,7 +34,9 @@ function Reward(json) {    'use strict';
             ret = "Step-In";
         } else if(this.getActionKind() === Reward.ACTION_KIND_SCAN) {
             ret = "Scan";
-        }
+        }/*else if(this.getActionKind() === Reward.ACTION_KIND_STEPIN_RAYON) {
+            ret = "Step-In-Rayon";
+        }*/
         return ret;
     };
     this.getWhen = function() {
@@ -130,6 +132,7 @@ Reward.prototype = CloudObject.prototype;
 Reward.prototype.constructor = Reward;
 
 Reward.ACTION_KIND_STEPIN = "stepin";
+//Reward.ACTION_KIND_STEPIN_RAYON = "stepinrayon";
 Reward.ACTION_KIND_SCAN = "scan";
 Reward.ACTION_KIND_CATALOG = "catalog";
 
