@@ -390,6 +390,11 @@ function Shop(json) {'use strict';
         this.changed = (this.prev_checkin !== this.checkin || this.prev_catalogViewed !== this.catalogViewed || this.prev_points !== this.allPossiblePoints);
         AppUser.updateShop(this);
     };
+    
+    this.setSocialRewards = function(srews) {
+        socialRewards = srews;
+    }
+    
     this.getSocialRewards = function(func, rewards, finalFunc) {
         var rew = new Reward();
         var now = new Date();
