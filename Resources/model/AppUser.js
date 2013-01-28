@@ -401,6 +401,7 @@ function AppUser(json) {'use strict';
                     dataBook.push(b);
                 }
             }
+            Ti.API.info("Databook = " + dataBook);
             Ti.App.allBookmarks = dataBook;
 
             Ti.App.allShops =[];
@@ -431,78 +432,23 @@ function AppUser(json) {'use strict';
                         }
                     }
                     shop.catalogs = dataCatalogs;
+
+                    var jsonSR = jsonShop.social_rewards;
+                    data = null;
+                    if (jsonSR) {
+                        data = [];
+                        for ( i = 0; i < jsonSR.length; i++) {
+                            data.push(new Reward(jsonSR[i]));
+                        }
+                    }
+                    shop.setSocialRewards(data);
+                    shop.computeAvailablePoints(Ti.App.allRewards);
                     addNewShop(shop);
-                    //onNewShop(shop);
                 }
             }
             finalFunc(Ti.App.allShops);
-            
-///////////////////////////////////////////////////////////////////////////////////////////////
-/*
-            Ti.App.allShops = [];
-            var jsonShops = bigJSON.user.shops;
-            var l, m, o, dataShop = null;
-            if (jsonShops && jsonShops.length > 0) {
-                for ( l = 0; l < jsonShops.length; l++) {
-                    var Shop = require('model/Shop'), s = new Shop(jsonShops[l]);
-                    var dataCatalogs = [];
-                    // parcour cata
-                    var Catalogs = s.catalogs;
-                    for ( o = 0; o < Catalogs.length; o++) {
-                        var jsonCata = Catalogs[o];
-                        var Catalogues = require('model/Catalog'), cat = new Catalogues(jsonCata);
-                        dataCatalogs.push(cat);
-                        for ( m = 0; m < cat.length; m++) {
-                            var scans = cat.scans[m];
-                            var Scan = require("/model/Scan"), sScan = new Scan(scans);
-                            sScan.shopUrl = s.getUrl();
-                            //TODO Problem Probably here
-                            sScan.index = s.scans.length + 1;
-                            s.scans.push(sScan);
-                        }
-                    }
-                    s.catalogs = dataCatalogs;
-                    addNewShop(s);
-                    //onNewShop(s);
-                }
-            }
-                    finalFunc(Ti.App.allShops);*/
         });
     }
-
-    /*
-     var rayon = 1000;
-     // ie. km (very large !!!)
-     var userloc = self.location;
-     var qparams = {};
-     qparams['location!near'] = '((' + userloc.lat + ',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
-     qparams.per_page = 20;
-     // We only get the shops with beancode
-     qparams["beancode!gt"] = 0;
-
-     if (tags && tags.length > 0) {
-     var i;
-     for ( i = 0; i < tags.length; i++) {
-     var tag = tags[i];
-     if (tag.value) {
-     qparams["tags!in[]"] = tag.tag;
-     }oget
-     }
-     }
-
-     var Shop = require('model/Shop'), shop = new Shop();
-     self.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
-     Ti.App.allShops = [];
-     var i, data = null;
-     if (result && result.length > 0) {
-     for ( i = 0; i < result.length; i++) {
-     var s = new Shop(result[i]);
-     s.retrieveCatalogs(addNewShop, Ti.App.allRewards, (i === result.length - 1 ? finalFunc : null));
-     }
-     }
-     });
-     */
-
     this.retrieveShops = function(tags, onNewShop, finalFunc) {
         // alert("retrieveShops");
         Spinner.show();
