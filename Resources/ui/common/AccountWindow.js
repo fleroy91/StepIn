@@ -63,11 +63,11 @@ function AccountWindow(args) {'use strict';
     sProfil.add(r10);
     // sProfil.add(r12);
     // sProfil.add(r13);
-    
+
     Ti.App.fireEvent('CallSpinner');
-    
+
     function showLoader() {
-        Ti.App.Properties.setString('LoaderActive','Active');
+        Ti.App.Properties.setString('LoaderActive', 'Active');
         var viewIndicator = Ti.UI.createView({
             width : self.width,
             height : self.width,
@@ -90,17 +90,19 @@ function AccountWindow(args) {'use strict';
         ActivityIndicator.show();
         self.add(viewIndicator);
 
-         Ti.App.addEventListener('EndActivityIndicator', function(e) {
-        if(viewIndicator){
-            viewIndicator.opacity=0;
-        Ti.App.Properties.removeProperty('LoaderActive');
-           }
-        
+        Ti.App.addEventListener('EndActivityIndicator', function(e) {
+            if (viewIndicator) {
+                viewIndicator.opacity = 0;
+                Ti.App.Properties.removeProperty('LoaderActive');
+            }
+
         });
     }
-    
+
     function setNewUser(user, func) {
-        if(!Ti.App.Properties.hasProperty('LoaderActive')){showLoader();}
+        if (!Ti.App.Properties.hasProperty('LoaderActive')) {
+            showLoader();
+        }
         if (user) {
             user.setCurrentUser();
             user.checkAll(function(e) {
@@ -127,7 +129,9 @@ function AccountWindow(args) {'use strict';
     }
 
     function doLogin() {
-        if(!Ti.App.Properties.hasProperty('LoaderActive')){showLoader();}
+        if (!Ti.App.Properties.hasProperty('LoaderActive')) {
+            showLoader();
+        }
         var LoginWindow = require("/ui/common/LoginWindow"), win = new LoginWindow(tabGroup);
 
         win.addEventListener('close', function(e) {
@@ -183,15 +187,13 @@ function AccountWindow(args) {'use strict';
     sInfo.add(r23);
 
     r22.addEventListener('click', notImplemented);
-    
+
     r21.addEventListener('click', function(e) {
         var SplashWindow = require("ui/common/SplashWindow"), tuto = new SplashWindow();
         tuto.open();
         tuto.displayTutorial();
     });
-    
-    
-    
+
     r23.addEventListener('click', function(e) {
         var ConditionsWindow = require("/ui/common/ConditionsWindow"), win = new ConditionsWindow({
             tabGroup : tabGroup
@@ -291,7 +293,9 @@ function AccountWindow(args) {'use strict';
     self.add(tv);
 
     updateWindow = function(e, user) {
-        if(!Ti.App.Properties.hasProperty('LoaderActive')){showLoader();}
+        if (!Ti.App.Properties.hasProperty('LoaderActive')) {
+            showLoader();
+        }
         if (user) {
             tabGroup.closeAllWindows();
         } else {
@@ -330,6 +334,7 @@ function AccountWindow(args) {'use strict';
 
             dlg.addEventListener('click', function(e) {
                 if (e.index === 0) {
+                    Ti.App.fireEvent('EmptyBookmarks');
                     Ti.App.Properties.setString('user', null);
                     Ti.Facebook.logout();
                     user = new AppUser();
@@ -346,4 +351,4 @@ function AccountWindow(args) {'use strict';
     return self;
 }
 
-module.exports = AccountWindow; 
+module.exports = AccountWindow;
