@@ -569,21 +569,25 @@ function ApplicationTabGroup() {'use strict';
 
     self.openShop = function(shop, catalog, scanUrl) {
         self.closeAllWindows();
-        // We open the window
-        var ShopDetailStepInWindow = require("/ui/common/ShopDetailStepInWindow"), swin = new ShopDetailStepInWindow(shop, self);
-        self.openWindow(null, swin, {
-            animated : false
-        });
+        
 
         // Do we have to open the catalog
         if (catalog) {
-            var ScanListWindow = require("/ui/common/ScanListWindow"), cwin = new ScanListWindow(shop, self, catalog, scanUrl);
+            var ShopDetailWindow = require("ui/common/ShopDetailWindow"), cwin = new ShopDetailWindow(shop, self);
             self.openWindow(null, cwin, {
                 animated : false
             });
+            self.setActiveTab(0);
+        }else{
+            alert("hello")
+            // We open the window
+            var ShopDetailStepInWindow = require("/ui/common/ShopDetailStepInWindow"), swin = new ShopDetailStepInWindow(shop, self);
+            self.openWindow(null, swin, {
+                animated : false
+            });
+            self.setActiveTab(0);
+            return swin;   
         }
-        self.setActiveTab(0);
-        return swin;
     };
 
     self.resetCheckInOfShops = function() {
@@ -849,9 +853,6 @@ function ApplicationTabGroup() {'use strict';
             }
         }
     }
-
-    // setInterval(moveNext, 3000);
-
     setInterval(checkCode, 1000);
 
     return self;

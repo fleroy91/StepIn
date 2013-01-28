@@ -277,7 +277,7 @@ function MorePointsWindow(tabGroup, options) {'use strict';
     function readCatalog(params) {
         // we need to open the shop window + the catalog of the shop
         var shop = params && params.shop;
-        tabGroup.openShop(shop);
+        tabGroup.openShop(shop,true);
     }
 
     // FIXME : check if actions are already done by the user !!!! (check rewards)

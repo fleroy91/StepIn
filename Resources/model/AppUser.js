@@ -86,6 +86,7 @@ function AppUser(json) {'use strict';
         return (p.length === 10);
     }
 
+<<<<<<< HEAD
 
     this.initData = function(self, func) {
         // Ti.App.MyJSON=[];
@@ -108,6 +109,23 @@ function AppUser(json) {'use strict';
 
     };
 
+=======
+    /* // TODO
+     this.init=function() {
+     dataManager.doCall('GET', "http://backoffice.step-in.fr/home/init_mobile",
+     Tools.Hash2Qparams({ user : this.getUrl(),
+     lat : this.location.lat,
+     lng : this.location.lng }),
+     null, function(bigJSON) {
+     Ti.API.myLog(bigJSON);
+     // Interpretation de big JSON pour remplir
+     // Les rewards bigJSON.rewards
+     // Les shops bigJSON.shops
+     // ...
+
+     });
+     } */
+>>>>>>> Bookmarks updated
 
     this.validate = function() {
         var bOk = false;
@@ -218,7 +236,10 @@ function AppUser(json) {'use strict';
     };
 
     this.retrievePresents = function(func) {
+<<<<<<< HEAD
         //alert("Presents");
+=======
+>>>>>>> Bookmarks updated
         var Present = require('model/Present'), pres = new Present();
         this.getList(pres, Tools.Hash2Qparams({
             sort : 'points',
@@ -260,7 +281,10 @@ function AppUser(json) {'use strict';
     };
 
     this.retrieveInvitations = function(func) {
+<<<<<<< HEAD
         // alert("invitations");
+=======
+>>>>>>> Bookmarks updated
         if (! this.isDummy()) {
             var invit = new Invitation();
             this.getList(invit, Tools.Hash2Qparams({
@@ -375,6 +399,7 @@ function AppUser(json) {'use strict';
 
     function getShops(self, tags, onNewShop, finalFunc) {
         fOnNewShop = onNewShop;
+<<<<<<< HEAD
         //var test=Ti.App.MyJSON;
         //alert(Ti.App.MyJSON);e
 
@@ -464,12 +489,43 @@ function AppUser(json) {'use strict';
                     s.catalogs = dataCatalogs;
                     addNewShop(s);
                     //onNewShop(s);
+=======
+
+        var rayon = 1000;
+        // ie. km (very large !!!)
+        var userloc = self.location;
+        var qparams = {};
+        qparams['location!near'] = '((' + userloc.lat + ',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
+        qparams.per_page = 20;
+        // We only get the shops with beancode
+        qparams["beancode!gt"] = 0;
+
+        if (tags && tags.length > 0) {
+            var i;
+            for ( i = 0; i < tags.length; i++) {
+                var tag = tags[i];
+                if (tag.value) {
+                    qparams["tags!in[]"] = tag.tag;
+                }
+            }
+        }
+
+        var Shop = require('model/Shop'), shop = new Shop();
+        self.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
+            Ti.App.allShops = [];
+            var i, data = null;
+            if (result && result.length > 0) {
+                for ( i = 0; i < result.length; i++) {
+                    var s = new Shop(result[i]);
+                    s.retrieveCatalogs(addNewShop, Ti.App.allRewards, (i === result.length - 1 ? finalFunc : null));
+>>>>>>> Bookmarks updated
                 }
             }
                     finalFunc(Ti.App.allShops);*/
         });
     }
 
+<<<<<<< HEAD
     /*
      var rayon = 1000;
      // ie. km (very large !!!)
@@ -503,12 +559,18 @@ function AppUser(json) {'use strict';
      });
      */
 
+=======
+>>>>>>> Bookmarks updated
     this.retrieveShops = function(tags, onNewShop, finalFunc) {
         // alert("retrieveShops");
         Spinner.show();
         this.geolocalize(function(self) {
             self.setCurrentUser();
+<<<<<<< HEAD
 
+=======
+            //self.init();
+>>>>>>> Bookmarks updated
             if (!Ti.App.allRewards) {
                 self.retrieveInvitationsAndRewards(function(allRewards) {
                     getShops(self, tags, onNewShop, finalFunc);
@@ -808,6 +870,31 @@ AppUser.updateShop = function(shop) {'use strict';
         data[shop.index - 1] = shop;
         Ti.App.allShops = data;
     }
+};
+
+/**
+ * Check the presence of bookmarks
+ *
+ * @returns : nothing
+ */
+
+AppUser.getAllBookmarks = function() {'use strict';
+    return Ti.App.allBookmarks;
+};
+
+/**
+ * Check if the user is connected
+ *
+ * @returns : boolean
+ */
+AppUser.isDummy=function(){'use strict';
+    var Dummy;
+    if(this.isDummy){
+        Dummy=true; 
+    }else{
+        Dummy=false; 
+    }
+    return Dummy.value;
 };
 
 module.exports = AppUser;

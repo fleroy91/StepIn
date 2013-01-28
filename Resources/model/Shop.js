@@ -22,7 +22,7 @@ var _currentShop = null;
 // var _currentObject = null;
 
 var rayonArray = [{
-    name : "Entrée Step-In",
+    name : "Step-In Entrée",
     desc : "",
     points : -1
 }, // ATTENTION : ne pas lire les points ici car ils proviennet de la BD
@@ -35,12 +35,12 @@ var rayonArray = [{
     desc : "Entrez dans le rayon \net gagnez des steps",
     points : 50
 }, {
-    name : "Step-In Surgeleés",
+    name : "Step-In Surgelés",
     desc : "Entrez dans le rayon \net gagnez des steps",
     points : 50
 }, {
     name : "Step-In Caisse",
-    desc : "Passez en caisse \npour gagner des steps",
+    desc : "Passez en caisse \net gagner vos steps",
     points : 30
 }];
 

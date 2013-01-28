@@ -96,11 +96,11 @@ function ShopDetailStepInWindow(shop, tabGroup) {'use strict';
         return row;
     }
     
-    var rowStepIn = createRow('/images/steps.png', shop.getRayonName(0), "Entrez dans le magasin \net gagnez des steps", shop.getStepInPoints());
-    var rowStepInRayon1 = createRow('/images/steps.png', shop.getRayonName(1), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(1));
-    var rowStepInRayon2 = createRow('/images/steps.png', shop.getRayonName(2), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(2));
-    var rowStepInRayon3 = createRow('/images/steps.png', shop.getRayonName(3), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(3));
-    var rowStepInRayon4 = createRow('/images/steps.png', shop.getRayonName(4), "Entrez dans le rayon \net gagnez des steps", shop.getPointsRayon(4));
+    var rowStepIn = createRow('/images/steps.png', shop.getRayonName(0), "Entrez dans le magasin \npour gagner vos steps", shop.getStepInPoints());
+    var rowStepInRayon1 = createRow('/images/steps.png', shop.getRayonName(1), "Entrez dans le rayon \net gagnez vos steps", shop.getPointsRayon(1));
+    var rowStepInRayon2 = createRow('/images/steps.png', shop.getRayonName(2), "Entrez dans le rayon \net gagnez vos steps", shop.getPointsRayon(2));
+    var rowStepInRayon3 = createRow('/images/steps.png', shop.getRayonName(3), "Entrez dans le rayon \net gagnez vos steps", shop.getPointsRayon(3));
+    var rowStepInRayon4 = createRow('/images/steps.png', shop.getRayonName(4), "Passez en caisse \net gagnez vos steps", shop.getPointsRayon(4));
 
    
     if (shop.checkin) 
