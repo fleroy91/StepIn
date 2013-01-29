@@ -12,7 +12,7 @@ var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
 var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
-var dataManager = require("services/DataManager");
+var DataManager = require("services/DataManager");
 var Reward = require('model/Reward');
 var Bookmark = require('model/Bookmark');
 var Invitation = require('model/AppInvitation');
@@ -85,21 +85,26 @@ function AppUser(json) {'use strict';
         return (p.length === 10);
     }
 
-    /* // TODO
-     this.init=function() {
-     dataManager.doCall('GET', "http://backoffice.step-in.fr/home/init_mobile",
-     Tools.Hash2Qparams({ user : this.getUrl(),
-     lat : this.location.lat,
-     lng : this.location.lng }),
-     null, function(bigJSON) {
-     Ti.API.myLog(bigJSON);
-     // Interpretation de big JSON pour remplir
-     // Les rewards bigJSON.rewards
-     // Les shops bigJSON.shops
-     // ...
+    this.initData = function(self, func) {
+        // Ti.App.MyJSON=[];
+        var dm = new DataManager();
+        var userloc = self.location;
+        dm.doCall('GET', "http://backoffice.step-in.fr/home/init_mobile", Tools.Hash2Qparams({
+            user : (! this.isDummy()) ? this.getUrl() : "0",
+            lat : userloc.lat,
+            lng : userloc.lng
+        }), null, function(bigJSON) {
+            //dataFile = JSON.stringify(bigJSON);
+            //dataFile=bigJSON.user;
+            //Ti.API.myLog(JSON.stringify(bigJSON));
+            func(bigJSON);
+            //alert(bigJSON.user.rewards[1]);
+            //alert(bigJSON.user.invitations[1]);
+            // alert(bigJSON.user.shops[0]);
 
-     });
-     } */
+        });
+
+    };
 
     this.validate = function() {
         var bOk = false;
@@ -210,6 +215,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrievePresents = function(func) {
+
         var Present = require('model/Present'), pres = new Present();
         this.getList(pres, Tools.Hash2Qparams({
             sort : 'points',
@@ -251,6 +257,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrieveInvitations = function(func) {
+
         if (! this.isDummy()) {
             var invit = new Invitation();
             this.getList(invit, Tools.Hash2Qparams({
@@ -276,7 +283,9 @@ function AppUser(json) {'use strict';
             }
         }
     };
+
     this.retrieveBookmarks = function(func) {
+        //alert("bookmarks");
         var book = new Bookmark();
         Ti.App.allBookmarks = [];
 
@@ -304,6 +313,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrieveRewards = function(func) {
+        //alert("rewards");
         function _addRewards(self) {
             return function(result) {
                 var i, data = null;
@@ -342,6 +352,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrieveInvitationsAndRewards = function(func) {
+        //alert("retrieveInviAndRewards");
         //init();
         function _retrieveRewards(self) {
             return function() {
@@ -361,7 +372,6 @@ function AppUser(json) {'use strict';
 
     function getShops(self, tags, onNewShop, finalFunc) {
         fOnNewShop = onNewShop;
-
         var rayon = 1000;
         // ie. km (very large !!!)
         var userloc = self.location;
@@ -389,16 +399,86 @@ function AppUser(json) {'use strict';
                 for ( i = 0; i < result.length; i++) {
                     var s = new Shop(result[i]);
                     s.retrieveCatalogs(addNewShop, Ti.App.allRewards, (i === result.length - 1 ? finalFunc : null));
+        //var test=Ti.App.MyJSON;
+        //alert(Ti.App.MyJSON);e
+
+        self.initData(self, function(bigJSON) {
+
+            //REWARDS//
+            var i, data = null;
+            var result = bigJSON.user.rewards;
+            if (result) {
+                data = [];
+                for ( i = 0; i < result.length; i++) {
+                    data.push(new Reward(result[i]));
                 }
             }
+            Ti.App.allRewards = data;
+
+            // BOOKMARKS //
+            var dataBook = null, j;
+            var resultBook = bigJSON.user.bookmarks;
+            if (resultBook) {
+                dataBook = [];
+                for ( j = 0; j < resultBook.length; j++) {
+                    var b = new Bookmark(resultBook[j]);
+                    dataBook.push(b);
+                }
+            }
+            Ti.API.info("Databook = " + dataBook);
+            Ti.App.allBookmarks = dataBook;
+
+            Ti.App.allShops =[];
+            var jsonShops = bigJSON.user.shops;
+            var Shop = require('model/Shop'),
+                Catalogues = require('model/Catalog'),
+                Scan = require("/model/Scan");
+            var l, m, n, o, dataShop = null;
+            if (jsonShops && jsonShops.length > 0) {
+                for ( l = 0; l < jsonShops.length; l++) {
+                    var jsonShop = jsonShops[l];
+                    var shop = new Shop(jsonShops[l]);
+                    shop.scans = [];
+                    var dataCatalogs = [];
+                    var jsonCatalogs = jsonShops[l].catalogs;
+                    for ( o = 0; o < jsonCatalogs.length; o++) {
+                        var jsonCata = jsonCatalogs[o];
+                        var cat = new Catalogues(jsonCata);
+                        dataCatalogs.push(cat);
+                        var jsonScans = jsonCata.scans;
+                        for ( m = 0; m < jsonScans.length; m++) {
+                            var jsonScan = jsonScans[m];
+                            var scan = new Scan(jsonScan);
+    
+                            scan.shopUrl = shop.getUrl();
+                            scan.index = shop.scans.length + 1;
+                            shop.scans.push(scan);
+                        }
+                    }
+                    shop.catalogs = dataCatalogs;
+
+                    var jsonSR = jsonShop.social_rewards;
+                    data = null;
+                    if (jsonSR) {
+                        data = [];
+                        for ( i = 0; i < jsonSR.length; i++) {
+                            data.push(new Reward(jsonSR[i]));
+                        }
+                    }
+                    shop.setSocialRewards(data);
+                    shop.computeAvailablePoints(Ti.App.allRewards);
+                    addNewShop(shop);
+                }
+            }
+            finalFunc(Ti.App.allShops);
         });
     }
-
     this.retrieveShops = function(tags, onNewShop, finalFunc) {
+        // alert("retrieveShops");
         Spinner.show();
         this.geolocalize(function(self) {
             self.setCurrentUser();
-            //self.init();
+
             if (!Ti.App.allRewards) {
                 self.retrieveInvitationsAndRewards(function(allRewards) {
                     getShops(self, tags, onNewShop, finalFunc);
@@ -491,6 +571,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrieveUser = function(args, func) {
+        //alert("retrieveUser");
         Spinner.show();
         this.getList(this, Tools.Hash2Qparams(args), function(result) {
             if (result.length === 0) {

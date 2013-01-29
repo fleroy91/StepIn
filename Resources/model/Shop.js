@@ -346,6 +346,7 @@ function Shop(json) {'use strict';
         this.allPossiblePoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.stepinPoints = this.getPoints(Reward.ACTION_KIND_STEPIN) || 0;
         this.catalogPoints = this.getPoints(Reward.ACTION_KIND_CATALOG) || 0;
+
         this.enableAllScans();
         var nb_checkins = 0, i;
         for ( i = 0; i < rewards.length; i++) {
@@ -361,7 +362,8 @@ function Shop(json) {'use strict';
                         this.checkin = true;
                         this.stepinPoints = 0;
                     }
-                } else if (rew.getActionKind() === Reward.ACTION_KIND_CATALOG) {
+                }
+                else if (rew.getActionKind() === Reward.ACTION_KIND_CATALOG) {
                     if (elapsedTime <= 24 * 60 * 7) {
                         // We need to find the catalog
                         var j;
@@ -373,7 +375,8 @@ function Shop(json) {'use strict';
                             }
                         }
                     }
-                } else if (rew.getActionKind() === Reward.ACTION_KIND_SCAN) {
+                }
+                else if (rew.getActionKind() === Reward.ACTION_KIND_SCAN) {
                     if (elapsedTime <= 24 * 60) {
                         this.disableScan(rew);
                     }
@@ -387,6 +390,11 @@ function Shop(json) {'use strict';
         this.changed = (this.prev_checkin !== this.checkin || this.prev_catalogViewed !== this.catalogViewed || this.prev_points !== this.allPossiblePoints);
         AppUser.updateShop(this);
     };
+    
+    this.setSocialRewards = function(srews) {
+        socialRewards = srews;
+    }
+    
     this.getSocialRewards = function(func, rewards, finalFunc) {
         var rew = new Reward();
         var now = new Date();
