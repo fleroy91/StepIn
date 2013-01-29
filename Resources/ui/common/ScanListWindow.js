@@ -111,9 +111,9 @@ function ScanListWindow(shop, tabGroup, catalog, urlScanSelected) {'use strict';
             width : 220,
             top : 30
         });
-        Image.cacheImage(scan.getPhotoUrl(0), function(image) {
-            img.setImage(image);
-        });
+
+        img.setImage(Image.convertUrlInFile(scan.getPhotoUrl(0)));
+
         v.add(img);
 
         var lbl1 = Ti.UI.createLabel({

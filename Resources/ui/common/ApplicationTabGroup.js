@@ -407,8 +407,7 @@ function ApplicationTabGroup() {'use strict';
     self.createTitle(winMorePoints, "Plus de points");
 
     self.updateTitleWindow = function(win, animated) {
-        if (win && win.btPoints) 
-        {
+        if (win && win.btPoints) {
             var user = AppUser.getCurrentUser();
             var points = user.getTotalPoints() || 0;
             win.btPoints.setPoints(points || 0, animated);
@@ -474,7 +473,7 @@ function ApplicationTabGroup() {'use strict';
     };
 
     self.displayTransitionAdvert = function() {
-        var Advert = new AdvertViewTranstions(self,codeJustHeard);
+        var Advert = new AdvertViewTranstions(self, codeJustHeard);
     };
 
     function getNbRows(tv) {
@@ -491,7 +490,6 @@ function ApplicationTabGroup() {'use strict';
         self.showIndicator();
         self.tvSearch.setData([]);
         mainObject.retrieveShops(null, self.addNewObject, function(e) {
-                
             if (Ti.App.Properties.hasProperty('openSpinner')) {
                 SplashLoader.hide();
                 if (Ti.App.Properties.getBool('isFirstLaunch', true)) {
@@ -569,7 +567,6 @@ function ApplicationTabGroup() {'use strict';
 
     self.openShop = function(shop, catalog, scanUrl) {
         self.closeAllWindows();
-        
 
         // Do we have to open the catalog
         if (catalog) {
@@ -578,7 +575,7 @@ function ApplicationTabGroup() {'use strict';
                 animated : false
             });
             self.setActiveTab(0);
-        }else{
+        } else {
             alert("hello")
             // We open the window
             var ShopDetailStepInWindow = require("/ui/common/ShopDetailStepInWindow"), swin = new ShopDetailStepInWindow(shop, self);
@@ -586,7 +583,7 @@ function ApplicationTabGroup() {'use strict';
                 animated : false
             });
             self.setActiveTab(0);
-            return swin;   
+            return swin;
         }
     };
 
@@ -607,12 +604,12 @@ function ApplicationTabGroup() {'use strict';
                         }
                     }
                 }
-                    /*
-                    user.deleteAllRewards(function() {
-                    self.updateTitle();
-                    user.checkAll(self.updateAllRows);
-                    });
-                    */
+                /*
+                 user.deleteAllRewards(function() {
+                 self.updateTitle();
+                 user.checkAll(self.updateAllRows);
+                 });
+                 */
             }
         }
     };
@@ -623,7 +620,7 @@ function ApplicationTabGroup() {'use strict';
     self.didHearCode = function(code) {
         codeJustHeard = code;
         var beancode, rayon;
-       
+        Ti.API.info(code);
         if (Ti.App.Properties.hasProperty('ArrayCode')) {
             var list = Ti.App.Properties.getList('ArrayCode');
             Ti.App.allCodes = list;
@@ -655,16 +652,15 @@ function ApplicationTabGroup() {'use strict';
                         //if (rows[i].object_index) {
                         var s = AppUser.getShop(rows[i].object_index);
 
-                       // Ti.API.myLog("BeanCode=" + s.beancode.toString() + "  " + "Code" + beancode.toString() + " " + "CheckingValue=" + ! s.isCheckin()); 
-                         //TODO TO REMOVE ---- Used just for demo
-                         if (s.beancode.toString() === beancode.toString() &&  s.isCheckin()===true && code==='11') {
+                        // Ti.API.myLog("BeanCode=" + s.beancode.toString() + "  " + "Code" + beancode.toString() + " " + "CheckingValue=" + ! s.isCheckin());
+                        //TODO TO REMOVE ---- Used just for demo
+                        if (s.beancode.toString() === beancode.toString() && s.isCheckin() === true && code === '11') {
                             shopFound = s;
                             obj_index = rows[i].object_index;
                             row_index = i;
-                            Ti.App.properties.setString('checkinRayon','check');
+                            Ti.App.properties.setString('checkinRayon', 'check');
                         }
-                       
-                        
+
                         if (s.beancode.toString() === beancode.toString() && !  s.isCheckin()) {
                             shopFound = s;
                             obj_index = rows[i].object_index;
@@ -853,6 +849,7 @@ function ApplicationTabGroup() {'use strict';
             }
         }
     }
+
     setInterval(checkCode, 1000);
 
     return self;

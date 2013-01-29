@@ -10,6 +10,7 @@
 
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
+var Image = require("/etc/AppImage");
 var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var DataManager = require("services/DataManager");
@@ -85,6 +86,7 @@ function AppUser(json) {'use strict';
         return (p.length === 10);
     }
 
+
     this.initData = function(self, func) {
         // Ti.App.MyJSON=[];
         var dm = new DataManager();
@@ -105,6 +107,7 @@ function AppUser(json) {'use strict';
         });
 
     };
+
 
     this.validate = function() {
         var bOk = false;
@@ -215,7 +218,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrievePresents = function(func) {
-
+        //alert("Presents");
         var Present = require('model/Present'), pres = new Present();
         this.getList(pres, Tools.Hash2Qparams({
             sort : 'points',
@@ -257,7 +260,7 @@ function AppUser(json) {'use strict';
     };
 
     this.retrieveInvitations = function(func) {
-
+        // alert("invitations");
         if (! this.isDummy()) {
             var invit = new Invitation();
             this.getList(invit, Tools.Hash2Qparams({
@@ -372,35 +375,6 @@ function AppUser(json) {'use strict';
 
     function getShops(self, tags, onNewShop, finalFunc) {
         fOnNewShop = onNewShop;
-        var rayon = 1000;
-        // ie. km (very large !!!)
-        var userloc = self.location;
-        var qparams = {};
-        qparams['location!near'] = '((' + userloc.lat + ',' + userloc.lng + '),' + Geoloc.km2Rad(rayon) + ')';
-        qparams.per_page = 20;
-        // We only get the shops with beancode
-        qparams["beancode!gt"] = 0;
-
-        if (tags && tags.length > 0) {
-            var i;
-            for ( i = 0; i < tags.length; i++) {
-                var tag = tags[i];
-                if (tag.value) {
-                    qparams["tags!in[]"] = tag.tag;
-                }
-            }
-        }
-
-        var Shop = require('model/Shop'), shop = new Shop();
-        self.getList(shop, Tools.Hash2Qparams(qparams), function(result) {
-            Ti.App.allShops = [];
-            var i, data = null;
-            if (result && result.length > 0) {
-                for ( i = 0; i < result.length; i++) {
-                    var s = new Shop(result[i]);
-                    s.retrieveCatalogs(addNewShop, Ti.App.allRewards, (i === result.length - 1 ? finalFunc : null));
-        //var test=Ti.App.MyJSON;
-        //alert(Ti.App.MyJSON);e
 
         self.initData(self, function(bigJSON) {
 
@@ -425,7 +399,6 @@ function AppUser(json) {'use strict';
                     dataBook.push(b);
                 }
             }
-            Ti.API.info("Databook = " + dataBook);
             Ti.App.allBookmarks = dataBook;
 
             Ti.App.allShops =[];
@@ -444,19 +417,20 @@ function AppUser(json) {'use strict';
                     for ( o = 0; o < jsonCatalogs.length; o++) {
                         var jsonCata = jsonCatalogs[o];
                         var cat = new Catalogues(jsonCata);
+                        Image.cacheImage(cat.getPhotoUrl(0));
                         dataCatalogs.push(cat);
                         var jsonScans = jsonCata.scans;
                         for ( m = 0; m < jsonScans.length; m++) {
                             var jsonScan = jsonScans[m];
                             var scan = new Scan(jsonScan);
-    
+                            Image.cacheImage(scan.getPhotoUrl(0));
                             scan.shopUrl = shop.getUrl();
                             scan.index = shop.scans.length + 1;
                             shop.scans.push(scan);
                         }
                     }
                     shop.catalogs = dataCatalogs;
-
+                    
                     var jsonSR = jsonShop.social_rewards;
                     data = null;
                     if (jsonSR) {
@@ -473,6 +447,7 @@ function AppUser(json) {'use strict';
             finalFunc(Ti.App.allShops);
         });
     }
+
     this.retrieveShops = function(tags, onNewShop, finalFunc) {
         // alert("retrieveShops");
         Spinner.show();
@@ -778,31 +753,6 @@ AppUser.updateShop = function(shop) {'use strict';
         data[shop.index - 1] = shop;
         Ti.App.allShops = data;
     }
-};
-
-/**
- * Check the presence of bookmarks
- *
- * @returns : nothing
- */
-
-AppUser.getAllBookmarks = function() {'use strict';
-    return Ti.App.allBookmarks;
-};
-
-/**
- * Check if the user is connected
- *
- * @returns : boolean
- */
-AppUser.isDummy=function(){'use strict';
-    var Dummy;
-    if(this.isDummy){
-        Dummy=true; 
-    }else{
-        Dummy=false; 
-    }
-    return Dummy.value;
 };
 
 module.exports = AppUser;
