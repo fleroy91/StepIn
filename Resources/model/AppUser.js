@@ -10,6 +10,7 @@
 
 var CloudObject = require("model/CloudObject");
 var Geoloc = require("etc/Geoloc");
+var Image = require("/etc/AppImage");
 var Spinner = require("etc/AppSpinner");
 var Tools = require("etc/Tools");
 var DataManager = require("services/DataManager");
@@ -86,7 +87,6 @@ function AppUser(json) {'use strict';
         return (p.length === 10);
     }
 
-<<<<<<< HEAD
 
     this.initData = function(self, func) {
         // Ti.App.MyJSON=[];
@@ -108,24 +108,6 @@ function AppUser(json) {'use strict';
         });
 
     };
-
-=======
-    /* // TODO
-     this.init=function() {
-     dataManager.doCall('GET', "http://backoffice.step-in.fr/home/init_mobile",
-     Tools.Hash2Qparams({ user : this.getUrl(),
-     lat : this.location.lat,
-     lng : this.location.lng }),
-     null, function(bigJSON) {
-     Ti.API.myLog(bigJSON);
-     // Interpretation de big JSON pour remplir
-     // Les rewards bigJSON.rewards
-     // Les shops bigJSON.shops
-     // ...
-
-     });
-     } */
->>>>>>> Bookmarks updated
 
     this.validate = function() {
         var bOk = false;
@@ -236,10 +218,6 @@ function AppUser(json) {'use strict';
     };
 
     this.retrievePresents = function(func) {
-<<<<<<< HEAD
-        //alert("Presents");
-=======
->>>>>>> Bookmarks updated
         var Present = require('model/Present'), pres = new Present();
         this.getList(pres, Tools.Hash2Qparams({
             sort : 'points',
@@ -395,8 +373,6 @@ function AppUser(json) {'use strict';
 
     function getShops(self, tags, onNewShop, finalFunc) {
         fOnNewShop = onNewShop;
-        //var test=Ti.App.MyJSON;
-        //alert(Ti.App.MyJSON);e
 
         self.initData(self, function(bigJSON) {
 
@@ -421,7 +397,6 @@ function AppUser(json) {'use strict';
                     dataBook.push(b);
                 }
             }
-            Ti.API.info("Databook = " + dataBook);
             Ti.App.allBookmarks = dataBook;
 
             Ti.App.allShops =[];
@@ -440,19 +415,20 @@ function AppUser(json) {'use strict';
                     for ( o = 0; o < jsonCatalogs.length; o++) {
                         var jsonCata = jsonCatalogs[o];
                         var cat = new Catalogues(jsonCata);
+                        Image.cacheImage(cat.getPhotoUrl(0));
                         dataCatalogs.push(cat);
                         var jsonScans = jsonCata.scans;
                         for ( m = 0; m < jsonScans.length; m++) {
                             var jsonScan = jsonScans[m];
                             var scan = new Scan(jsonScan);
-    
+                            Image.cacheImage(scan.getPhotoUrl(0));
                             scan.shopUrl = shop.getUrl();
                             scan.index = shop.scans.length + 1;
                             shop.scans.push(scan);
                         }
                     }
                     shop.catalogs = dataCatalogs;
-
+                    
                     var jsonSR = jsonShop.social_rewards;
                     data = null;
                     if (jsonSR) {
@@ -774,31 +750,6 @@ AppUser.updateShop = function(shop) {'use strict';
         data[shop.index - 1] = shop;
         Ti.App.allShops = data;
     }
-};
-
-/**
- * Check the presence of bookmarks
- *
- * @returns : nothing
- */
-
-AppUser.getAllBookmarks = function() {'use strict';
-    return Ti.App.allBookmarks;
-};
-
-/**
- * Check if the user is connected
- *
- * @returns : boolean
- */
-AppUser.isDummy=function(){'use strict';
-    var Dummy;
-    if(this.isDummy){
-        Dummy=true; 
-    }else{
-        Dummy=false; 
-    }
-    return Dummy.value;
 };
 
 module.exports = AppUser;

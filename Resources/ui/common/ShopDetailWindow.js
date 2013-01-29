@@ -31,24 +31,28 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
         backgroundColor : 'white'
     });
 
-    function createRow(image, title, detail, points, withAction) {
+    function createRow(leftImage, title, detail, points, withAction) {
         var row = Ti.UI.createTableViewRow({
             className : 'shopDetailRow',
             height : 80
         });
 
         var imageRow = Ti.UI.createImageView({
-            top:5,
+            top : 5,
             width : 70,
             left : 5,
-            height : 70
+            height : 70,
+            image : leftImage
         });
-        row.add(imageRow);
 
-        Image.cacheImage(image, function(img) {
-            //row.setLeftImage(Image.squareImage(img,70));
-            imageRow.setImage(img);
-        });
+        row.add(imageRow);
+        row.setLeftImage(leftImage);
+        // row.setLeftImage(Image.squareImage(imageRow,70));
+        //imageRow.setImage(leftImage);
+        //Image.cacheImage(image, function(img) {
+        //row.setLeftImage(Image.squareImage(img,70));
+        //imageRow.setImage(img);
+        //});
 
         var lbl = Ti.UI.createLabel({
             font : {
@@ -100,12 +104,12 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
         row.ptView = pt;
         return row;
     }
-   
+
     var data = [], i;
     var catalogs = shop.catalogs;
     for ( i = 0; i < catalogs.length; i++) {
         var catalog = catalogs[i];
-        var rowScans = createRow(catalog.getPhotoUrl(0), catalog.kind, "Parcourez ce catalogue \npour gagner plus de steps", shop.catalogPoints, true);
+        var rowScans = createRow(Image.convertUrlInFile(catalog.getPhotoUrl(0)), catalog.kind, "Parcourez ce catalogue \npour gagner plus de steps", shop.catalogPoints, true);
         if (catalog.viewed) {
             rowScans.backgroundColor = '#eadae3';
         }
@@ -115,27 +119,27 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
 
     tv.setData(data);
 
-    if(data.length===0){
-    var rowEmptyScan = createRow("test", "catalog.kind", "Parcourez ce catalogue \npour gagner plus de steps", "", false);
-     data.push(rowEmptyScan);
+    if (data.length === 0) {
+        var rowEmptyScan = createRow("test", "catalog.kind", "Parcourez ce catalogue \npour gagner plus de steps", "", false);
+        data.push(rowEmptyScan);
     }
 
     tv.addEventListener('click', function(e) {
-            
-            var index = e.rowData.catalogIndex;
-            var catalog = catalogs[index];
-            var rowScan = data[e.index];
-            var ScanListWindow = require("/ui/common/ScanListWindow"), swin = new ScanListWindow(shop, tabGroup, catalog);
 
-            swin.addEventListener('close', function() {
-                if (swin.rewarded) {
-                    shop.catalogs[index].viewed = true;
-                    rowScan.backgroundColor = '#eadae3';
-                }
-            });
-            tabGroup.openWindow(null, swin, {
-                animated : true
-            });
+        var index = e.rowData.catalogIndex;
+        var catalog = catalogs[index];
+        var rowScan = data[e.index];
+        var ScanListWindow = require("/ui/common/ScanListWindow"), swin = new ScanListWindow(shop, tabGroup, catalog);
+
+        swin.addEventListener('close', function() {
+            if (swin.rewarded) {
+                shop.catalogs[index].viewed = true;
+                rowScan.backgroundColor = '#eadae3';
+            }
+        });
+        tabGroup.openWindow(null, swin, {
+            animated : true
+        });
 
         tv.deselectRow(e.index);
     });
@@ -144,11 +148,11 @@ function ShopDetailWindow(shop, tabGroup) {'use strict';
     tabGroup.createTitle(self, shop.getTitle());
 
     /*
-    self.setObject = function(newObject) {
-        shop = newObject;
-        rowStepIn.backgroundColor = (shop.checkin ? '#eadae3' : null);
-    };
-    */
+     self.setObject = function(newObject) {
+     shop = newObject;
+     rowStepIn.backgroundColor = (shop.checkin ? '#eadae3' : null);
+     };
+     */
 
     return self;
 }
