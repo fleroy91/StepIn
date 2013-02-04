@@ -1,8 +1,8 @@
 eclipse.preferences.version=1
-provisioning_profiles/development/1D489BE0-0EDD-481F-95F2-96E8DAC1B7F7/appid=com.cosm.stepin
-provisioning_profiles/development/1D489BE0-0EDD-481F-95F2-96E8DAC1B7F7/filepath=/Users/damienbigot/Library/MobileDevice/Provisioning Profiles/1D489BE0-0EDD-481F-95F2-96E8DAC1B7F7.mobileprovision
-provisioning_profiles/development/1D489BE0-0EDD-481F-95F2-96E8DAC1B7F7/name=StepInDev
-provisioning_profiles/development/1D489BE0-0EDD-481F-95F2-96E8DAC1B7F7/uuid=1D489BE0-0EDD-481F-95F2-96E8DAC1B7F7
+provisioning_profiles/development/22037CD2-267A-4402-8042-043507037085/appid=com.cosm.stepin
+provisioning_profiles/development/22037CD2-267A-4402-8042-043507037085/filepath=/Users/damienbigot/Library/MobileDevice/Provisioning Profiles/22037CD2-267A-4402-8042-043507037085.mobileprovision
+provisioning_profiles/development/22037CD2-267A-4402-8042-043507037085/name=StepInDev
+provisioning_profiles/development/22037CD2-267A-4402-8042-043507037085/uuid=22037CD2-267A-4402-8042-043507037085
 provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/appid=com.eckografik.charityfair
 provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/filepath=/Users/damienbigot/Library/MobileDevice/Provisioning Profiles/280A2B93-323B-4206-9CEE-BE857286A2EB.mobileprovision
 provisioning_profiles/development/280A2B93-323B-4206-9CEE-BE857286A2EB/name=charityfair

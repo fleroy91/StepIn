@@ -11,7 +11,7 @@ var AppUser = require("/model/AppUser");
 var Spinner = require("/etc/AppSpinner");
 var Image = require("/etc/AppImage");
 
-function LoginView(tabGroup, header, onClose) { 'use strict';
+function LoginView(tabGroup, header, onClose, beforeClose) { 'use strict';
     var bonus = 0;
     var loginView = Ti.UI.createView({
         height : Ti.UI.FILL
@@ -138,8 +138,10 @@ function LoginView(tabGroup, header, onClose) { 'use strict';
     
     function setNewUserAndClose(user) {
         user.setCurrentUser();
-        user.checkAll(function(e) {
-            tabGroup.updateAllRows();
+        if(beforeClose) {
+            beforeClose();
+        }
+        tabGroup.getAllObjects(user, function(e) {
             Spinner.hide();
             onClose(bonus);
         });

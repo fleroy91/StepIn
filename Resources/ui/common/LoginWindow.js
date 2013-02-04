@@ -8,7 +8,7 @@
 /*global Ti: true, Titanium : true */
 /*jslint nomen: true, evil: false, vars: true, plusplus : true */
 
-function LoginWindow(tabGroup, headerView) {'use strict';
+function LoginWindow(tabGroup, headerView, beforeClose) {'use strict';
 
     var win = Ti.UI.createWindow({
         backgroundColor : '#f0f0f0',
@@ -24,7 +24,7 @@ function LoginWindow(tabGroup, headerView) {'use strict';
     }
     
     var LoginView = require("/ui/common/LoginView"),
-        loginView = new LoginView(tabGroup, headerView, onClose);
+        loginView = new LoginView(tabGroup, headerView, onClose, beforeClose);
     sc.add(loginView);
     
     win.add(sc);

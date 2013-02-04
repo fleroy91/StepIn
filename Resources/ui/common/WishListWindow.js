@@ -10,7 +10,8 @@
 var Image = require("/etc/AppImage");
 
 function WishListWindow(tabGroup) {'use strict';
-    var AppUser = require("model/AppUser");
+    //var AppUser = require("model/AppUser");
+    var AppUser = require("model/AppUser"), user = AppUser.getCurrentUser();
     var self = Ti.UI.createWindow({
         title : 'Mes favoris !',
         backgroundColor : '#ffffff',
@@ -32,20 +33,10 @@ function WishListWindow(tabGroup) {'use strict';
         tabGroup.openShop(shop, true);
     }
 
-    function displayLogos() {
-        scrollingLogos.visible = true;
-    }
-
-    function hideLogos() {
-        scrollingLogos.visible = false;
-    }
-
-    function scrollingViewLogos() {
-        var book = AppUser.getAllBookmarks;
+    function scrollingViewLogos(indexShop) {
         var user = AppUser.getCurrentUser;
-
         var i, shops = AppUser.getAllShops();
-        var viewLogo, bt_logo, indexBt = 0, indexLogo = 0, actionsShop = [], logos = [];
+        var actionsShop = [];
 
         //TODO A optimiser lorsque les logos seront déjà en cache dans l'appli
         for ( i = 0; shops && i < shops.length; i++) {
@@ -55,51 +46,19 @@ function WishListWindow(tabGroup) {'use strict';
                 image : shop.getPhotoUrl(0),
                 points : shop.getCatalogPoints(),
                 params : {
-                    shop : shop,
+                    shop : shop
                 }
             };
             actionsShop.push(action);
-            var viewLogo = Ti.UI.createView({
-                width : 320,
-                touchEnabled : false,
-                index : indexLogo++,
-                height : 224
-            });
-
-            bt_logo = Ti.UI.createButton({
-                width : 152,
-                height : 31,
-                bottom : 30,
-                style : Ti.UI.iPhone.SystemButtonStyle.PLAIN,
-                backgroundImage : '/images/bt_catalogue.png'
-            });
-
-            Image.cacheImage(actionsShop[i].image, function(image) {
-                viewLogo.setBackgroundImage(image);
-            });
-            logos.push(viewLogo);
         }
-        scrollingLogos.views = logos;
-
-        self.add(scrollingLogos);
-        self.add(bt_logo);
-
-        bt_logo.addEventListener('click', function(e) {
-            readCatalog(actionsShop[indexBt].params);
-        });
-
-        scrollingLogos.addEventListener('scroll', function(e) {
-            indexBt = e.currentPage;
-        });
-
-        scrollingLogos.visible = true;
-        Ti.App.Properties.setString('Logos', 'display');
+        readCatalog(actionsShop[indexShop].params);
     }
 
     function createBookmarkView(shop) {
         var view = Ti.UI.createView({
             width : 142,
-            height : 140
+            height : 140,
+            index : shop
         });
 
         var lblTitle = Ti.UI.createLabel({
@@ -135,7 +94,7 @@ function WishListWindow(tabGroup) {'use strict';
         view.add(imgCorner);
 
         var lblBookmarks = Ti.UI.createLabel({
-            text : shop.bookmarks.length + " favoris",
+            text : shop.bookmarks ? shop.bookmarks.length + " favoris" : "0 favoris",
             color : 'white',
             font : {
                 fontSize : 15,
@@ -149,18 +108,25 @@ function WishListWindow(tabGroup) {'use strict';
         view.add(lblBookmarks);
 
         function displayBookmark(e) {
-            var WishDetailWindow = require("/ui/common/WishDetailWindow"), swin = new WishDetailWindow(tabGroup, shop, shop.bookmarks);
-            tabGroup.openWindow(self.containingTab, swin, {
-                animated : true
-            });
+            var book = Ti.App.allBookmarks;
+            if (shop.bookmarks.length > 0) {
+                var WishDetailWindow = require("/ui/common/WishDetailWindow"), swin = new WishDetailWindow(tabGroup, shop, shop.bookmarks);
+                tabGroup.openWindow(self.containingTab, swin, {
+                    animated : true
+                });
+            } else {
+                scrollingViewLogos(shop.index - 1);
+            }
         }
+
+
         img.addEventListener('click', displayBookmark);
         view.addEventListener('click', displayBookmark);
 
         return view;
     }
 
-    var i, data = [];
+    var data = [];
     var BigScrollView = require("ui/common/BigScrollView"), bsv = new BigScrollView({
         data : data,
         top : 0,
@@ -168,70 +134,81 @@ function WishListWindow(tabGroup) {'use strict';
     });
     self.add(bsv);
 
+    function strcmp(a, b) {
+        if (a.toString() < b.toString())
+            return -1;
+        if (a.toString() > b.toString())
+            return 1;
+        return 0;
+    }
+
+
     self.updateBookmarks = function(bookmarks) {
-        var shops = [];
-        var user = AppUser.getCurrentUser();
-        var j;
-        //
-        if (bookmarks !== undefined && bookmarks !== null && bookmarks.length !== 0) {
-            hideLogos();
-            for ( i = 0; i < bookmarks.length; i++) {
-                // We need to organise it by shops
-                var book = bookmarks[i];
-                var shop = AppUser.findShop(book.shop.url);
-                var scan = null;
-                if (shop) {
-                    scan = shop.findScan(book.scan.url);
-                }
-                var found = false;
-                for ( j = 0; !found && j < shops.length; j++) {
-                    if (shops[j].getUrl() === shop.getUrl()) {
-                        found = true;
-                        shops[j].bookmarks.push(scan);
+        var shops = AppUser.getAllShops();
+        var i, j, k, p, book;
+
+        // RaZ Des bookmarks pour les shops
+        if (shops) {
+            for ( i = 0; i < shops.length; i++) {
+                shops[i].bookmarks = [];
+            }
+            if (bookmarks && bookmarks.length > 0) {
+                for ( i = 0; i < bookmarks.length; i++) {
+                    // We need to organise it by shops
+                    book = bookmarks[i];
+                    var shop = AppUser.findShop(book.shop.url);
+                    var scan = null;
+                    if (shop) {
+                        scan = shop.findScan(book.scan.url);
+                        if (scan) {
+                            var found = false;
+                            for ( j = 0; !found && j < shops.length; j++) {
+                                if (shops[j].getUrl() === shop.getUrl()) {
+                                    found = true;
+                                    shop = shops[j];
+                                    shops[j].bookmarks.push(scan);
+                                }
+                            }
+                        }
                     }
                 }
-                if (!found) {
-                    shops.push(shop);
-                    shops[shops.length - 1].bookmarks = [scan];
-                }
-
             }
-        } else {
-            scrollingViewLogos();
-            var shops = [];
+
+            shops = shops.sort(function(a, b) {
+                var ret = 0;
+                if (a.bookmarks.length > b.bookmarks.length) {
+                    ret = -1;
+                } else if (a.bookmarks.length < b.bookmarks.length) {
+                    ret = 1;
+                } else {
+                    ret = strcmp(a.name, b.name);
+                }
+                return ret;
+            });
+
+            data = [];
+            for ( j = 0; j < shops.length; j++) {
+                data.push(createBookmarkView(shops[j]));
+            }
+            bsv.setData(data);
         }
-        data = [];
-        for ( j = 0; j < shops.length; j++) {
-            data.push(createBookmarkView(shops[j]));
-        }
-        bsv.setData(data);
     };
+
     function updateBookmarks() {
         var user = AppUser.getCurrentUser();
         self.updateBookmarks(user.getBookmarks());
     }
-
-
-    Ti.App.addEventListener('EmptyBookmarks', function(e) {
-        updateBookmarks();
-
-    });
 
     var updateBookmarksOnce = function() {
         self.removeEventListener('focus', updateBookmarksOnce);
         updateBookmarks();
     };
 
-    self.addEventListener('focus', updateBookmarksOnce);
-
-    self.addEventListener('focus', function(e) {
-        var user = AppUser.getCurrentUser();
-        if (!Ti.App.Properties.hasProperty('Logos') && JSON.stringify(user.m_version) === undefined) {
-            scrollingViewLogos();
-        } else if (Ti.App.Properties.hasProperty('Logos') && JSON.stringify(user.m_version) === undefined) {
-            scrollingViewLogos();
-        }
+    Ti.App.addEventListener('EmptyBookmarks', function(e) {
+        updateBookmarks();
     });
+
+    self.addEventListener('focus', updateBookmarksOnce);
 
     Ti.App.addEventListener('NewBookmarks', function() {
         updateBookmarks();

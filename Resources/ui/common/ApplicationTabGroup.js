@@ -486,10 +486,15 @@ function ApplicationTabGroup() {'use strict';
     }
 
 
-    self.getAllObjects = function() {
+    self.getAllObjects = function(user, func) {
         self.showIndicator();
         self.tvSearch.setData([]);
+        if(user) {
+            mainObject = user;
+        }
         mainObject.retrieveShops(null, self.addNewObject, function(e) {
+            self.hideIndicator();
+            Ti.App.fireEvent('NewBookmarks');
             if (Ti.App.Properties.hasProperty('openSpinner')) {
                 SplashLoader.hide();
                 if (Ti.App.Properties.getBool('isFirstLaunch', true)) {
@@ -498,9 +503,10 @@ function ApplicationTabGroup() {'use strict';
                     Ti.App.Properties.setBool('isFirstLaunch', false);
                 }
             }
+            if(func) {
+                func();
+            }
         });
-        self.hideIndicator();
-
     };
 
     self.getAllPresents = function() {
@@ -576,7 +582,6 @@ function ApplicationTabGroup() {'use strict';
             });
             self.setActiveTab(0);
         } else {
-            alert("hello")
             // We open the window
             var ShopDetailStepInWindow = require("/ui/common/ShopDetailStepInWindow"), swin = new ShopDetailStepInWindow(shop, self);
             self.openWindow(null, swin, {
@@ -621,11 +626,12 @@ function ApplicationTabGroup() {'use strict';
         codeJustHeard = code;
         var beancode, rayon;
         Ti.API.info(code);
-        if (Ti.App.Properties.hasProperty('ArrayCode')) {
+        /*if (Ti.App.Properties.hasProperty('ArrayCode')) {
             var list = Ti.App.Properties.getList('ArrayCode');
             Ti.App.allCodes = list;
-        }
+        }*/
 
+        code = Number(code);
         if (Ti.App.allCodes.indexOf(code) >= 0) {
             Ti.API.info("Code alreadxy heard so ignored : " + code);
         } else if (!in_manage_code) {
@@ -654,19 +660,20 @@ function ApplicationTabGroup() {'use strict';
 
                         // Ti.API.myLog("BeanCode=" + s.beancode.toString() + "  " + "Code" + beancode.toString() + " " + "CheckingValue=" + ! s.isCheckin());
                         //TODO TO REMOVE ---- Used just for demo
-                        if (s.beancode.toString() === beancode.toString() && s.isCheckin() === true && code === '11') {
-                            shopFound = s;
-                            obj_index = rows[i].object_index;
-                            row_index = i;
-                            Ti.App.properties.setString('checkinRayon', 'check');
+                        if (s.beancode.toString() === beancode.toString()) {
+                            
+                            if(s.isCheckin() && rayon > 0) {
+                                shopFound = s;
+                                obj_index = rows[i].object_index;
+                                row_index = i;
+                                    Ti.App.properties.setString('checkinRayon', 'check');
+                            }
+                            else if (! s.isCheckin() && rayon === 0) {
+                                shopFound = s;
+                                obj_index = rows[i].object_index;
+                                row_index = i;
+                            }
                         }
-
-                        if (s.beancode.toString() === beancode.toString() && !  s.isCheckin()) {
-                            shopFound = s;
-                            obj_index = rows[i].object_index;
-                            row_index = i;
-                        }
-                        // }
                     }
                     /////////////////////////////
                 }
@@ -691,10 +698,10 @@ function ApplicationTabGroup() {'use strict';
                 var swin = self.openShop(shopFound);
 
                 self.addNewReward(rew, function(reward) {
+                    var data = Ti.App.allCodes;
+                    data.push(code);
+                    Ti.App.allCodes = data;
                     if (reward) {
-                        var data = Ti.App.allCodes;
-                        data.push(code);
-                        Ti.App.allCodes = data;
 
                         var newShop = AppUser.getShop(obj_index);
                         newShop.checkin = true;
@@ -822,6 +829,7 @@ function ApplicationTabGroup() {'use strict';
                 for ( i = 0; i < rows.length; i++) {
                     if (rows[i].object_index) {
                         var s = AppUser.getShop(rows[i].object_index);
+                        
                         if (s.changed) {
                             var row = s.createTableRow(self);
                             self.tvSearch.updateRow(i, row);
