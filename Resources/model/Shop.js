@@ -348,8 +348,9 @@ function Shop(json) {'use strict';
         this.catalogPoints = this.getPoints(Reward.ACTION_KIND_CATALOG) || 0;
 
         this.enableAllScans();
-        var nb_checkins = 0, i;
-        for ( i = 0; i < rewards.length; i++) {
+      var nb_checkins = 0, i;
+      //TODO remove for production
+        /*for ( i = 0; i < rewards.length; i++) {
             var rew = rewards[i];
             var now = new Date();
             if (rew.shop && rew.shop.url === this.m_url) {
@@ -384,6 +385,7 @@ function Shop(json) {'use strict';
         if (!this.checkin && nb_checkins > 0) {
             this.stepinPoints = Math.round(this.getPoints(Reward.ACTION_KIND_STEPIN) / (nb_checkins * nb_checkins));
         }
+        */
         this.allPoints += this.stepinPoints + this.catalogPoints;
         this.changed = (this.prev_checkin !== this.checkin || this.prev_catalogViewed !== this.catalogViewed || this.prev_points !== this.allPossiblePoints);
         AppUser.updateShop(this);

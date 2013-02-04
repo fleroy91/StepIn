@@ -98,7 +98,7 @@ function AppUser(json) {'use strict';
         }), null, function(bigJSON) {
             //dataFile = JSON.stringify(bigJSON);
             //dataFile=bigJSON.user;
-            //Ti.API.myLog(JSON.stringify(bigJSON));
+            Ti.API.myLog(JSON.stringify(bigJSON.user.Bookmark));
             func(bigJSON);
             //alert(bigJSON.user.rewards[1]);
             //alert(bigJSON.user.invitations[1]);
@@ -449,7 +449,6 @@ function AppUser(json) {'use strict';
     }
 
     this.retrieveShops = function(tags, onNewShop, finalFunc) {
-        // alert("retrieveShops");
         Spinner.show();
         this.geolocalize(function(self) {
             self.setCurrentUser();

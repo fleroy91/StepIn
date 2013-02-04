@@ -132,7 +132,10 @@ function AccountWindow(args) {'use strict';
         if (!Ti.App.Properties.hasProperty('LoaderActive')) {
             showLoader();
         }
-        var LoginWindow = require("/ui/common/LoginWindow"), win = new LoginWindow(tabGroup);
+        var LoginWindow = require("/ui/common/LoginWindow"),
+            win = new LoginWindow(tabGroup, null, function() {
+                updateWindow();
+            });
 
         win.addEventListener('close', function(e) {
             setNewUser(e.object, displayAccount);

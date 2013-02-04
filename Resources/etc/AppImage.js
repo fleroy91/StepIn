@@ -394,7 +394,7 @@ Image.cacheImage = function(url, func, width, height) { 'use strict';
     
         if (file.exists()) {
             // If it has been cached, assign the local asset path to the image view object.
-            // Ti.API.info("Read cached image : " + file.nativePath);
+            Ti.API.info("Read cached image : " + file.nativePath + "\n URL = " + url);
             ret = file.nativePath;
             if(func) {
                 func(ret) ;
